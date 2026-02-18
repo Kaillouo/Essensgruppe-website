@@ -1,0 +1,182 @@
+// Prisma schema for Essensgruppe portal
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User accounts with role-based access
+model User {
+  id            String     @id @default(uuid())
+  username      String     @unique
+  email         String?    @unique
+  passwordHash  String     @map("password_hash")
+  role          Role       @default(USER)
+  status        UserStatus @default(PENDING)
+  balance       Int        @default(1000) // Starting gambling balance
+  avatarUrl     String?    @map("avatar_url")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  posts         Post[]
+  comments      Comment[]
+  votes         Vote[]
+  events        Event[]
+  transactions  Transaction[]
+  gamesHistory  GameHistory[]
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  BANNED
+}
+
+// Forum posts (threads)
+model Post {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String
+  content   String   @db.Text
+  imageUrl  String?  @map("image_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments Comment[]
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("posts")
+}
+
+// Nested comments system
+model Comment {
+  id              String   @id @default(uuid())
+  postId          String   @map("post_id")
+  parentCommentId String?  @map("parent_comment_id") // For nested replies
+  userId          String   @map("user_id")
+  content         String   @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  post           Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentComment  Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies        Comment[] @relation("CommentReplies")
+
+  @@index([postId])
+  @@index([userId])
+  @@index([parentCommentId])
+  @@map("comments")
+}
+
+// Upvote/downvote system for posts and comments
+model Vote {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  targetId   String   @map("target_id") // Post or Comment ID
+  targetType VoteType @map("target_type")
+  value      Int      // +1 for upvote, -1 for downvote
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Note: targetId is polymorphic (can be Post or Comment ID based on targetType)
+  // No direct relations to avoid foreign key conflicts
+
+  @@unique([userId, targetId]) // One vote per user per target
+  @@index([targetId])
+  @@map("votes")
+}
+
+enum VoteType {
+  POST
+  COMMENT
+}
+
+// Event planning system (ABI 27)
+model Event {
+  id          String      @id @default(uuid())
+  userId      String      @map("user_id") // Creator
+  title       String
+  description String      @db.Text
+  date        DateTime?
+  location    String?
+  budget      Float?
+  status      EventStatus @default(PROPOSED)
+  votes       Int         @default(0) // Net votes (upvotes - downvotes)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("events")
+}
+
+enum EventStatus {
+  PROPOSED
+  IN_PLANNING
+  COMPLETED
+}
+
+// Gambling balance transactions
+model Transaction {
+  id        String          @id @default(uuid())
+  userId    String          @map("user_id")
+  amount    Int             // Positive for credits, negative for debits
+  type      TransactionType
+  game      String?         // Game name if gambling-related
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+enum TransactionType {
+  INITIAL_BALANCE
+  GAME_BET
+  GAME_WIN
+  ADMIN_ADJUSTMENT
+}
+
+// Gambling games history
+model GameHistory {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  gameType  String   @map("game_type") // coinflip, dice, etc.
+  bet       Int
+  result    String   @db.Text // JSON string with game-specific result
+  payout    Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([gameType])
+  @@index([createdAt])
+  @@map("games_history")
+}
