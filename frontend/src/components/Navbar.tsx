@@ -112,12 +112,14 @@ export const Navbar = () => {
                 </div>
               </>
             ) : (
-              <Link
-                to="/login"
-                className="btn btn-primary"
-              >
-                Ich bin Teil der Essensgruppe
-              </Link>
+              location.pathname !== '/login' && (
+                <Link
+                  to="/login"
+                  className="btn btn-primary"
+                >
+                  Ich bin Teil der Essensgruppe
+                </Link>
+              )
             )}
 
             {/* Mobile menu button */}

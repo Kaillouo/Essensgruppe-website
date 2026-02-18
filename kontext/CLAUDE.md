@@ -57,34 +57,9 @@ private forum, event planning, resource links, Minecraft server info, and gambli
 
 ## 📋 Documentation Files
 
-All docs live in the `kontext/` folder:
+**PROGRESS.md** - Implementation progress log. Read this file to see what has been completed, what's in progress, and architectural decisions made. Updated after each phase completion.
 
-**kontext/NextSteps.md** - START HERE for future sessions! Current status, what to do next, troubleshooting guide, and success criteria for each phase.
-
-**kontext/PROGRESS.md** - Implementation progress log. What has been completed, what's in progress, and architectural decisions made. Updated after each phase completion.
-
-**kontext/SETUP.md** - Full setup guide for installing dependencies, configuring .env files, and running the dev servers from scratch.
-
-**kontext/ocichanges.md** - Log of all changes made directly on the OCI production server (nginx config, PM2, firewall, PostgreSQL setup, etc).
-
-## 🗂️ kontext/ Folder
-
-Contains all project documentation in one place for easy reference across sessions:
-- `CLAUDE.md` — copy of these project instructions
-- `NextSteps.md` — what to work on next
-- `PROGRESS.md` — completed work log
-- `SETUP.md` — dev environment setup guide
-- `ocichanges.md` — OCI server change log
-
-## 🛠️ skills/ Folder
-
-Contains Claude Code skills pulled from `anthropics/skills` on GitHub. These enhance Claude's capabilities for this project:
-
-- `frontend-design/` — production-grade UI/UX, avoids generic AI aesthetics, React + CSS guidelines
-- `theme-factory/` — apply consistent color/font themes across pages
-- `web-artifacts-builder/` — build React + Tailwind + shadcn/ui components
-- `webapp-testing/` — Playwright-based testing of the running dev server
-- `algorithmic-art/` — p5.js generative art, useful for landing page animations and effects
+**NextSteps.md** - START HERE for future sessions! Current status, what to do next, troubleshooting guide, and success criteria for each phase.
 
 ---
 

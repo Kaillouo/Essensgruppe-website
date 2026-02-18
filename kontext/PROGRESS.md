@@ -209,9 +209,9 @@ backend/uploads/
 
 ---
 
-## Phase 3: Events + Links + MC 🔄 NOT STARTED
+## Phase 3: Events + Links + MC ✅ COMPLETED (2026-02-18)
 
-**Status:** Next up
+**Status:** Fully implemented
 **Planned Features:**
 
 ### Events (ABI 27):
@@ -237,6 +237,130 @@ backend/uploads/
 - Leaderboards (data source TBD)
 - How to join instructions
 - Server status indicator (online/offline, player count)
+
+---
+
+### What Was Built (Phase 3):
+
+**Schema additions:**
+- `EventVote` model — per-user vote tracking on events (userId, eventId, value, unique constraint)
+- `Announcement` model — MC page admin announcements (title, content, userId)
+- Relations added to User and Event models
+
+**New Backend Endpoints:**
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| `GET` | `/api/events` | List all events with userVote per current user |
+| `POST` | `/api/events` | Create event proposal (auth) |
+| `POST` | `/api/events/:id/vote` | Vote +1/-1 on proposed events (toggle/switch) |
+| `PATCH` | `/api/events/:id/status` | Admin: move event between PROPOSED/IN_PLANNING/COMPLETED |
+| `DELETE` | `/api/events/:id` | Creator or admin: delete event |
+| `GET` | `/api/announcements` | List MC announcements newest-first |
+| `POST` | `/api/announcements` | Admin: create announcement |
+| `DELETE` | `/api/announcements/:id` | Admin: delete announcement |
+
+**New Files:**
+- `backend/src/routes/event.routes.ts`
+- `backend/src/routes/announcement.routes.ts`
+
+**Updated Files:**
+- `backend/src/server.ts` — registered event + announcement routes
+- `backend/prisma/schema.prisma` — EventVote + Announcement models
+- `frontend/src/types/index.ts` — Event, EventUser, Announcement types
+- `frontend/src/services/api.service.ts` — event + announcement API methods
+
+**Frontend Pages Built:**
+
+`EventsPage.tsx` (`/events` — ABI 27):
+- 3 tabs: Proposed (with vote count badges), In Planning, Completed
+- Tab-animated content switching (Framer Motion)
+- Thumbs up/down voting on proposed events (toggle behavior, green/red states)
+- Create proposal modal: title, description, date, location, budget
+- Admin: "Move Status" button per card → modal to pick new status
+- Creator or admin can delete events
+- Social links strip (GoFundMe, TikTok, Instagram — update URLs)
+- Events sorted by votes descending within Proposed tab
+
+`MinecraftPage.tsx` (`/mc`):
+- Hero section with gradient background, server IP + one-click copy button
+- Static "online" indicator (update to dynamic when data source available)
+- BlueMap iframe (update `BLUEMAP_URL` constant for production)
+- Announcements section: admin can post/delete, all members see newest-first
+- How to Join — numbered steps
+- Server Rules — bullet list
+- Leaderboard — placeholder (data source TBD)
+
+`LinksPage.tsx` (`/links`):
+- Important Links — 4 colorful cards (school, Moodle, Vertretungsplan, email)
+- Stundenplan — dropdown selector with iframe embed (update URLs in constants)
+- Teachers list — searchable by name/subject, email links
+- All content hardcoded as constants at top of file (easy for admin to update)
+
+**Content to update (placeholders):**
+- `SERVER_IP` in MinecraftPage.tsx
+- `BLUEMAP_URL` in MinecraftPage.tsx (use OCI IP for production)
+- Social links in EventsPage.tsx (GoFundMe, TikTok, Instagram)
+- `IMPORTANT_LINKS` in LinksPage.tsx (school URLs)
+- `TEACHERS` in LinksPage.tsx (real teacher data)
+- `STUNDENPLAN_PEOPLE` in LinksPage.tsx (real schedule links)
+
+---
+
+## Phase 3.5: Event Photo Galleries ✅ COMPLETED (2026-02-18)
+
+**Status:** Fully implemented and deployed
+
+### What Was Built:
+
+**Schema:**
+- Added `EventPhoto` model — `id, eventId, userId, imageUrl, createdAt`
+- Added `photos EventPhoto[]` relation to `Event` model
+- Added `eventPhotos EventPhoto[]` relation to `User` model
+- Applied with `prisma db push` + `prisma generate`
+
+**New File:** `backend/src/middleware/upload.middleware.ts`
+- multer diskStorage → `uploads/events/`
+- Filename: `{timestamp}-{randomUUID()}.jpg` (Node built-in `crypto.randomUUID`)
+- File filter: jpeg, png, webp, gif only
+- Size limit: 5 MB (multer)
+- Exports `uploadEventPhoto` (single field `photo`)
+
+**Updated File:** `backend/src/routes/event.routes.ts`
+- `POST /api/events/:id/photos` — multer upload + sharp resize (max 1200px wide, quality 85), saves DB record, returns photo object
+- `DELETE /api/events/:id/photos/:photoId` — uploader or admin can delete; removes from DB and disk
+- `GET /api/events` — now includes `photos: [...]` on each event (ordered `createdAt asc`)
+- `POST /api/events` — now returns `photos: []` on newly created events
+
+**Updated File:** `frontend/src/types/index.ts`
+- Added `EventPhoto` interface
+- Added `photos: EventPhoto[]` to `Event` interface
+
+**Updated File:** `frontend/src/services/api.service.ts`
+- `uploadEventPhoto(eventId, file)` — FormData POST, handles non-JSON responses (413 etc.)
+- `deleteEventPhoto(eventId, photoId)` — DELETE request
+
+**Updated File:** `frontend/src/pages/EventsPage.tsx`
+- New `PhotoCarousel` component per event card:
+  - 0 photos → "📷 Add Photo" button
+  - 1+ photos → 220px carousel with Framer Motion slide animation
+  - Left/right arrows (hidden at boundaries), dot indicators
+  - Bottom-right overlay: × delete (with confirm), + add button
+  - Click photo → fullscreen lightbox with prev/next navigation
+  - Any member can upload to any event
+  - Upload/delete update local state optimistically
+
+### Infrastructure Fixes:
+
+**nginx `client_max_body_size 10m`** (`/etc/nginx/sites-available/web`)
+- Default was 1MB — images >1MB returned a 413 HTML page instead of JSON
+- Set to 10m to allow large photo uploads
+- Config tested and reloaded
+
+**Vite proxy `/uploads`** (`frontend/vite.config.ts`)
+- `/uploads` was not proxied — Vite served the SPA HTML fallback instead of the image file
+- Added `'/uploads' → http://localhost:3000` proxy entry
+- Frontend restarted via PM2
 
 ---
 

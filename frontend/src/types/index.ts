@@ -66,3 +66,43 @@ export interface Comment {
 export interface PostDetail extends Post {
   comments: Comment[];
 }
+
+// Events types
+export interface EventUser {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+}
+
+export interface EventPhoto {
+  id: string;
+  imageUrl: string;
+  userId: string;
+  createdAt: string;
+}
+
+export interface Event {
+  id: string;
+  title: string;
+  description: string;
+  date: string | null;
+  location: string | null;
+  budget: number | null;
+  status: 'PROPOSED' | 'IN_PLANNING' | 'COMPLETED';
+  votes: number;
+  createdAt: string;
+  updatedAt: string;
+  user: EventUser;
+  userVote: number; // 1, -1, or 0
+  photos: EventPhoto[];
+}
+
+// Announcement types
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  user: EventUser;
+}

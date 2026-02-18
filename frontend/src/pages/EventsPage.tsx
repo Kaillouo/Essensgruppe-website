@@ -1,33 +1,771 @@
-import { motion } from 'framer-motion';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../contexts/AuthContext';
+import { ApiService } from '../services/api.service';
+import { Event, EventPhoto } from '../types';
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function timeAgo(dateStr: string): string {
+  const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return 'TBD';
+  return new Date(dateStr).toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+function formatBudget(budget: number | null): string {
+  if (budget === null) return 'TBD';
+  return `${budget.toLocaleString('de-DE')} €`;
+}
+
+// ─── Photo Carousel ───────────────────────────────────────────────────────────
+
+interface PhotoCarouselProps {
+  eventId: string;
+  photos: EventPhoto[];
+  currentUserId: string;
+  isAdmin: boolean;
+  onPhotosChange: (eventId: string, photos: EventPhoto[]) => void;
+}
+
+function PhotoCarousel({ eventId, photos, currentUserId, isAdmin, onPhotosChange }: PhotoCarouselProps) {
+  const [index, setIndex] = useState(0);
+  const [lightbox, setLightbox] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const clampedIndex = Math.min(index, Math.max(0, photos.length - 1));
+
+  const prev = () => setIndex(i => Math.max(0, i - 1));
+  const next = () => setIndex(i => Math.min(photos.length - 1, i + 1));
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setUploading(true);
+    try {
+      const newPhoto = await ApiService.uploadEventPhoto(eventId, file) as EventPhoto;
+      const updated = [...photos, newPhoto];
+      onPhotosChange(eventId, updated);
+      setIndex(updated.length - 1);
+    } catch (err: any) {
+      alert(err.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDelete = async (photoId: string) => {
+    try {
+      await ApiService.deleteEventPhoto(eventId, photoId);
+      const updated = photos.filter(p => p.id !== photoId);
+      onPhotosChange(eventId, updated);
+      setIndex(i => Math.min(i, Math.max(0, updated.length - 1)));
+    } catch (err: any) {
+      alert(err.message || 'Delete failed');
+    } finally {
+      setConfirmDeleteId(null);
+    }
+  };
+
+  const currentPhoto = photos[clampedIndex];
+  const canDeleteCurrent = currentPhoto && (isAdmin || currentPhoto.userId === currentUserId);
+
+  if (photos.length === 0) {
+    return (
+      <div className="mt-3 pt-3 border-t border-gray-100">
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-500 hover:bg-gray-200 disabled:opacity-50"
+        >
+          {uploading ? 'Uploading...' : '📷 Add Photo'}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 pt-3 border-t border-gray-100">
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+
+      {/* Carousel */}
+      <div className="relative rounded-lg overflow-hidden bg-gray-100" style={{ height: 220 }}>
+        {/* Image */}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.img
+            key={currentPhoto.id}
+            src={currentPhoto.imageUrl}
+            alt="Event photo"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ duration: 0.2 }}
+            className="w-full h-full object-cover cursor-pointer"
+            onClick={() => setLightbox(true)}
+          />
+        </AnimatePresence>
+
+        {/* Arrows */}
+        {photos.length > 1 && (
+          <>
+            <button
+              onClick={prev}
+              disabled={clampedIndex === 0}
+              className="absolute left-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 text-white flex items-center justify-center disabled:opacity-20 hover:bg-black/60 text-xs"
+            >
+              ‹
+            </button>
+            <button
+              onClick={next}
+              disabled={clampedIndex === photos.length - 1}
+              className="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 text-white flex items-center justify-center disabled:opacity-20 hover:bg-black/60 text-xs"
+            >
+              ›
+            </button>
+          </>
+        )}
+
+        {/* Action buttons overlay (bottom-right) */}
+        <div className="absolute bottom-2 right-2 flex gap-1.5">
+          {canDeleteCurrent && !confirmDeleteId && (
+            <button
+              onClick={() => setConfirmDeleteId(currentPhoto.id)}
+              className="w-6 h-6 rounded-full bg-red-600/80 text-white text-xs flex items-center justify-center hover:bg-red-700"
+              title="Delete photo"
+            >
+              ×
+            </button>
+          )}
+          {confirmDeleteId === currentPhoto.id && (
+            <div className="flex items-center gap-1 bg-black/60 rounded-full px-2 py-0.5">
+              <span className="text-white text-xs">Delete?</span>
+              <button onClick={() => handleDelete(currentPhoto.id)} className="text-red-300 hover:text-red-200 text-xs font-bold">Yes</button>
+              <button onClick={() => setConfirmDeleteId(null)} className="text-gray-300 hover:text-white text-xs">No</button>
+            </div>
+          )}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            title="Add photo"
+            className="w-6 h-6 rounded-full bg-black/40 text-white text-xs flex items-center justify-center hover:bg-black/60 disabled:opacity-50"
+          >
+            {uploading ? '…' : '+'}
+          </button>
+        </div>
+      </div>
+
+      {/* Dots */}
+      {photos.length > 1 && (
+        <div className="flex justify-center gap-1.5 mt-2">
+          {photos.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setIndex(i)}
+              className={`w-1.5 h-1.5 rounded-full transition-colors ${i === clampedIndex ? 'bg-primary-600' : 'bg-gray-300'}`}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightbox && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+            onClick={() => setLightbox(false)}
+          >
+            <button
+              className="absolute top-4 right-4 text-white text-2xl w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
+              onClick={() => setLightbox(false)}
+            >
+              ×
+            </button>
+            {photos.length > 1 && (
+              <>
+                <button
+                  onClick={e => { e.stopPropagation(); prev(); }}
+                  disabled={clampedIndex === 0}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-3xl w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-20"
+                >
+                  ‹
+                </button>
+                <button
+                  onClick={e => { e.stopPropagation(); next(); }}
+                  disabled={clampedIndex === photos.length - 1}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-3xl w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-20"
+                >
+                  ›
+                </button>
+              </>
+            )}
+            <motion.img
+              key={currentPhoto.id}
+              src={currentPhoto.imageUrl}
+              alt="Event photo"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="max-h-[90vh] max-w-full object-contain rounded-lg"
+              onClick={e => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── Create Modal ────────────────────────────────────────────────────────────
+
+interface CreateModalProps {
+  onClose: () => void;
+  onCreated: (event: Event) => void;
+}
+
+function CreateModal({ onClose, onCreated }: CreateModalProps) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [date, setDate] = useState('');
+  const [location, setLocation] = useState('');
+  const [budget, setBudget] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !description.trim()) {
+      setError('Title and description are required.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const data: any = {
+        title: title.trim(),
+        description: description.trim(),
+        date: date ? new Date(date).toISOString() : null,
+        location: location.trim() || null,
+        budget: budget ? parseFloat(budget) : null,
+      };
+      const created = await ApiService.createEvent(data) as Event;
+      onCreated(created);
+      onClose();
+    } catch (err: any) {
+      setError(err.message || 'Failed to submit event.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900">Propose an Event</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+            <input
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              maxLength={200}
+              placeholder="Event title..."
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+            <textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              maxLength={5000}
+              rows={4}
+              placeholder="What's the event about? Why should we do it?"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date (optional)</label>
+              <input
+                type="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Budget in € (optional)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={budget}
+                onChange={e => setBudget(e.target.value)}
+                placeholder="0.00"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Location (optional)</label>
+            <input
+              type="text"
+              value={location}
+              onChange={e => setLocation(e.target.value)}
+              maxLength={200}
+              placeholder="Where would this take place?"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+              Cancel
+            </button>
+            <button type="submit" disabled={loading} className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50">
+              {loading ? 'Submitting...' : 'Submit Proposal'}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── Status Change Modal (Admin) ─────────────────────────────────────────────
+
+interface StatusModalProps {
+  event: Event;
+  onClose: () => void;
+  onUpdated: (eventId: string, status: Event['status']) => void;
+}
+
+function StatusModal({ event, onClose, onUpdated }: StatusModalProps) {
+  const [loading, setLoading] = useState(false);
+
+  const handleStatus = async (status: Event['status']) => {
+    setLoading(true);
+    try {
+      await ApiService.updateEventStatus(event.id, status);
+      onUpdated(event.id, status);
+      onClose();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const statusOptions: { label: string; value: Event['status']; color: string }[] = [
+    { label: 'Proposed', value: 'PROPOSED', color: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' },
+    { label: 'In Planning', value: 'IN_PLANNING', color: 'bg-blue-100 text-blue-800 hover:bg-blue-200' },
+    { label: 'Completed', value: 'COMPLETED', color: 'bg-green-100 text-green-800 hover:bg-green-200' },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6"
+      >
+        <h2 className="text-lg font-bold text-gray-900 mb-2">Move Event</h2>
+        <p className="text-sm text-gray-500 mb-4">"{event.title}"</p>
+        <div className="space-y-2">
+          {statusOptions.map(opt => (
+            <button
+              key={opt.value}
+              disabled={loading || event.status === opt.value}
+              onClick={() => handleStatus(opt.value)}
+              className={`w-full px-4 py-2.5 rounded-lg font-medium text-sm transition-colors ${opt.color} disabled:opacity-40`}
+            >
+              {event.status === opt.value ? `✓ Currently: ${opt.label}` : opt.label}
+            </button>
+          ))}
+        </div>
+        <button onClick={onClose} className="mt-4 w-full px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">
+          Cancel
+        </button>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── Event Card ───────────────────────────────────────────────────────────────
+
+interface EventCardProps {
+  event: Event;
+  isAdmin: boolean;
+  currentUserId: string;
+  onVote: (eventId: string, value: 1 | -1) => void;
+  onDelete: (eventId: string) => void;
+  onStatusChange: (event: Event) => void;
+  onPhotosChange: (eventId: string, photos: EventPhoto[]) => void;
+}
+
+function EventCard({ event, isAdmin, currentUserId, onVote, onDelete, onStatusChange, onPhotosChange }: EventCardProps) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const statusColors: Record<Event['status'], string> = {
+    PROPOSED: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    IN_PLANNING: 'bg-blue-100 text-blue-700 border-blue-200',
+    COMPLETED: 'bg-green-100 text-green-700 border-green-200',
+  };
+
+  const statusLabels: Record<Event['status'], string> = {
+    PROPOSED: 'Proposed',
+    IN_PLANNING: 'In Planning',
+    COMPLETED: 'Completed',
+  };
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${statusColors[event.status]}`}>
+              {statusLabels[event.status]}
+            </span>
+            {event.date && (
+              <span className="text-xs text-gray-500">📅 {formatDate(event.date)}</span>
+            )}
+          </div>
+          <h3 className="text-base font-semibold text-gray-900 leading-snug">{event.title}</h3>
+          <p className="text-sm text-gray-600 mt-1 line-clamp-3">{event.description}</p>
+
+          <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 flex-wrap">
+            {event.location && <span>📍 {event.location}</span>}
+            {event.budget !== null && <span>💰 {formatBudget(event.budget)}</span>}
+            <span>by {event.user.username} · {timeAgo(event.createdAt)}</span>
+          </div>
+        </div>
+
+        {/* Vote column — only for PROPOSED */}
+        {event.status === 'PROPOSED' && (
+          <div className="flex flex-col items-center gap-1 flex-shrink-0">
+            <button
+              onClick={() => onVote(event.id, 1)}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                event.userVote === 1 ? 'bg-green-500 text-white' : 'text-gray-400 hover:bg-green-50 hover:text-green-600'
+              }`}
+              title="Upvote"
+            >
+              ▲
+            </button>
+            <span className={`text-sm font-bold ${event.votes > 0 ? 'text-green-600' : event.votes < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+              {event.votes}
+            </span>
+            <button
+              onClick={() => onVote(event.id, -1)}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                event.userVote === -1 ? 'bg-red-500 text-white' : 'text-gray-400 hover:bg-red-50 hover:text-red-600'
+              }`}
+              title="Downvote"
+            >
+              ▼
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Photo carousel */}
+      <PhotoCarousel
+        eventId={event.id}
+        photos={event.photos}
+        currentUserId={currentUserId}
+        isAdmin={isAdmin}
+        onPhotosChange={onPhotosChange}
+      />
+
+      {/* Admin / creator actions */}
+      {(isAdmin || event.user.id === currentUserId) && (
+        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+          {isAdmin && (
+            <button
+              onClick={() => onStatusChange(event)}
+              className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200"
+            >
+              Move Status
+            </button>
+          )}
+          {!confirmDelete ? (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="text-xs px-2 py-1 rounded bg-red-50 text-red-600 hover:bg-red-100"
+            >
+              Delete
+            </button>
+          ) : (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-gray-500">Sure?</span>
+              <button onClick={() => onDelete(event.id)} className="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700">Yes</button>
+              <button onClick={() => setConfirmDelete(false)} className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200">No</button>
+            </div>
+          )}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+// ─── Section ─────────────────────────────────────────────────────────────────
+
+interface SectionProps {
+  title: string;
+  icon: string;
+  events: Event[];
+  isAdmin: boolean;
+  currentUserId: string;
+  onVote: (eventId: string, value: 1 | -1) => void;
+  onDelete: (eventId: string) => void;
+  onStatusChange: (event: Event) => void;
+  onPhotosChange: (eventId: string, photos: EventPhoto[]) => void;
+  emptyText: string;
+}
+
+function Section({ title, icon, events, isAdmin, currentUserId, onVote, onDelete, onStatusChange, onPhotosChange, emptyText }: SectionProps) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-2xl">{icon}</span>
+        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+        <span className="ml-1 text-sm font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{events.length}</span>
+      </div>
+      <div className="space-y-3">
+        <AnimatePresence mode="popLayout">
+          {events.length === 0 ? (
+            <motion.p key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-gray-400 italic">
+              {emptyText}
+            </motion.p>
+          ) : (
+            events.map(event => (
+              <EventCard
+                key={event.id}
+                event={event}
+                isAdmin={isAdmin}
+                currentUserId={currentUserId}
+                onVote={onVote}
+                onDelete={onDelete}
+                onStatusChange={onStatusChange}
+                onPhotosChange={onPhotosChange}
+              />
+            ))
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ───────────────────────────────────────────────────────────────
 
 export const EventsPage = () => {
+  const { user } = useAuth();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+  const [statusTarget, setStatusTarget] = useState<Event | null>(null);
+  const [activeTab, setActiveTab] = useState<'PROPOSED' | 'IN_PLANNING' | 'COMPLETED'>('PROPOSED');
+
+  const isAdmin = user?.role === 'ADMIN';
+
+  const fetchEvents = useCallback(async () => {
+    try {
+      const data = await ApiService.getEvents() as Event[];
+      setEvents(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchEvents(); }, [fetchEvents]);
+
+  const handleVote = async (eventId: string, value: 1 | -1) => {
+    try {
+      const result = await ApiService.voteEvent(eventId, value) as { votes: number; userVote: number };
+      setEvents(prev => prev.map(e => e.id === eventId ? { ...e, votes: result.votes, userVote: result.userVote } : e));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDelete = async (eventId: string) => {
+    try {
+      await ApiService.deleteEvent(eventId);
+      setEvents(prev => prev.filter(e => e.id !== eventId));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleStatusUpdated = (eventId: string, status: Event['status']) => {
+    setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status } : e));
+  };
+
+  const handlePhotosChange = (eventId: string, photos: EventPhoto[]) => {
+    setEvents(prev => prev.map(e => e.id === eventId ? { ...e, photos } : e));
+  };
+
+  const proposed = events.filter(e => e.status === 'PROPOSED').sort((a, b) => b.votes - a.votes);
+  const inPlanning = events.filter(e => e.status === 'IN_PLANNING');
+  const completed = events.filter(e => e.status === 'COMPLETED');
+
+  const tabs = [
+    { key: 'PROPOSED' as const, label: 'Proposed', icon: '💡', count: proposed.length },
+    { key: 'IN_PLANNING' as const, label: 'In Planning', icon: '🗓️', count: inPlanning.length },
+    { key: 'COMPLETED' as const, label: 'Completed', icon: '✅', count: completed.length },
+  ];
+
+  const tabEvents = { PROPOSED: proposed, IN_PLANNING: inPlanning, COMPLETED: completed };
+  const tabEmptyText = {
+    PROPOSED: 'No proposals yet. Be the first to suggest something!',
+    IN_PLANNING: 'No events currently in planning.',
+    COMPLETED: 'No completed events yet.',
+  };
+  const tabIcons = { PROPOSED: '💡', IN_PLANNING: '🗓️', COMPLETED: '✅' };
+  const tabTitles = { PROPOSED: 'Proposed Events', IN_PLANNING: 'In Planning', COMPLETED: 'Completed' };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center"
-        >
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">ABI 27 Events</h1>
-          <p className="text-xl text-gray-600 mb-8">Event planning system coming in Phase 3</p>
-
-          <div className="card max-w-2xl mx-auto">
-            <div className="text-6xl mb-4">📅</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Under Construction</h2>
-            <p className="text-gray-600 mb-4">
-              The event planning system will include:
-            </p>
-            <ul className="text-left text-gray-600 space-y-2">
-              <li>• Submit event proposals</li>
-              <li>• Vote on proposed events</li>
-              <li>• Task assignment and planning</li>
-              <li>• Event photo galleries</li>
-              <li>• Social media links integration</li>
-            </ul>
+      <div className="max-w-3xl mx-auto">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">ABI 27 Events</h1>
+              <p className="text-gray-500 text-sm mt-1">Plan, vote, and celebrate together</p>
+            </div>
+            <button
+              onClick={() => setShowCreate(true)}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium text-sm"
+            >
+              + Propose Event
+            </button>
           </div>
+
+          {/* Social links strip */}
+          <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-4 mb-6 flex items-center gap-4 flex-wrap">
+            <span className="text-white font-medium text-sm">Follow the journey:</span>
+            <a href="https://gofundme.com" target="_blank" rel="noopener noreferrer"
+              className="text-white/90 hover:text-white text-sm underline underline-offset-2">GoFundMe</a>
+            <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer"
+              className="text-white/90 hover:text-white text-sm underline underline-offset-2">TikTok</a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"
+              className="text-white/90 hover:text-white text-sm underline underline-offset-2">Instagram</a>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6">
+            {tabs.map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === tab.key
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
+                {tab.count > 0 && (
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    activeTab === tab.key ? 'bg-primary-100 text-primary-700' : 'bg-gray-200 text-gray-500'
+                  }`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Content */}
+          {loading ? (
+            <div className="text-center py-16 text-gray-400">Loading events...</div>
+          ) : (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.15 }}
+              >
+                <Section
+                  title={tabTitles[activeTab]}
+                  icon={tabIcons[activeTab]}
+                  events={tabEvents[activeTab]}
+                  isAdmin={isAdmin}
+                  currentUserId={user?.id ?? ''}
+                  onVote={handleVote}
+                  onDelete={handleDelete}
+                  onStatusChange={setStatusTarget}
+                  onPhotosChange={handlePhotosChange}
+                  emptyText={tabEmptyText[activeTab]}
+                />
+              </motion.div>
+            </AnimatePresence>
+          )}
         </motion.div>
       </div>
+
+      {/* Modals */}
+      <AnimatePresence>
+        {showCreate && (
+          <CreateModal
+            onClose={() => setShowCreate(false)}
+            onCreated={event => setEvents(prev => [event, ...prev])}
+          />
+        )}
+        {statusTarget && (
+          <StatusModal
+            event={statusTarget}
+            onClose={() => setStatusTarget(null)}
+            onUpdated={handleStatusUpdated}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -205,4 +205,80 @@ export class ApiService {
       body: JSON.stringify({ value }),
     }, true);
   }
+
+  // Event endpoints
+  static async getEvents() {
+    return this.request('/events', {}, true);
+  }
+
+  static async createEvent(data: {
+    title: string;
+    description: string;
+    date?: string | null;
+    location?: string | null;
+    budget?: number | null;
+  }) {
+    return this.request('/events', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }, true);
+  }
+
+  static async voteEvent(eventId: string, value: 1 | -1) {
+    return this.request(`/events/${eventId}/vote`, {
+      method: 'POST',
+      body: JSON.stringify({ value }),
+    }, true);
+  }
+
+  static async updateEventStatus(eventId: string, status: 'PROPOSED' | 'IN_PLANNING' | 'COMPLETED') {
+    return this.request(`/events/${eventId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }, true);
+  }
+
+  static async deleteEvent(eventId: string) {
+    return this.request(`/events/${eventId}`, { method: 'DELETE' }, true);
+  }
+
+  static async uploadEventPhoto(eventId: string, file: File) {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('photo', file);
+    const response = await fetch(`${API_URL}/events/${eventId}/photos`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      // nginx returned HTML (e.g. 413 Too Large)
+      if (response.status === 413) throw new Error('File too large (max 10 MB)');
+      throw new Error(`Upload failed (HTTP ${response.status})`);
+    }
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Upload failed');
+    return data;
+  }
+
+  static async deleteEventPhoto(eventId: string, photoId: string) {
+    return this.request(`/events/${eventId}/photos/${photoId}`, { method: 'DELETE' }, true);
+  }
+
+  // Announcement endpoints
+  static async getAnnouncements() {
+    return this.request('/announcements', {}, true);
+  }
+
+  static async createAnnouncement(data: { title: string; content: string }) {
+    return this.request('/announcements', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }, true);
+  }
+
+  static async deleteAnnouncement(id: string) {
+    return this.request(`/announcements/${id}`, { method: 'DELETE' }, true);
+  }
 }

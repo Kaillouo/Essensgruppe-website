@@ -6,6 +6,8 @@ import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import adminRoutes from './routes/admin.routes';
 import postRoutes from './routes/post.routes';
+import eventRoutes from './routes/event.routes';
+import announcementRoutes from './routes/announcement.routes';
 
 // Load environment variables
 dotenv.config();
@@ -26,6 +28,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 // Serve uploaded files (avatars, post images, event images)
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
