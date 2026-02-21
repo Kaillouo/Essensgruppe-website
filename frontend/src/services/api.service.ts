@@ -81,6 +81,25 @@ export class ApiService {
     }, true);
   }
 
+  static async uploadAvatar(file: File) {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const response = await fetch(`${API_URL}/users/me/avatar`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      if (response.status === 413) throw new Error('File too large (max 5 MB)');
+      throw new Error(`Upload failed (HTTP ${response.status})`);
+    }
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Upload failed');
+    return data;
+  }
+
   static async getTransactions() {
     return this.request('/users/me/transactions', {}, true);
   }
@@ -280,5 +299,63 @@ export class ApiService {
 
   static async deleteAnnouncement(id: string) {
     return this.request(`/announcements/${id}`, { method: 'DELETE' }, true);
+  }
+
+  // Prediction market endpoints
+  static async getPredictions() {
+    return this.request('/predictions', {}, true);
+  }
+
+  static async createPrediction(data: { title: string; closeDate: string }) {
+    return this.request('/predictions', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }, true);
+  }
+
+  static async placeBet(predictionId: string, data: { side: boolean; amount: number }) {
+    return this.request(`/predictions/${predictionId}/bet`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }, true);
+  }
+
+  static async resolvePrediction(predictionId: string, outcome: boolean) {
+    return this.request(`/predictions/${predictionId}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({ outcome }),
+    }, true);
+  }
+
+  static async deletePrediction(predictionId: string) {
+    return this.request(`/predictions/${predictionId}`, { method: 'DELETE' }, true);
+  }
+
+  // ── Slots ──────────────────────────────────────────────────────────────────
+  static async spinSlots(bet: number) {
+    return this.request<{
+      reels: ['cherry' | 'lemon' | 'bell' | 'star' | 'diamond', 'cherry' | 'lemon' | 'bell' | 'star' | 'diamond', 'cherry' | 'lemon' | 'bell' | 'star' | 'diamond'];
+      payout: number;
+      winType: string;
+      net: number;
+      balance: number;
+    }>('/games/slots/spin', { method: 'POST', body: JSON.stringify({ bet }) }, true);
+  }
+
+  // ── Blackjack ──────────────────────────────────────────────────────────────
+  static async blackjackDeal(bet: number) {
+    return this.request('/games/blackjack/deal', { method: 'POST', body: JSON.stringify({ bet }) }, true);
+  }
+
+  static async blackjackHit() {
+    return this.request('/games/blackjack/hit', { method: 'POST' }, true);
+  }
+
+  static async blackjackStand() {
+    return this.request('/games/blackjack/stand', { method: 'POST' }, true);
+  }
+
+  static async blackjackDouble() {
+    return this.request('/games/blackjack/double', { method: 'POST' }, true);
   }
 }

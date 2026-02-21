@@ -330,13 +330,13 @@ export const ThreadPage = () => {
                 isAdmin={isAdmin}
                 depth={0}
                 timeAgo={timeAgo}
-                onCommentAdded={(newComment) => {
+                onCommentAdded={() => {
                   setPost(prev => prev ? {
                     ...prev,
                     commentCount: prev.commentCount + 1,
                   } : null);
                 }}
-                onCommentDeleted={(commentId) => {
+                onCommentDeleted={() => {
                   setPost(prev => prev ? {
                     ...prev,
                     commentCount: prev.commentCount - 1,

@@ -30,8 +30,10 @@ model User {
   eventVotes    EventVote[]
   eventPhotos   EventPhoto[]
   announcements Announcement[]
-  transactions  Transaction[]
-  gamesHistory  GameHistory[]
+  transactions    Transaction[]
+  gamesHistory    GameHistory[]
+  predictions     Prediction[]
+  predictionBets  PredictionBet[]
 
   @@map("users")
 }
@@ -210,7 +212,51 @@ enum TransactionType {
   INITIAL_BALANCE
   GAME_BET
   GAME_WIN
+  PREDICTION_BET
+  PREDICTION_WIN
   ADMIN_ADJUSTMENT
+}
+
+// Prediction market
+model Prediction {
+  id        String           @id @default(uuid())
+  creatorId String           @map("creator_id")
+  title     String
+  closeDate DateTime         @map("close_date")
+  status    PredictionStatus @default(OPEN)
+  outcome   Boolean?         // true = YES won, false = NO won, null = not resolved yet
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+
+  creator User            @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  bets    PredictionBet[]
+
+  @@index([creatorId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("predictions")
+}
+
+model PredictionBet {
+  id           String   @id @default(uuid())
+  predictionId String   @map("prediction_id")
+  userId       String   @map("user_id")
+  side         Boolean  // true = YES, false = NO
+  amount       Int
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  prediction Prediction @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([predictionId, userId]) // one bet per user per prediction
+  @@index([predictionId])
+  @@index([userId])
+  @@map("prediction_bets")
+}
+
+enum PredictionStatus {
+  OPEN
+  CLOSED
 }
 
 // Gambling games history

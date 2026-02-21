@@ -1,8 +1,12 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import path from 'path';
+import fs from 'fs';
+import sharp from 'sharp';
 import prisma from '../utils/prisma.util';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { hashPassword, comparePassword } from '../utils/password.util';
+import { uploadAvatar } from '../middleware/upload.middleware';
 import { AuthRequest, UpdateProfileDto, ChangePasswordDto } from '../types';
 
 const router = Router();
@@ -155,6 +159,61 @@ router.delete('/me', async (req: AuthRequest, res) => {
     console.error('Delete account error:', error);
     res.status(500).json({ error: 'Failed to delete account' });
   }
+});
+
+// POST /api/users/me/avatar - Upload profile picture
+router.post('/me/avatar', (req: AuthRequest, res) => {
+  uploadAvatar(req as any, res as any, async (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+
+    const file = (req as any).file;
+    if (!file) {
+      return res.status(400).json({ error: 'No file provided' });
+    }
+
+    try {
+      // Resize to 256x256 square, overwrite the file in place
+      const tmpPath = file.path + '.tmp';
+      await sharp(file.path)
+        .resize(256, 256, { fit: 'cover', position: 'centre' })
+        .jpeg({ quality: 85 })
+        .toFile(tmpPath);
+      fs.renameSync(tmpPath, file.path);
+
+      const avatarUrl = `/uploads/avatars/${file.filename}`;
+
+      // Delete old avatar file if one exists
+      const currentUser = await prisma.user.findUnique({
+        where: { id: req.user!.id },
+        select: { avatarUrl: true },
+      });
+      if (currentUser?.avatarUrl) {
+        const oldFilename = path.basename(currentUser.avatarUrl);
+        const oldPath = path.join(__dirname, '..', '..', 'uploads', 'avatars', oldFilename);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: { id: req.user!.id },
+        data: { avatarUrl },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          role: true,
+          balance: true,
+          avatarUrl: true,
+        },
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      res.status(500).json({ error: 'Failed to upload avatar' });
+    }
+  });
 });
 
 // GET /api/users/me/transactions - Get user transactions

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { ApiService } from '../services/api.service';
 import { motion } from 'framer-motion';
@@ -19,6 +19,30 @@ export const ProfilePage = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [transactions, setTransactions] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarClick = () => {
+    avatarInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    setMessage({ type: '', text: '' });
+    try {
+      const updated: any = await ApiService.uploadAvatar(file);
+      updateUser(updated);
+      setMessage({ type: 'success', text: 'Profile picture updated!' });
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message });
+    } finally {
+      setAvatarUploading(false);
+      // Reset input so same file can be re-selected
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     // Load user profile with stats
@@ -110,13 +134,55 @@ export const ProfilePage = () => {
             animate={{ opacity: 1, y: 0 }}
             className="card"
           >
+            {/* Hidden file input */}
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
+
             <div className="flex items-center mb-6">
-              <div className="w-20 h-20 rounded-full bg-primary-600 flex items-center justify-center text-white text-3xl font-bold">
-                {user?.username.charAt(0).toUpperCase()}
-              </div>
+              {/* Clickable avatar */}
+              <button
+                type="button"
+                onClick={handleAvatarClick}
+                disabled={avatarUploading}
+                className="relative w-20 h-20 rounded-full overflow-hidden group focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                title="Click to change profile picture"
+              >
+                {user?.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-primary-600 flex items-center justify-center text-white text-3xl font-bold">
+                    {user?.username.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center">
+                  {avatarUploading ? (
+                    <svg className="w-6 h-6 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
+                </div>
+              </button>
+
               <div className="ml-4">
                 <h2 className="text-2xl font-bold text-gray-900">{user?.username}</h2>
                 <p className="text-gray-600">{user?.role}</p>
+                <p className="text-xs text-gray-400 mt-0.5">Click Profilspicture to change</p>
               </div>
             </div>
 

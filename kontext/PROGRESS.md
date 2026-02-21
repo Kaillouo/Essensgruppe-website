@@ -1,6 +1,6 @@
 # Project Progress Log
 
-**Last Updated:** 2026-02-16
+**Last Updated:** 2026-02-19
 **Current Phase:** Phase 2 - Forum System (COMPLETED)
 **Next Phase:** Phase 3 - Events + Links + MC
 
@@ -364,21 +364,140 @@ backend/uploads/
 
 ---
 
-## Phase 4: Gambling Framework 🔄 NOT STARTED
+## Phase 4.0: Games Page ✅ COMPLETED (2026-02-18)
 
-**Status:** Waiting for Phase 3 completion
-**Planned Features:**
-- Games list page with cards
-- WebSocket setup for real-time gameplay
-- Individual game pages (e.g., /games/coinflip)
-- Bet validation (server-side)
-- Balance updates via transactions
-- Animations for game results
-- 5% house edge implementation
-- Game history tracking
-- Transaction logging for all bets/wins
+**Files changed:**
+- `frontend/src/pages/GamesPage.tsx` — complete rewrite
+- `frontend/src/pages/GamePlaceholderPage.tsx` — new, shared "coming soon" for unbuilt games
+- `frontend/src/App.tsx` — added `/games/:game` route + `/games/prediction` specific route
+- `frontend/vite.config.ts` — added `/socket.io` proxy with `ws: true`
+- `backend/src/server.ts` — Socket.io wired up on HTTP server
 
-**Games to Design Later** (user will provide specs)
+**What was built:**
+- Single Player tab: Slots, Blackjack, Mines cards (dark themed, purple/green/red)
+- Multiplayer tab: Poker, Prediction Market cards (sky/amber)
+- Online users bubble (fixed bottom-right, multiplayer tab only) — shows who's on the games page
+- Instant messaging: click ✉ next to a user → compose modal → message appears as toast on recipient → 1-minute cooldown
+- Socket.io backend: `games:join`, `games:leave`, `games:message`, `games:receive_message`, `games:online_users`
+- FAB balance display inline with header
+- No tags, no "Play Now" button — click card to navigate
+
+---
+
+## Phase 4.2a: Prediction Market ✅ COMPLETED (2026-02-18)
+
+**Schema additions** (`prisma db push` applied):
+- `Prediction` model: id, creatorId, title, closeDate, status (OPEN/CLOSED), outcome (bool|null), timestamps
+- `PredictionBet` model: id, predictionId, userId, side (bool), amount, createdAt. Unique: one bet per user per prediction.
+- `PredictionStatus` enum: OPEN | CLOSED
+- `TransactionType` extended: + PREDICTION_BET, PREDICTION_WIN
+- User model: + `predictions[]`, `predictionBets[]` relations
+
+**New backend file:** `backend/src/routes/prediction.routes.ts`
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/predictions` | List all with bet summaries + userBet for caller |
+| POST | `/api/predictions` | Create (title + closeDate) |
+| POST | `/api/predictions/:id/bet` | Place bet (side: bool, amount) — validates: not creator, not already bet, balance check |
+| POST | `/api/predictions/:id/resolve` | Creator closes + sets outcome → distributes payouts |
+| DELETE | `/api/predictions/:id` | Creator delete (only if 0 bets) or admin |
+
+**Payout logic:**
+- Winners get stake back + `floor(stake / totalWinPool * totalLosePool)`
+- Edge case: nobody bet on winning side → full refund to all bettors
+- Transactions logged as PREDICTION_WIN
+
+**New frontend file:** `frontend/src/pages/PredictionPage.tsx`
+- Dark theme matching GamesPage
+- Open/Closed tabs with counts
+- YES/NO percentage bar per card
+- Bet totals + counts per side
+- User's bet badge (shows won/lost when resolved)
+- ⓘ info button — tooltip explaining creator can't bet + payout formula
+- FAB (+) bottom-left to create new prediction
+- Create modal: question + datetime-local picker
+- Bet modal: YES/NO toggle, amount input, live payout estimate
+- Resolve modal: outcome YES/NO, payout preview before confirming
+- Balance auto-refreshes via `ApiService.getProfile()` + `updateUser()` after bet/resolve
+
+**Updated:** `frontend/src/services/api.service.ts` — 5 new prediction methods
+**Updated:** `frontend/src/App.tsx` — `/games/prediction` route before `:game` wildcard
+
+---
+
+## Profile Picture Upload ✅ COMPLETED (2026-02-18)
+
+**New backend middleware export:** `upload.middleware.ts`
+- Refactored to shared `makeStorage(folder)` helper
+- Added `uploadAvatar` (multer → `uploads/avatars/`, 5 MB limit)
+
+**New backend route:** `POST /api/users/me/avatar`
+- Multer file upload → sharp resize to 256×256 square JPEG
+- Deletes old avatar file from disk before saving new one
+- Updates `avatarUrl` on user in DB, returns updated user object
+
+**New frontend method:** `ApiService.uploadAvatar(file)` in `api.service.ts`
+
+**Updated:** `frontend/src/pages/ProfilePage.tsx`
+- Avatar area is a clickable button (hidden `<input type="file">`)
+- Shows real image if `avatarUrl` set, otherwise initials fallback
+- Hover overlay shows camera icon; spinner during upload
+- Calls `updateUser()` on AuthContext immediately after success
+- Hint text: "Click Profilspicture to change"
+
+**Updated:** `frontend/src/components/Navbar.tsx`
+- Profile avatar bubble shows real image if `avatarUrl` set, otherwise initial letter
+
+---
+
+## Phase 4.2b: Poker (Texas Hold'em) ✅ COMPLETED (2026-02-18)
+
+**npm dep added:** `pokersolver` (backend) — hand evaluation (all edge cases, tie-breaking)
+
+**New file:** `backend/src/socket/poker.socket.ts`
+- Single-table singleton (6 seats max, expandable)
+- Game state machine: `WAITING → PREFLOP → FLOP → TURN → RIVER → SHOWDOWN → WAITING`
+- Cryptographic Fisher-Yates shuffle via `crypto.randomInt`
+- Blinds: SB = 1 chip, BB = 2 chips, auto-posted at hand start
+- Dealer button rotates each hand
+- Hole cards sent privately per socket (`poker:my_cards`); public state has `hasCards` only
+- Betting: fold / check / call / raise with proper acted-flag reset on raise
+- All-in handling: board auto-runs out when all remaining players are all-in
+- Showdown: `pokersolver` evaluates best 5-card hand, handles split pots + remainder
+- Balance written to DB after every chip movement; `GAME_WIN` / `GAME_BET` transactions logged
+- Disconnect / stand-up auto-folds mid-hand and saves balance
+- Emote system: 4 emoji choices (`😂 😤 🔥 💀`), broadcast to all at table
+- Chat: ≤50 chars, broadcast as `poker:message_broadcast`
+- Socket events handled: `poker:sit`, `poker:stand`, `poker:action`, `poker:emote`, `poker:message`, `disconnect`
+
+**New file:** `backend/src/routes/poker.routes.ts`
+- `GET /api/poker/state` — returns current public table state for page load
+
+**Updated:** `backend/src/server.ts`
+- Imports + calls `registerPokerSocket(io)` after io setup
+- Registers `/api/poker` route
+
+**New file:** `frontend/src/pages/PokerPage.tsx`
+- Full-screen (navbar hidden via App.tsx exception for `/games/poker`)
+- CSS 3D table: `perspective(900px) rotateX(22deg)` + mouse-drag `rotateY` to spin
+- Green felt with radial gradient, dark wood rim, EG watermark, ambient glow
+- 6 seats positioned absolutely around the oval; each shows avatar/PFP, username, chip count, badges (D/SB/BB/ALL IN)
+- Playing cards rendered as pure CSS (white card, rank + suit symbol, red/black coloring)
+- Your hole cards shown face-up; others shown face-down (CardBack); revealed at showdown
+- Community card slots (5) + pot display centered on felt
+- Action bar: Fold / Check / Call (amount) / Raise (range slider) — only shown on your turn
+- Hand result overlay: winner name + hand name (e.g. "Full House") + cards, auto-dismisses
+- Emote FAB (bottom-right): 4 emoji + chat input, bubbles float above seat 2 s
+- New hand auto-starts 2.5 s after 2+ players are seated in WAITING phase
+
+**Updated:** `frontend/src/App.tsx`
+- `/games/poker` route added before `:game` wildcard
+- Navbar/footer hidden for `/games/poker` (full-screen experience)
+
+**Updated:** `frontend/src/services/api.service.ts`
+- `getPokerTables()` method (calls `/api/poker/state`)
+
+**New file:** `kontext/POKER_PLAN.md` — full pre-implementation plan (kept for reference)
 
 ---
 
@@ -432,11 +551,14 @@ backend/uploads/
 - `/SETUP.md` - Installation and setup guide
 
 ### Backend:
-- `/backend/src/server.ts` - Main Express server
+- `/backend/src/server.ts` - Main Express server + Socket.io + poker registration
 - `/backend/src/routes/auth.routes.ts` - Auth (register/login)
 - `/backend/src/routes/post.routes.ts` - Forum (posts/comments/votes)
 - `/backend/src/routes/admin.routes.ts` - Admin panel APIs
-- `/backend/src/routes/user.routes.ts` - User profile APIs
+- `/backend/src/routes/user.routes.ts` - User profile APIs (incl. avatar upload)
+- `/backend/src/routes/poker.routes.ts` - Poker REST (GET /api/poker/state)
+- `/backend/src/socket/poker.socket.ts` - Full Texas Hold'em game logic
+- `/backend/src/middleware/upload.middleware.ts` - multer for avatars + event photos
 - `/backend/prisma/schema.prisma` - Database schema
 - `/backend/src/seed.ts` - Admin seed script
 
@@ -458,5 +580,59 @@ backend/uploads/
 
 ---
 
+---
+
+## Phase 4.2b Hotfix: Poker Table Rotation ✅ COMPLETED (2026-02-19)
+
+**File changed:** `frontend/src/pages/PokerPage.tsx`
+
+### Bugs Fixed:
+
+**1. Wrong rotation axis (`rotateY` → `rotateZ`)**
+- Drag-to-spin was using `rotateY`, which tilts the table side-to-side like a steering wheel
+- Changed state from `rotateY` to `rotateZ` and updated the drag handler accordingly
+- `rotateZ` spins the table flat like a lazy susan (correct behavior)
+
+**2. Transform order fixed**
+- Old: `rotateX(22deg) rotateY(${rotateY}deg)` — spin around already-tilted axis (wobble)
+- New: `rotateZ(${rotateZ}deg) rotateX(22deg)` — spin in global horizontal plane first, then tilt toward viewer
+
+**3. Seats now follow the table**
+- Seats were in a sibling div to the 3D table, so spinning the table left them floating at fixed positions
+- Wrapped all seats in a new `rotateZ` div with `transformOrigin: '50% 52.8%'` (the oval's center in container coordinates)
+- Seats now orbit with the table during drag
+
+**4. Seat content stays upright**
+- Each seat's inner content wrapped in `rotateZ(${-rotateZ}deg)` to counter-rotate
+- Avatars, usernames, chip counts, and cards remain readable at any rotation angle
+
+---
+
+---
+
+## Phase 4.2c: Poker — Seat Joining, Solo Play, Watchers, Queue, Visual Polish ✅ COMPLETED (2026-02-20)
+
+**Files changed:** `backend/src/socket/poker.socket.ts`, `frontend/src/pages/PokerPage.tsx`
+
+### Backend Changes:
+- **Mid-hand seating:** `poker:sit` / `poker:join` no longer require `WAITING` phase. Players seated mid-hand start with `folded: true` until next hand.
+- **Solo practice mode:** `tryScheduleStart()` triggers at ≥1 player. Solo branch in `startNewHand()` — interactive: player acts each street (check advances, fold returns pot). `soloAdvancePhase()` / `soloShowdown()` added. Hand name revealed at end. Pot always returned, no net chip change.
+- **Queue system:** `tableQueue[]` FIFO. Full table → added to queue instead of error. `dequeueNextPlayer()` auto-seats first queued player when any seat opens (stand/disconnect). Events: `poker:queue_update` (position), `poker:queue_seated`, `poker:leave_queue`. `queueCount` in public state.
+- **Deduplicated watchers:** `tableWatchers` changed from `Map<socketId, ...>` to `Map<userId, { socketIds: Set, username, avatarUrl }>`. Multiple tabs = 1 avatar. Entry removed only when all socket connections close.
+- **Username in watcher broadcast:** `publicState()` watchers include `username` for tooltips.
+- **`soloMode` flag** added to table state and public state broadcast.
+- **Shared `seatPlayer()` helper** — deduplicates seat logic between `poker:sit` and `poker:join`.
+- **Error logging** improved; `poker:error` now shows chip count.
+
+### Frontend Changes:
+- **Seat-based joining:** `canSit = !mySeat && queuePosition === null`. Removed "Join Game" button. Empty seats pulse with green glow animation.
+- **Solo play UI:** "Solo Practice" badge in header. Action bar shows phase-appropriate messaging. Hand result shows hand name + hole cards.
+- **Watcher display:** Strip above table, always visible. Shows avatar (or initial letter) + username tooltip. `PublicWatcher` type updated with `username`.
+- **Queue UI:** `#N in queue` badge + "Leave" button. Header shows queue count badge.
+- **Decorative idle cards:** 5 face-down `CardBack` with floating animation when nobody seated.
+- **Visual polish:** `AmbientParticles` (18 floating gold dots), `DeckStack` (layered card stack with count), `AnimatedCommunityCard` (flip-reveal on deal), card deal animation on hole cards. Error toast replaces `alert()`. Touch support for table drag. `rotateY` (±45° clamped) for natural 3D feel. 8 emojis in emote panel. Emote FAB only shown when seated.
+
+---
+
 **Last Updated By:** Claude Code
-**Next Update:** After Phase 3 completion
+**Next Update:** After next feature batch

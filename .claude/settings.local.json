@@ -9,7 +9,13 @@
       "Bash(npx tsx watch:*)",
       "Bash(npx vite:*)",
       "Bash(curl:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(sudo -u postgres psql -c \"ALTER USER postgres PASSWORD ''''PL@CVhrJa8'''';\")",
+      "Bash(sudo -u postgres psql:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(pm2 restart:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

@@ -2,17 +2,18 @@ import multer from 'multer';
 import path from 'path';
 import crypto from 'crypto';
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, path.join(__dirname, '..', '..', 'uploads', 'events'));
-  },
-  filename: (_req, _file, cb) => {
-    const unique = `${Date.now()}-${crypto.randomUUID()}`;
-    cb(null, `${unique}.jpg`);
-  },
-});
+const makeStorage = (folder: string) =>
+  multer.diskStorage({
+    destination: (_req, _file, cb) => {
+      cb(null, path.join(__dirname, '..', '..', 'uploads', folder));
+    },
+    filename: (_req, _file, cb) => {
+      const unique = `${Date.now()}-${crypto.randomUUID()}`;
+      cb(null, `${unique}.jpg`);
+    },
+  });
 
-const fileFilter = (
+const imageFilter = (
   _req: Express.Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
@@ -26,7 +27,13 @@ const fileFilter = (
 };
 
 export const uploadEventPhoto = multer({
-  storage,
-  fileFilter,
+  storage: makeStorage('events'),
+  fileFilter: imageFilter,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
 }).single('photo');
+
+export const uploadAvatar = multer({
+  storage: makeStorage('avatars'),
+  fileFilter: imageFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+}).single('avatar');
