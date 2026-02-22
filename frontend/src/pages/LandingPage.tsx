@@ -2,6 +2,14 @@ import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 
+const SECTIONS = [
+  { label: 'Forum', desc: 'Threads, discussions, and class chat', to: '/forum', locked: true },
+  { label: 'ABI 27', desc: 'Events, planning, and photo galleries', to: '/events', locked: false },
+  { label: 'Games', desc: 'Coins, poker, slots and more', to: '/games', locked: false },
+  { label: 'About Us', desc: 'Who we are', to: '/about', locked: false },
+  { label: 'MC', desc: 'Minecraft server and BlueMap', to: '/mc', locked: true },
+];
+
 export const LandingPage = () => {
   const { isAuthenticated } = useAuth();
   const { scrollYProgress } = useScroll();
@@ -9,7 +17,7 @@ export const LandingPage = () => {
   const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.8]);
 
   return (
-    <div className="bg-white">
+    <div className="bg-gray-950">
       {/* Hero Section */}
       <motion.section
         style={{ opacity, scale }}
@@ -22,7 +30,7 @@ export const LandingPage = () => {
             allow="autoplay; encrypted-media"
             className="absolute top-1/2 left-1/2 min-w-full min-h-full"
             style={{
-              width: '177.78vh', /* 16:9 aspect ratio fill for portrait video */
+              width: '177.78vh',
               height: '177.78vw',
               minWidth: '100%',
               minHeight: '100%',
@@ -32,7 +40,7 @@ export const LandingPage = () => {
             title="Background video"
           />
         </div>
-        {/* Dark overlay for text readability */}
+        {/* Dark overlay */}
         <div className="absolute inset-0 bg-black/55" />
 
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
@@ -52,27 +60,21 @@ export const LandingPage = () => {
           >
             Abitur 2027 Community Portal
           </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-          >
-            {isAuthenticated ? (
-              <Link
-                to="/forum"
-                className="inline-block bg-white text-primary-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-primary-50 transition-all transform hover:scale-105 shadow-xl"
-              >
-                Go to Forum →
-              </Link>
-            ) : (
+
+          {!isAuthenticated && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+            >
               <Link
                 to="/login"
                 className="inline-block bg-white text-primary-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-primary-50 transition-all transform hover:scale-105 shadow-xl"
               >
                 Ich bin Teil der Essensgruppe
               </Link>
-            )}
-          </motion.div>
+            </motion.div>
+          )}
 
           {/* Scroll indicator */}
           <motion.div
@@ -88,33 +90,30 @@ export const LandingPage = () => {
       </motion.section>
 
       {/* Sections list */}
-      <section className="py-16 px-4 bg-white">
+      <section className="py-16 px-4 bg-gray-950">
         <div className="max-w-xl mx-auto">
-          {[
-            { label: 'Forum', desc: 'Threads, discussions, and class chat', to: '/forum', locked: true },
-            { label: 'ABI 27', desc: 'Events, planning, and photo galleries', to: '/events', locked: false },
-            { label: 'Links', desc: 'Teachers, schedules, and school resources', to: '/links', locked: false },
-            { label: 'About Us', desc: 'Who we are', to: '/about', locked: false },
-            { label: 'MC', desc: 'Minecraft server and BlueMap', to: '/mc', locked: true },
-          ].map((item, i) => (
+          {SECTIONS.map((item, i) => (
             <motion.div
               key={item.to}
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.07 }}
+              className="group"
             >
               <Link
                 to={item.locked && !isAuthenticated ? '/login' : item.to}
-                className="flex items-center justify-between py-5 border-b border-gray-100 group hover:text-primary-600 transition-colors"
+                className="flex items-center justify-between py-5 border-b border-gray-800 transition-colors"
               >
                 <div>
-                  <span className="text-lg font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
+                  <span className="inline-block text-lg font-semibold text-gray-200 transition-all duration-200 md:group-hover:scale-110 md:group-hover:text-primary-400 origin-left">
                     {item.label}
                   </span>
-                  <span className="block text-sm text-gray-400 mt-0.5">{item.desc}</span>
+                  <span className="block text-sm text-gray-600 mt-0.5 md:group-hover:text-gray-400 transition-colors duration-200">
+                    {item.desc}
+                  </span>
                 </div>
-                <span className="text-gray-300 group-hover:text-primary-400 transition-colors text-xl">→</span>
+                <span className="text-gray-700 md:group-hover:text-primary-400 transition-all duration-200 text-xl">→</span>
               </Link>
             </motion.div>
           ))}
@@ -122,7 +121,7 @@ export const LandingPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-primary-600 to-primary-700">
+      <section className="py-20 px-4 bg-gradient-to-r from-primary-800 to-primary-900">
         <div className="max-w-4xl mx-auto text-center">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -132,21 +131,21 @@ export const LandingPage = () => {
           >
             Are you really ready to join.
           </motion.h2>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-          >
-            {!isAuthenticated && (
+          {!isAuthenticated && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+            >
               <Link
                 to="/register"
                 className="inline-block bg-white text-primary-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-primary-50 transition-all transform hover:scale-105 shadow-xl"
               >
                 Request to Join
               </Link>
-            )}
-          </motion.div>
+            </motion.div>
+          )}
         </div>
       </section>
     </div>

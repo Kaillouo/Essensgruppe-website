@@ -4,13 +4,13 @@ import { motion } from 'framer-motion';
 // ─── Links Gallery ────────────────────────────────────────────────────────────
 
 const LINKS = [
-  { icon: '🏫', label: 'Schulwebsite', url: 'https://www.theodor-heuss-gymnasium-freiburg.de' },
-  { icon: '📚', label: 'Moodle', url: 'https://04105971160.moodle.bw.schule/' },
-  { icon: '📅', label: 'Webuntis', url: 'https://th-heuss-gym.webuntis.com/WebUntis/?school=th-heuss-gym#/basic/login' },
-  { icon: '☁️', label: 'Nextcloud', url: 'https://cloud.thg-freiburg.de/nextcloud' },
-  { icon: '💰', label: 'GoFundMe', url: 'https://gofund.me/6c2bc4e83' },
-  { icon: '💬', label: 'Discord', url: 'https://discord.gg/X5nzxXZU' },
-  { icon: '🤖', label: 'ChatGPT', url: 'https://chatgpt.com' },
+  { domain: 'theodor-heuss-gymnasium-freiburg.de', label: 'Schulwebsite', url: 'https://www.theodor-heuss-gymnasium-freiburg.de' },
+  { domain: 'moodle.org', label: 'Moodle', url: 'https://04105971160.moodle.bw.schule/' },
+  { domain: 'webuntis.com', label: 'Webuntis', url: 'https://th-heuss-gym.webuntis.com/WebUntis/?school=th-heuss-gym#/basic/login' },
+  { domain: 'nextcloud.com', label: 'Nextcloud', url: 'https://cloud.thg-freiburg.de/nextcloud' },
+  { domain: 'gofundme.com', label: 'GoFundMe', url: 'https://gofund.me/6c2bc4e83' },
+  { domain: 'discord.com', label: 'Discord', url: 'https://discord.gg/X5nzxXZU' },
+  { domain: 'openai.com', label: 'ChatGPT', url: 'https://chatgpt.com' },
 ];
 
 // ─── Teacher Data (THG Freiburg 2025/26) ──────────────────────────────────────
@@ -126,18 +126,18 @@ export const LinksPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-gray-950 py-8 px-4">
       <div className="max-w-5xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Links & Ressourcen</h1>
+            <h1 className="text-3xl font-bold text-white">Links & Ressourcen</h1>
             <p className="text-gray-500 mt-1 text-sm">Alles Wichtige – an einem Ort.</p>
           </div>
 
           {/* Links Icon Gallery */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">🔗 Links</h2>
+            <h2 className="text-xl font-bold text-white mb-4">Links</h2>
             <div className="flex flex-wrap gap-3">
               {LINKS.map(link => (
                 <a
@@ -145,9 +145,14 @@ export const LinksPage = () => {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-sm font-medium text-gray-700 hover:text-primary-600"
+                  className="flex items-center gap-2.5 px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl hover:shadow-lg hover:shadow-primary-900/30 hover:-translate-y-0.5 hover:border-gray-600 transition-all duration-200 text-sm font-medium text-gray-200 hover:text-white"
                 >
-                  <span className="text-lg">{link.icon}</span>
+                  <img
+                    src={`https://www.google.com/s2/favicons?domain=${link.domain}&sz=64`}
+                    alt={link.label}
+                    className="w-5 h-5 rounded-sm flex-shrink-0"
+                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  />
                   {link.label}
                 </a>
               ))}
@@ -156,80 +161,88 @@ export const LinksPage = () => {
 
           {/* Stundenplan placeholder */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">📆 Stundenplan</h2>
-            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-              <div className="text-5xl mb-4">📅</div>
-              <p className="text-gray-600 font-medium">Stundenplan kommt bald</p>
-              <p className="text-gray-400 text-sm mt-1">Daten werden noch hochgeladen.</p>
+            <h2 className="text-xl font-bold text-white mb-4">Stundenplan</h2>
+            <div className="bg-gray-800 rounded-xl border border-gray-700 p-8 text-center">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-primary-900/40 flex items-center justify-center">
+                <svg className="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p className="text-gray-300 font-medium">Stundenplan kommt bald</p>
+              <p className="text-gray-500 text-sm mt-1">Daten werden noch hochgeladen.</p>
             </div>
           </section>
 
           {/* Teachers */}
           <section className="mb-10">
             <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-              <h2 className="text-xl font-bold text-gray-900">👩‍🏫 Lehrerverzeichnis</h2>
+              <h2 className="text-xl font-bold text-white">Lehrerverzeichnis</h2>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={teacherSearch}
                   onChange={e => setTeacherSearch(e.target.value)}
                   placeholder="Name oder Fach suchen..."
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-56"
+                  className="border border-gray-600 bg-gray-800 text-white placeholder-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-56"
                 />
                 {teacherSearch && (
-                  <span className="text-xs text-gray-400">{filteredTeachers.length} gefunden</span>
+                  <span className="text-xs text-gray-500">{filteredTeachers.length} gefunden</span>
                 )}
               </div>
             </div>
-            <div className="grid sm:grid-cols-2 gap-2">
-              {filteredTeachers.length === 0 ? (
-                <p className="text-gray-400 text-sm col-span-2 py-4 text-center">Keine Lehrkraft gefunden.</p>
-              ) : (
-                filteredTeachers.map(teacher => (
-                  <div
-                    key={teacher.email}
-                    className="bg-white rounded-xl border border-gray-200 px-4 py-3 flex items-center gap-3"
-                  >
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                      {teacher.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 text-sm">{teacher.name}</p>
-                      <p className="text-xs text-gray-400 truncate">{teacher.subjects.join(' · ')}</p>
-                    </div>
-                    <button
-                      onClick={() => copyEmail(teacher.email)}
-                      className={`text-xs flex-shrink-0 px-2.5 py-1 rounded-lg transition-colors ${
-                        copiedEmail === teacher.email
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-100 hover:bg-primary-100 text-gray-600 hover:text-primary-700'
-                      }`}
-                      title={teacher.email}
+
+            {/* Scrollable container */}
+            <div className="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
+              <div className="max-h-[500px] overflow-y-auto p-3 grid sm:grid-cols-2 gap-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                {filteredTeachers.length === 0 ? (
+                  <p className="text-gray-500 text-sm col-span-2 py-6 text-center">Keine Lehrkraft gefunden.</p>
+                ) : (
+                  filteredTeachers.map(teacher => (
+                    <div
+                      key={teacher.email}
+                      className="bg-gray-800 rounded-xl border border-gray-700 px-4 py-3 flex items-center gap-3"
                     >
-                      {copiedEmail === teacher.email ? '✓ Kopiert' : 'E-Mail kopieren'}
-                    </button>
-                  </div>
-                ))
-              )}
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-700 to-primary-900 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                        {teacher.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-100 text-sm">{teacher.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{teacher.subjects.join(' · ')}</p>
+                      </div>
+                      <button
+                        onClick={() => copyEmail(teacher.email)}
+                        className={`text-xs flex-shrink-0 px-2.5 py-1 rounded-lg transition-colors ${
+                          copiedEmail === teacher.email
+                            ? 'bg-green-900/50 text-green-400'
+                            : 'bg-gray-700 hover:bg-primary-900/50 text-gray-400 hover:text-primary-400'
+                        }`}
+                        title={teacher.email}
+                      >
+                        {copiedEmail === teacher.email ? '✓ Kopiert' : 'E-Mail'}
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-            <p className="text-xs text-gray-400 mt-3">Stand: 04.02.2026 · THG Freiburg</p>
+            <p className="text-xs text-gray-600 mt-3">Stand: 04.02.2026 · THG Freiburg</p>
           </section>
 
           {/* Coming Soon Placeholders */}
           <section className="mb-10">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">🔮 Bald verfügbar</h2>
+            <h2 className="text-xl font-bold text-white mb-4">Bald verfügbar</h2>
             <div className="grid sm:grid-cols-2 gap-4">
-              <div className="bg-white border border-dashed border-gray-300 rounded-xl p-6 opacity-70">
+              <div className="bg-gray-800 border border-dashed border-gray-700 rounded-xl p-6 opacity-70">
                 <div className="text-3xl mb-3">🤖</div>
-                <h3 className="font-bold text-gray-700 mb-1">Essensgruppe AI</h3>
+                <h3 className="font-bold text-gray-300 mb-1">Essensgruppe AI</h3>
                 <p className="text-sm text-gray-500">Chatbot mit Sitzungsgedächtnis – coming soon.</p>
-                <span className="inline-block mt-3 text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">In Entwicklung</span>
+                <span className="inline-block mt-3 text-xs px-2.5 py-1 rounded-full bg-gray-700 text-gray-400">In Entwicklung</span>
               </div>
-              <div className="bg-white border border-dashed border-gray-300 rounded-xl p-6 opacity-70">
+              <div className="bg-gray-800 border border-dashed border-gray-700 rounded-xl p-6 opacity-70">
                 <div className="text-3xl mb-3">🚨</div>
-                <h3 className="font-bold text-gray-700 mb-1">PANIK Modus</h3>
+                <h3 className="font-bold text-gray-300 mb-1">PANIK Modus</h3>
                 <p className="text-sm text-gray-500">Fokus-Aufgabenseite – wie Notion oder Moodle, nur schneller.</p>
-                <span className="inline-block mt-3 text-xs px-2.5 py-1 rounded-full bg-red-100 text-red-500">Demnächst</span>
+                <span className="inline-block mt-3 text-xs px-2.5 py-1 rounded-full bg-red-900/40 text-red-400">Demnächst</span>
               </div>
             </div>
           </section>
