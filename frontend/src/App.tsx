@@ -23,6 +23,7 @@ import { PokerPage } from './pages/PokerPage';
 import { SlotsPage } from './pages/SlotsPage';
 import { BlackjackPage } from './pages/BlackjackPage';
 import { AboutPage } from './pages/AboutPage';
+import { PrivacyPage } from './pages/PrivacyPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AdminPage } from './pages/AdminPage';
 
@@ -71,6 +72,7 @@ function AppContent() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
 
           {/* Protected routes */}
           <Route
@@ -89,22 +91,8 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/events"
-            element={
-              <ProtectedRoute>
-                <EventsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/links"
-            element={
-              <ProtectedRoute>
-                <LinksPage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/events" element={<EventsPage />} />
+          <Route path="/links" element={<LinksPage />} />
           <Route
             path="/mc"
             element={

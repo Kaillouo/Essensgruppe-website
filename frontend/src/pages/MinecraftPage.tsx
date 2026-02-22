@@ -4,8 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { ApiService } from '../services/api.service';
 import { Announcement } from '../types';
 
-const SERVER_IP = 'play.essensgruppe.de'; // Update with real IP/domain
-const BLUEMAP_URL = 'http://localhost:8100'; // Will be replaced with OCI IP in production
+const SERVER_IP = 'Mc.essensgruppe.com';
+const BLUEMAP_URL = 'https://essensgruppe.de/bluemap';
+const DISCORD_URL = 'https://discord.gg/X5nzxXZU';
 
 function timeAgo(dateStr: string): string {
   const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
@@ -26,7 +27,6 @@ function CopyButton({ text }: { text: string }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for older browsers
       const el = document.createElement('textarea');
       el.value = text;
       document.body.appendChild(el);
@@ -47,7 +47,7 @@ function CopyButton({ text }: { text: string }) {
           : 'bg-white/20 text-white hover:bg-white/30'
       }`}
     >
-      {copied ? '✓ Copied!' : 'Copy IP'}
+      {copied ? '✓ Kopiert!' : 'IP kopieren'}
     </button>
   );
 }
@@ -135,18 +135,17 @@ function CreateAnnModal({ onClose, onCreated }: CreateAnnModalProps) {
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 const RULES = [
-  'Respect all players — no griefing, no harassment.',
-  'No cheating, hacks, or unfair mods.',
-  'Keep the world tidy — clean up failed builds.',
-  'Ask before building near someone else\'s base.',
-  'No redstone contraptions that cause lag.',
-  'Report bugs to an admin instead of exploiting them.',
-  'Have fun and help newcomers!',
+  'No xray',
+  'No hack',
+  'No crashing on purpose',
+  'Griefing allowed',
+  'Report others for orders',
+  'Join the dc',
 ];
 
 const HOW_TO_JOIN = [
   { step: '1', text: 'Download Minecraft Java Edition (required).' },
-  { step: '2', text: `Open Minecraft → Multiplayer → Add Server.` },
+  { step: '2', text: 'Open Minecraft → Multiplayer → Add Server.' },
   { step: '3', text: `Enter the server IP: ${SERVER_IP}` },
   { step: '4', text: 'Click "Join Server" — you\'re in!' },
   { step: '5', text: 'Ask an admin if you get stuck or need a whitelist spot.' },
@@ -158,6 +157,7 @@ export const MinecraftPage = () => {
   const [annLoading, setAnnLoading] = useState(true);
   const [showCreateAnn, setShowCreateAnn] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [serverOnline, setServerOnline] = useState<boolean | null>(null);
 
   const isAdmin = user?.role === 'ADMIN';
 
@@ -172,7 +172,22 @@ export const MinecraftPage = () => {
     }
   }, []);
 
-  useEffect(() => { fetchAnnouncements(); }, [fetchAnnouncements]);
+  const checkServerStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/mc/status');
+      const data = await res.json();
+      setServerOnline(data.online);
+    } catch {
+      setServerOnline(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAnnouncements();
+    checkServerStatus();
+    const interval = setInterval(checkServerStatus, 30000);
+    return () => clearInterval(interval);
+  }, [fetchAnnouncements, checkServerStatus]);
 
   const handleDeleteAnn = async (id: string) => {
     try {
@@ -192,7 +207,7 @@ export const MinecraftPage = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
             <div className="text-6xl mb-4">⛏️</div>
             <h1 className="text-4xl font-bold mb-2">Essensgruppe MC</h1>
-            <p className="text-green-200 text-lg mb-8">Our private Minecraft server — build, explore, survive together.</p>
+            <p className="text-green-200 text-lg mb-8">Unser privater Minecraft Server — bauen, erkunden, überleben.</p>
 
             {/* Server IP */}
             <div className="inline-flex items-center gap-3 bg-black/30 rounded-xl px-5 py-3 border border-white/10">
@@ -201,10 +216,24 @@ export const MinecraftPage = () => {
               <CopyButton text={SERVER_IP} />
             </div>
 
-            {/* Status indicator (static for now) */}
+            {/* Real status indicator */}
             <div className="flex items-center justify-center gap-2 mt-4">
-              <span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-sm text-green-300">Server Online</span>
+              {serverOnline === null ? (
+                <>
+                  <span className="w-2.5 h-2.5 rounded-full bg-gray-400 animate-pulse" />
+                  <span className="text-sm text-gray-300">Checking...</span>
+                </>
+              ) : serverOnline ? (
+                <>
+                  <span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-sm text-green-300">Server Online</span>
+                </>
+              ) : (
+                <>
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                  <span className="text-sm text-red-300">Server Offline</span>
+                </>
+              )}
             </div>
           </motion.div>
         </div>
@@ -307,10 +336,23 @@ export const MinecraftPage = () => {
             <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-2.5">
               {RULES.map((rule, i) => (
                 <div key={i} className="flex items-start gap-2.5">
-                  <span className="text-primary-500 font-bold text-sm flex-shrink-0 mt-0.5">·</span>
+                  <span className="text-primary-500 font-bold text-sm flex-shrink-0 mt-0.5">{i + 1}.</span>
                   <p className="text-sm text-gray-700">{rule}</p>
                 </div>
               ))}
+              <div className="pt-3 border-t border-gray-100">
+                <a
+                  href={DISCORD_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026c.462-.62.874-1.275 1.226-1.963.021-.04.001-.088-.041-.104a13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028z"/>
+                  </svg>
+                  Join Discord
+                </a>
+              </div>
             </div>
           </motion.section>
         </div>

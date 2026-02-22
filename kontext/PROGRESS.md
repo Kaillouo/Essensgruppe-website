@@ -634,5 +634,77 @@ backend/uploads/
 
 ---
 
-**Last Updated By:** Claude Code
-**Next Update:** After next feature batch
+---
+
+## Phase 4.3: Content Fill & Frontend Polish ✅ COMPLETED (2026-02-22)
+
+**Files changed:** `frontend/src/pages/AboutPage.tsx`, `frontend/src/pages/LandingPage.tsx`, `frontend/src/pages/LinksPage.tsx`, `frontend/src/pages/MinecraftPage.tsx`, `frontend/src/pages/EventsPage.tsx`, `frontend/src/pages/AdminPage.tsx`, `frontend/src/components/Footer.tsx`, `frontend/src/App.tsx`, `backend/src/server.ts`, `backend/src/routes/mc.routes.ts`, `backend/src/routes/abi.routes.ts`, `backend/prisma/schema.prisma`
+
+### Phase 4.3a – About Us + Footer + Privacy Policy
+- **About page:** Added `the people.jpg` as full-bleed hero background (copied to `frontend/public/`). Removed "What We Offer" section. Added real email `chef@essengruppe.de`. Updated social links to real Instagram + GoFundMe URLs, removed TikTok.
+- **Footer:** Replaced Facebook icon with Email icon. Removed TikTok. Added "Datenschutz" link to footer Quick Links.
+- **Privacy page:** New `frontend/src/pages/PrivacyPage.tsx` at route `/privacy`. Shows German privacy policy text.
+
+### Phase 4.3b – Links Page Overhaul
+- **Links gallery:** Replaced 4 big cards with compact icon tile gallery (7 links). Real URLs from `content/LinkandMCcontent.md`: Schulwebsite, Moodle, Webuntis, Nextcloud, GoFundMe, Discord, ChatGPT.
+- **Teacher list:** All 83 THG Freiburg teachers baked in from `content/teachers.md`. Searchable by name or subject. "E-Mail kopieren" button with clipboard API + green feedback.
+- **Stundenplan:** Replaced dropdown with placeholder card (data upload pending).
+- **Coming soon:** Essensgruppe AI and PANIK Modus placeholder cards.
+
+### Phase 4.3c – MC Page Updates
+- **Server IP:** Updated to `Mc.essensgruppe.com`.
+- **BlueMap:** URL updated to `https://essensgruppe.de/bluemap` (nginx reverse proxy on OCI).
+- **Real server status:** New backend endpoint `GET /api/mc/status` — TCP connect to port 25565, 3s timeout. Frontend polls every 30s, shows green/red indicator.
+- **Server rules:** Updated to exact list from NextSteps.md (6 rules, numbered).
+- **Discord:** Added "Join Discord" button → `https://discord.gg/X5nzxXZU` with Discord SVG icon.
+
+### Phase 4.3d – Events Page (ABI 27)
+- **Background:** `camping.jpg` added as hero banner behind "ABI 27 Events" title.
+- **Social links:** Updated to real URLs (GoFundMe `gofund.me/6c2bc4e83`, Instagram `instagram.com/thg_abi27`). Removed TikTok.
+- **Abi Zeitung anonymous submissions:**
+  - New DB model `AbiSubmission` (id, title, content, createdAt — no userId). Applied with `prisma db push`.
+  - New backend routes: `POST /api/abi/submit` (auth, strips user identity), `GET /api/abi/submissions` (admin), `DELETE /api/abi/submissions/:id` (admin).
+  - Frontend: collapsible `AbiZeitungForm` component at bottom of EventsPage. 4000 char counter. Anonymous submit → success toast.
+  - Admin panel: New "Abi Zeitung" tab in AdminPage listing all submissions with delete button.
+
+### Phase 4.3e – Landing Page YouTube Background
+- Replaced animated gradient blobs with YouTube Shorts iframe background.
+- Video ID: `Y2gmQFjpcsU`. Embed params: `autoplay=1&mute=1&loop=1&playlist=...&controls=0`.
+- Iframe absolutely positioned + scaled to fill viewport (handles portrait Shorts aspect ratio).
+- Dark overlay (`bg-black/55`) keeps text readable.
+
+### Infrastructure Notes:
+- `prisma db push` succeeded (DB in sync). `prisma generate` failed with EPERM (DLL locked by running backend) — **restart backend to regenerate client** for `AbiSubmission` model to work.
+- `frontend/public/` folder created (didn't exist). Images `the-people.jpg` and `camping.jpg` copied there.
+
+---
+
+## Next Steps for User to Add Details
+
+The following items need real content/data from you before they're complete:
+
+### 1. Stundenplan Data
+- Create 2 markdown files (one for student schedule, one for teacher schedule) with time blocks, subjects, teachers, rooms.
+- Drop them in `content/` and tag Claude to build the full Stundenplan component.
+
+### 2. Abi Zeitung in Admin
+- After restarting the backend, test: submit an anonymous entry from EventsPage → check Admin → Abi Zeitung tab shows it.
+
+### 3. BlueMap nginx Reverse Proxy (OCI)
+- On OCI server, add nginx location block to proxy `/bluemap` → `localhost:8100`.
+- Log this in `kontext/ocichanges.md` when done.
+
+### 4. About Us / Contact Details
+- Current email is `chef@essengruppe.de`. Update if needed.
+- Add class photo to About page if desired (replace/supplement `the-people.jpg`).
+
+### 5. Landing Page Video
+- YouTube video `Y2gmQFjpcsU` is set. If you want to swap to a different video, update the embed src in `LandingPage.tsx`.
+
+### 6. MC Leaderboard
+- Still a placeholder. Provide the data source (API, file, manual list) when ready.
+
+---
+
+**Last Updated By:** Claude Code (Phase 4.3)
+**Date:** 2026-02-22

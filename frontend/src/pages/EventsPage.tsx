@@ -35,10 +35,11 @@ interface PhotoCarouselProps {
   photos: EventPhoto[];
   currentUserId: string;
   isAdmin: boolean;
+  canUpload: boolean;
   onPhotosChange: (eventId: string, photos: EventPhoto[]) => void;
 }
 
-function PhotoCarousel({ eventId, photos, currentUserId, isAdmin, onPhotosChange }: PhotoCarouselProps) {
+function PhotoCarousel({ eventId, photos, currentUserId, isAdmin, canUpload, onPhotosChange }: PhotoCarouselProps) {
   const [index, setIndex] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -84,6 +85,7 @@ function PhotoCarousel({ eventId, photos, currentUserId, isAdmin, onPhotosChange
   const canDeleteCurrent = currentPhoto && (isAdmin || currentPhoto.userId === currentUserId);
 
   if (photos.length === 0) {
+    if (!canUpload) return null;
     return (
       <div className="mt-3 pt-3 border-t border-gray-100">
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
@@ -140,32 +142,34 @@ function PhotoCarousel({ eventId, photos, currentUserId, isAdmin, onPhotosChange
         )}
 
         {/* Action buttons overlay (bottom-right) */}
-        <div className="absolute bottom-2 right-2 flex gap-1.5">
-          {canDeleteCurrent && !confirmDeleteId && (
+        {canUpload && (
+          <div className="absolute bottom-2 right-2 flex gap-1.5">
+            {canDeleteCurrent && !confirmDeleteId && (
+              <button
+                onClick={() => setConfirmDeleteId(currentPhoto.id)}
+                className="w-6 h-6 rounded-full bg-red-600/80 text-white text-xs flex items-center justify-center hover:bg-red-700"
+                title="Delete photo"
+              >
+                ×
+              </button>
+            )}
+            {confirmDeleteId === currentPhoto.id && (
+              <div className="flex items-center gap-1 bg-black/60 rounded-full px-2 py-0.5">
+                <span className="text-white text-xs">Delete?</span>
+                <button onClick={() => handleDelete(currentPhoto.id)} className="text-red-300 hover:text-red-200 text-xs font-bold">Yes</button>
+                <button onClick={() => setConfirmDeleteId(null)} className="text-gray-300 hover:text-white text-xs">No</button>
+              </div>
+            )}
             <button
-              onClick={() => setConfirmDeleteId(currentPhoto.id)}
-              className="w-6 h-6 rounded-full bg-red-600/80 text-white text-xs flex items-center justify-center hover:bg-red-700"
-              title="Delete photo"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              title="Add photo"
+              className="w-6 h-6 rounded-full bg-black/40 text-white text-xs flex items-center justify-center hover:bg-black/60 disabled:opacity-50"
             >
-              ×
+              {uploading ? '…' : '+'}
             </button>
-          )}
-          {confirmDeleteId === currentPhoto.id && (
-            <div className="flex items-center gap-1 bg-black/60 rounded-full px-2 py-0.5">
-              <span className="text-white text-xs">Delete?</span>
-              <button onClick={() => handleDelete(currentPhoto.id)} className="text-red-300 hover:text-red-200 text-xs font-bold">Yes</button>
-              <button onClick={() => setConfirmDeleteId(null)} className="text-gray-300 hover:text-white text-xs">No</button>
-            </div>
-          )}
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            title="Add photo"
-            className="w-6 h-6 rounded-full bg-black/40 text-white text-xs flex items-center justify-center hover:bg-black/60 disabled:opacity-50"
-          >
-            {uploading ? '…' : '+'}
-          </button>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Dots */}
@@ -429,6 +433,7 @@ function StatusModal({ event, onClose, onUpdated }: StatusModalProps) {
 interface EventCardProps {
   event: Event;
   isAdmin: boolean;
+  isAuthenticated: boolean;
   currentUserId: string;
   onVote: (eventId: string, value: 1 | -1) => void;
   onDelete: (eventId: string) => void;
@@ -436,7 +441,7 @@ interface EventCardProps {
   onPhotosChange: (eventId: string, photos: EventPhoto[]) => void;
 }
 
-function EventCard({ event, isAdmin, currentUserId, onVote, onDelete, onStatusChange, onPhotosChange }: EventCardProps) {
+function EventCard({ event, isAdmin, isAuthenticated, currentUserId, onVote, onDelete, onStatusChange, onPhotosChange }: EventCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const statusColors: Record<Event['status'], string> = {
@@ -482,27 +487,35 @@ function EventCard({ event, isAdmin, currentUserId, onVote, onDelete, onStatusCh
         {/* Vote column — only for PROPOSED */}
         {event.status === 'PROPOSED' && (
           <div className="flex flex-col items-center gap-1 flex-shrink-0">
-            <button
-              onClick={() => onVote(event.id, 1)}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                event.userVote === 1 ? 'bg-green-500 text-white' : 'text-gray-400 hover:bg-green-50 hover:text-green-600'
-              }`}
-              title="Upvote"
-            >
-              ▲
-            </button>
-            <span className={`text-sm font-bold ${event.votes > 0 ? 'text-green-600' : event.votes < 0 ? 'text-red-500' : 'text-gray-500'}`}>
-              {event.votes}
-            </span>
-            <button
-              onClick={() => onVote(event.id, -1)}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                event.userVote === -1 ? 'bg-red-500 text-white' : 'text-gray-400 hover:bg-red-50 hover:text-red-600'
-              }`}
-              title="Downvote"
-            >
-              ▼
-            </button>
+            {isAuthenticated ? (
+              <>
+                <button
+                  onClick={() => onVote(event.id, 1)}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                    event.userVote === 1 ? 'bg-green-500 text-white' : 'text-gray-400 hover:bg-green-50 hover:text-green-600'
+                  }`}
+                  title="Upvote"
+                >
+                  ▲
+                </button>
+                <span className={`text-sm font-bold ${event.votes > 0 ? 'text-green-600' : event.votes < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+                  {event.votes}
+                </span>
+                <button
+                  onClick={() => onVote(event.id, -1)}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                    event.userVote === -1 ? 'bg-red-500 text-white' : 'text-gray-400 hover:bg-red-50 hover:text-red-600'
+                  }`}
+                  title="Downvote"
+                >
+                  ▼
+                </button>
+              </>
+            ) : (
+              <span className={`text-sm font-bold ${event.votes > 0 ? 'text-green-600' : event.votes < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+                {event.votes}
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -513,6 +526,7 @@ function EventCard({ event, isAdmin, currentUserId, onVote, onDelete, onStatusCh
         photos={event.photos}
         currentUserId={currentUserId}
         isAdmin={isAdmin}
+        canUpload={isAuthenticated}
         onPhotosChange={onPhotosChange}
       />
 
@@ -554,6 +568,7 @@ interface SectionProps {
   icon: string;
   events: Event[];
   isAdmin: boolean;
+  isAuthenticated: boolean;
   currentUserId: string;
   onVote: (eventId: string, value: 1 | -1) => void;
   onDelete: (eventId: string) => void;
@@ -562,7 +577,7 @@ interface SectionProps {
   emptyText: string;
 }
 
-function Section({ title, icon, events, isAdmin, currentUserId, onVote, onDelete, onStatusChange, onPhotosChange, emptyText }: SectionProps) {
+function Section({ title, icon, events, isAdmin, isAuthenticated, currentUserId, onVote, onDelete, onStatusChange, onPhotosChange, emptyText }: SectionProps) {
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
@@ -582,6 +597,7 @@ function Section({ title, icon, events, isAdmin, currentUserId, onVote, onDelete
                 key={event.id}
                 event={event}
                 isAdmin={isAdmin}
+                isAuthenticated={isAuthenticated}
                 currentUserId={currentUserId}
                 onVote={onVote}
                 onDelete={onDelete}
@@ -596,10 +612,117 @@ function Section({ title, icon, events, isAdmin, currentUserId, onVote, onDelete
   );
 }
 
+// ─── Abi Zeitung Form ────────────────────────────────────────────────────────
+
+const MAX_CHARS = 4000;
+
+function AbiZeitungForm() {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !content.trim()) {
+      setError('Titel und Inhalt sind pflicht.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      await fetch('/api/abi/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ title: title.trim(), content: content.trim() }),
+      });
+      setSuccess(true);
+      setTitle('');
+      setContent('');
+      setTimeout(() => { setSuccess(false); setOpen(false); }, 3000);
+    } catch {
+      setError('Fehler beim Senden. Bitte erneut versuchen.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mt-8 pt-8 border-t border-gray-200">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm font-medium"
+      >
+        <span>📰</span>
+        <span>Abi Zeitung – Anonymer Beitrag</span>
+        <span className="text-xs text-gray-400">{open ? '▲' : '▼'}</span>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-4 bg-white rounded-xl border border-gray-200 p-5">
+              <p className="text-xs text-gray-400 mb-4">
+                Dein Beitrag wird anonym gespeichert — kein Name, keine Zuordnung.
+                Er wird nur für das Abi-Magazin genutzt und ist nur für Admins sichtbar.
+              </p>
+              {success ? (
+                <div className="text-green-600 font-medium text-sm py-4 text-center">
+                  ✓ Beitrag anonym eingereicht!
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={e => setTitle(e.target.value)}
+                    maxLength={200}
+                    placeholder="Titel des Beitrags..."
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                  <div>
+                    <textarea
+                      value={content}
+                      onChange={e => setContent(e.target.value)}
+                      maxLength={MAX_CHARS}
+                      rows={6}
+                      placeholder="Dein Beitrag... (max. 4000 Zeichen)"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                    />
+                    <p className="text-xs text-gray-400 text-right">{content.length} / {MAX_CHARS}</p>
+                  </div>
+                  {error && <p className="text-red-600 text-sm">{error}</p>}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 text-sm font-medium disabled:opacity-50"
+                  >
+                    {loading ? 'Wird gesendet...' : 'Anonym einreichen'}
+                  </button>
+                </form>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export const EventsPage = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -667,31 +790,44 @@ export const EventsPage = () => {
   const tabTitles = { PROPOSED: 'Proposed Events', IN_PLANNING: 'In Planning', COMPLETED: 'Completed' };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-gray-50">
+      {/* Camping hero banner */}
+      <div
+        className="relative h-40 flex items-center justify-center overflow-hidden"
+        style={{
+          backgroundImage: 'url(/camping.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative z-10 text-center text-white px-4">
+          <h1 className="text-4xl font-bold drop-shadow-lg">ABI 27 Events</h1>
+          <p className="text-gray-200 mt-1 text-sm">Plan, vote, and celebrate together</p>
+        </div>
+      </div>
+
+      <div className="py-8 px-4">
       <div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">ABI 27 Events</h1>
-              <p className="text-gray-500 text-sm mt-1">Plan, vote, and celebrate together</p>
+          {/* Header row */}
+          {isAuthenticated && (
+            <div className="flex items-center justify-end mb-6">
+              <button
+                onClick={() => setShowCreate(true)}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium text-sm"
+              >
+                + Propose Event
+              </button>
             </div>
-            <button
-              onClick={() => setShowCreate(true)}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium text-sm"
-            >
-              + Propose Event
-            </button>
-          </div>
+          )}
 
           {/* Social links strip */}
           <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-4 mb-6 flex items-center gap-4 flex-wrap">
             <span className="text-white font-medium text-sm">Follow the journey:</span>
-            <a href="https://gofundme.com" target="_blank" rel="noopener noreferrer"
+            <a href="https://gofund.me/6c2bc4e83" target="_blank" rel="noopener noreferrer"
               className="text-white/90 hover:text-white text-sm underline underline-offset-2">GoFundMe</a>
-            <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer"
-              className="text-white/90 hover:text-white text-sm underline underline-offset-2">TikTok</a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"
+            <a href="https://instagram.com/thg_abi27" target="_blank" rel="noopener noreferrer"
               className="text-white/90 hover:text-white text-sm underline underline-offset-2">Instagram</a>
           </div>
 
@@ -737,6 +873,7 @@ export const EventsPage = () => {
                   icon={tabIcons[activeTab]}
                   events={tabEvents[activeTab]}
                   isAdmin={isAdmin}
+                  isAuthenticated={isAuthenticated}
                   currentUserId={user?.id ?? ''}
                   onVote={handleVote}
                   onDelete={handleDelete}
@@ -747,7 +884,11 @@ export const EventsPage = () => {
               </motion.div>
             </AnimatePresence>
           )}
+          {/* Abi Zeitung Anonymous Submission — members only */}
+          {isAuthenticated && <AbiZeitungForm />}
+
         </motion.div>
+      </div>
       </div>
 
       {/* Modals */}

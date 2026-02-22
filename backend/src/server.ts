@@ -15,6 +15,8 @@ import predictionRoutes from './routes/prediction.routes';
 import pokerRoutes from './routes/poker.routes';
 import slotsRoutes from './routes/slots.routes';
 import blackjackRoutes from './routes/blackjack.routes';
+import mcRoutes from './routes/mc.routes';
+import abiRoutes from './routes/abi.routes';
 import { registerPokerSocket } from './socket/poker.socket';
 
 // Load environment variables
@@ -45,6 +47,8 @@ app.use('/api/predictions', predictionRoutes);
 app.use('/api/poker', pokerRoutes);
 app.use('/api/games/slots', slotsRoutes);
 app.use('/api/games/blackjack', blackjackRoutes);
+app.use('/api/mc', mcRoutes);
+app.use('/api/abi', abiRoutes);
 
 // Serve uploaded files (avatars, post images, event images)
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));

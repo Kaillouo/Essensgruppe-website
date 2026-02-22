@@ -15,7 +15,21 @@
       "Bash(npx prisma generate:*)",
       "Bash(npx prisma db push:*)",
       "Bash(pm2 restart:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(netstat:*)",
+      "Bash(claude mcp add:*)",
+      "Bash(where:*)",
+      "Bash(npx puppeteer:*)",
+      "Bash(true taskkill //PID 37072 //F)",
+      "mcp__puppeteer__screenshot",
+      "mcp__puppeteer__navigate",
+      "mcp__puppeteer__type",
+      "mcp__puppeteer__click",
+      "mcp__puppeteer__evaluate",
+      "mcp__puppeteer__wait_for_selector",
+      "mcp__puppeteer__extract_text",
+      "mcp__puppeteer__set_headless",
+      "Bash(ls:*)"
     ]
   }
 }

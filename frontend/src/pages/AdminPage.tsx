@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ApiService } from '../services/api.service';
 import { motion } from 'framer-motion';
 
-type Tab = 'analytics' | 'pending' | 'users';
+type Tab = 'analytics' | 'pending' | 'users' | 'abiZeitung';
 
 export const AdminPage = () => {
   const [activeTab, setActiveTab] = useState<Tab>('pending');
@@ -16,6 +16,8 @@ export const AdminPage = () => {
   const [passwordModal, setPasswordModal] = useState<{ userId: string; username: string } | null>(null);
   const [newPasswordInput, setNewPasswordInput] = useState('');
   const [shownPassword, setShownPassword] = useState<string | null>(null);
+  const [abiSubmissions, setAbiSubmissions] = useState<any[]>([]);
+  const [abiLoading, setAbiLoading] = useState(false);
 
   useEffect(() => {
     loadAnalytics();
@@ -25,7 +27,36 @@ export const AdminPage = () => {
   useEffect(() => {
     if (activeTab === 'users') loadUsers();
     if (activeTab === 'pending') loadPending();
+    if (activeTab === 'abiZeitung') loadAbiSubmissions();
   }, [activeTab]);
+
+  const loadAbiSubmissions = async () => {
+    setAbiLoading(true);
+    try {
+      const res = await fetch('/api/abi/submissions', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      const data = await res.json();
+      setAbiSubmissions(data);
+    } catch (error) {
+      console.error('Failed to load abi submissions:', error);
+    } finally {
+      setAbiLoading(false);
+    }
+  };
+
+  const handleDeleteAbiSubmission = async (id: string) => {
+    if (!window.confirm('Diesen Beitrag löschen?')) return;
+    try {
+      await fetch(`/api/abi/submissions/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      setAbiSubmissions(prev => prev.filter((s: any) => s.id !== id));
+    } catch (error) {
+      console.error('Failed to delete submission:', error);
+    }
+  };
 
   const loadAnalytics = async () => {
     try {
@@ -153,6 +184,7 @@ export const AdminPage = () => {
     { id: 'pending', label: 'Join Requests', badge: pendingUsers.length },
     { id: 'users', label: 'Users' },
     { id: 'analytics', label: 'Analytics' },
+    { id: 'abiZeitung', label: 'Abi Zeitung' },
   ];
 
   return (
@@ -332,6 +364,38 @@ export const AdminPage = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* Abi Zeitung Tab */}
+        {activeTab === 'abiZeitung' && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">📰 Abi Zeitung – Anonyme Beiträge</h3>
+            {abiLoading ? (
+              <div className="text-center py-8 text-gray-400">Lade Beiträge...</div>
+            ) : abiSubmissions.length === 0 ? (
+              <p className="text-gray-400 text-sm text-center py-8">Noch keine Beiträge.</p>
+            ) : (
+              <div className="space-y-4">
+                {abiSubmissions.map((s: any) => (
+                  <div key={s.id} className="border border-gray-200 rounded-xl p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900">{s.title}</h4>
+                        <p className="text-sm text-gray-600 mt-2 whitespace-pre-wrap">{s.content}</p>
+                        <p className="text-xs text-gray-400 mt-2">{new Date(s.createdAt).toLocaleString('de-DE')}</p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteAbiSubmission(s.id)}
+                        className="text-xs px-2 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100 flex-shrink-0"
+                      >
+                        Löschen
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </motion.div>

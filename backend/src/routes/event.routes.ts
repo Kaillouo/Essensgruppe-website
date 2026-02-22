@@ -4,13 +4,11 @@ import path from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
 import prisma from '../utils/prisma.util';
-import { authenticateToken, requireAdmin } from '../middleware/auth.middleware';
+import { authenticateToken, optionalAuth, requireAdmin } from '../middleware/auth.middleware';
 import { uploadEventPhoto } from '../middleware/upload.middleware';
 import { AuthRequest } from '../types';
 
 const router = Router();
-
-router.use(authenticateToken as any);
 
 const createEventSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200),
@@ -28,15 +26,15 @@ const statusSchema = z.object({
   status: z.enum(['PROPOSED', 'IN_PLANNING', 'COMPLETED']),
 });
 
-// GET /api/events — list all events grouped by status
-router.get('/', async (req: AuthRequest, res: Response) => {
+// GET /api/events — list all events (public, optional auth for userVote)
+router.get('/', optionalAuth as any, async (req: AuthRequest, res: Response) => {
   try {
     const events = await prisma.event.findMany({
       orderBy: [{ status: 'asc' }, { votes: 'desc' }, { createdAt: 'desc' }],
       include: {
         user: { select: { id: true, username: true, avatarUrl: true } },
         eventVotes: {
-          where: { userId: req.user!.id },
+          where: { userId: req.user?.id ?? 'none' },
           select: { value: true },
         },
         photos: {
@@ -70,7 +68,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 });
 
 // POST /api/events — create event proposal
-router.post('/', async (req: AuthRequest, res: Response) => {
+router.post('/', authenticateToken as any, async (req: AuthRequest, res: Response) => {
   try {
     const data = createEventSchema.parse(req.body);
     const event = await prisma.event.create({
@@ -99,7 +97,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 });
 
 // POST /api/events/:id/vote — vote on an event proposal
-router.post('/:id/vote', async (req: AuthRequest, res: Response) => {
+router.post('/:id/vote', authenticateToken as any, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { value } = voteSchema.parse(req.body);
@@ -156,7 +154,7 @@ router.post('/:id/vote', async (req: AuthRequest, res: Response) => {
 });
 
 // POST /api/events/:id/photos — upload a photo to an event
-router.post('/:id/photos', (req: AuthRequest, res: Response) => {
+router.post('/:id/photos', authenticateToken as any, (req: AuthRequest, res: Response) => {
   const { id } = req.params;
 
   uploadEventPhoto(req as any, res as any, async (err) => {
@@ -206,7 +204,7 @@ router.post('/:id/photos', (req: AuthRequest, res: Response) => {
 });
 
 // DELETE /api/events/:id/photos/:photoId — uploader or admin can delete
-router.delete('/:id/photos/:photoId', async (req: AuthRequest, res: Response) => {
+router.delete('/:id/photos/:photoId', authenticateToken as any, async (req: AuthRequest, res: Response) => {
   try {
     const { id, photoId } = req.params;
 
@@ -261,7 +259,7 @@ router.patch('/:id/status', requireAdmin as any, async (req: AuthRequest, res: R
 });
 
 // DELETE /api/events/:id — creator or admin can delete
-router.delete('/:id', async (req: AuthRequest, res: Response) => {
+router.delete('/:id', authenticateToken as any, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const event = await prisma.event.findUnique({ where: { id } });

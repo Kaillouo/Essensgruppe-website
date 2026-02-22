@@ -259,6 +259,17 @@ enum PredictionStatus {
   CLOSED
 }
 
+// Anonymous Abi Zeitung submissions (no user ID stored — fully anonymous)
+model AbiSubmission {
+  id        String   @id @default(uuid())
+  title     String
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("abi_submissions")
+}
+
 // Gambling games history
 model GameHistory {
   id        String   @id @default(uuid())

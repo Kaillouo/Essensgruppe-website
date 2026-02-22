@@ -31,6 +31,30 @@ export const authenticateToken = (
   }
 };
 
+// Attaches user to req if a valid token is present, but never rejects the request.
+export const optionalAuth = (
+  req: AuthRequest,
+  _res: Response,
+  next: NextFunction
+) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET) as {
+        id: string;
+        username: string;
+        email: string;
+        role: 'USER' | 'ADMIN';
+      };
+      req.user = decoded;
+    } catch {
+      // invalid/expired token — proceed as guest
+    }
+  }
+  next();
+};
+
 export const requireAdmin = (
   req: AuthRequest,
   res: Response,
