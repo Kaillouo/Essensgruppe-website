@@ -49,6 +49,15 @@ cd frontend && npm run dev
 
 ---
 
+## ⚠️ Spelling: Domain & Project Name
+The correct spelling is **Essensgruppe** (E-s-s-e-n-**s**-g-r-u-p-p-e) — there is an **s after the n**.
+- ✅ `essensgruppe.de` — correct
+- ❌ `essengruppe.de` — wrong (missing the s)
+
+This applies everywhere: domain names, email addresses, file paths, and text.
+
+---
+
 ## Project Overview
 Multi-purpose website for my school class (Abitur 2027). Combines public landing,
 private forum, event planning, resource links, Minecraft server info, and gambling games.
@@ -90,12 +99,25 @@ Contains Claude Code skills pulled from `anthropics/skills` on GitHub. These enh
 
 ## User Access Levels
 
+### Role System (DB enum: `Role`)
+- **`ABI27`** — Default role after email verification. All Abi 2027 students.
+- **`ESSENSGRUPPE_MITGLIED`** — Inner circle. Admin upgrades ABI27 → Essensgruppe Mitglied manually. Same rights as ABI27 for now; more privileges in the future.
+- **`ADMIN`** — Full access. Only the seeded admin account.
+
+### Registration Flow
+1. User fills form: username + email + password
+2. Verification email sent from `Emperor@essensgruppe.de` (Resend SMTP, smtp.resend.com:587)
+3. User clicks link → `/verify-email?token=...` → account becomes ACTIVE with role ABI27
+4. Login supports username OR email (`identifier` field)
+5. Admin can toggle registration open/closed in admin panel (AppSetting: REGISTRATION_OPEN)
+6. Admin-created users skip verification (emailVerified=true, ACTIVE immediately)
+
 ### 1. Visitors (Public)
 - See landing page
 - View "About Us"
-- Can request to join Essensgruppe
+- Can register (if registration is open)
 
-### 2. Essensgruppe Members (Private)
+### 2. ABI27 (verified members, role=ABI27)
 - Everything visitors see +
 - Forum access
 - Event planning (ABI 27)
@@ -104,13 +126,19 @@ Contains Claude Code skills pulled from `anthropics/skills` on GitHub. These enh
 - Gambling games
 - User profile
 
-### 3. Admin (Me)
+### 3. Essensgruppe Mitglied (role=ESSENSGRUPPE_MITGLIED)
+- Same as ABI27 for now
+- Admin upgrades users to this role
+
+### 4. Admin (Me, role=ADMIN)
 - Everything +
 - Add/remove members
 - Manage user balances (gambling)
 - Moderate forum posts
 - Edit events
 - View analytics
+- Toggle registration open/closed
+- Change user roles (ABI27 ↔ ESSENSGRUPPE_MITGLIED)
 
 ---
 

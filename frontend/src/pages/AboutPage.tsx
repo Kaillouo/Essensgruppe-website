@@ -38,10 +38,10 @@ export const AboutPage = () => {
                 For questions, suggestions, or issues, reach out to us directly:
               </p>
               <a
-                href="mailto:chef@essengruppe.de"
+                href="mailto:chef@essensgruppe.de"
                 className="text-primary-600 hover:text-primary-700 font-medium"
               >
-                chef@essengruppe.de
+                chef@essensgruppe.de
               </a>
             </div>
           </div>

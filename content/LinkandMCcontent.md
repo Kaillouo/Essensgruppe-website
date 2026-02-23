@@ -9,6 +9,6 @@ so here are the links and other contents for the /links and /MC sites some for a
     Mc server: Mc.essensgruppe.com
     GofundMe (for abi27 and links site): gofund.me/6c2bc4e83
     instagram :  instagram.com/thg_abi27
-    email for support: chef@essengruppe.de
+    email for support: chef@essensgruppe.de
     
 

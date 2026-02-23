@@ -21,7 +21,7 @@ export const authenticateToken = (
       id: string;
       username: string;
       email: string;
-      role: 'USER' | 'ADMIN';
+      role: 'ABI27' | 'ESSENSGRUPPE_MITGLIED' | 'ADMIN';
     };
 
     req.user = decoded;
@@ -45,7 +45,7 @@ export const optionalAuth = (
         id: string;
         username: string;
         email: string;
-        role: 'USER' | 'ADMIN';
+        role: 'ABI27' | 'ESSENSGRUPPE_MITGLIED' | 'ADMIN';
       };
       req.user = decoded;
     } catch {

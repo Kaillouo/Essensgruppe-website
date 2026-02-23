@@ -29,7 +29,13 @@
       "mcp__puppeteer__wait_for_selector",
       "mcp__puppeteer__extract_text",
       "mcp__puppeteer__set_headless",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(PGPASSWORD='PL@CVhrJa8' psql:*)",
+      "Bash(PGPASSWORD='PL@CVhrJa8' \"/c/Program Files/PostgreSQL/18/bin/psql\" -U postgres -d essensgruppe -c \"UPDATE users SET role = ''ABI27'' WHERE role = ''USER''; SELECT username, role FROM users;\")",
+      "Bash(PGPASSWORD='PL@CVhrJa8' \"/c/Program Files/PostgreSQL/18/bin/psql\":*)",
+      "Bash(npm run seed:*)",
+      "Bash(PGPASSWORD='PL@CVhrJa8' \"/c/Program Files/PostgreSQL/18/bin/psql\" -U postgres -d essensgruppe -c \"SELECT username, email, role, status, email_verified FROM users; SELECT * FROM app_settings;\")",
+      "Bash(node -e:*)"
     ]
   }
 }

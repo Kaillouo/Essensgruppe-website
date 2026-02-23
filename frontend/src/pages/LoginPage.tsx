@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 export const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -17,7 +17,7 @@ export const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      await login({ username, password });
+      await login({ identifier, password });
       navigate('/forum');
     } catch (err: any) {
       setError(err.message || 'Login failed');
@@ -51,24 +51,29 @@ export const LoginPage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Username
+              <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-2">
+                Benutzername oder E-Mail
               </label>
               <input
-                id="username"
+                id="identifier"
                 type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 className="input"
-                placeholder="your_username"
+                placeholder="dein_username oder mail@example.de"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Passwort
+                </label>
+                <Link to="/forgot-password" className="text-xs text-primary-600 hover:text-primary-700 font-medium">
+                  Passwort vergessen?
+                </Link>
+              </div>
               <input
                 id="password"
                 type="password"
@@ -91,19 +96,19 @@ export const LoginPage = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Logging in...
+                  Einloggen...
                 </span>
               ) : (
-                'Login'
+                'Einloggen'
               )}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">
-              Don't have an account?{' '}
+              Noch kein Account?{' '}
               <Link to="/register" className="text-primary-600 font-medium hover:text-primary-700">
-                Request to join
+                Jetzt registrieren
               </Link>
             </p>
           </div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ApiService } from '../services/api.service';
 import { motion } from 'framer-motion';
 
-type Tab = 'analytics' | 'pending' | 'users' | 'abiZeitung';
+type Tab = 'analytics' | 'pending' | 'users' | 'abiZeitung' | 'settings';
 
 export const AdminPage = () => {
   const [activeTab, setActiveTab] = useState<Tab>('pending');
@@ -18,16 +18,24 @@ export const AdminPage = () => {
   const [shownPassword, setShownPassword] = useState<string | null>(null);
   const [abiSubmissions, setAbiSubmissions] = useState<any[]>([]);
   const [abiLoading, setAbiLoading] = useState(false);
+  const [registrationOpen, setRegistrationOpen] = useState<boolean | null>(null);
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [roleModal, setRoleModal] = useState<{ userId: string; username: string; currentRole: string } | null>(null);
+  const [selectedRole, setSelectedRole] = useState('');
+  const [renameModal, setRenameModal] = useState<{ userId: string; username: string } | null>(null);
+  const [renameInput, setRenameInput] = useState('');
 
   useEffect(() => {
     loadAnalytics();
     loadPending();
+    loadSettings();
   }, []);
 
   useEffect(() => {
     if (activeTab === 'users') loadUsers();
     if (activeTab === 'pending') loadPending();
     if (activeTab === 'abiZeitung') loadAbiSubmissions();
+    if (activeTab === 'settings') loadSettings();
   }, [activeTab]);
 
   const loadAbiSubmissions = async () => {
@@ -180,11 +188,66 @@ export const AdminPage = () => {
     }
   };
 
+  const loadSettings = async () => {
+    try {
+      const data = await ApiService.getAdminSettings();
+      setRegistrationOpen(data.registrationOpen);
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+    }
+  };
+
+  const handleToggleRegistration = async () => {
+    if (registrationOpen === null) return;
+    setSettingsLoading(true);
+    try {
+      await ApiService.updateAdminSettings(!registrationOpen);
+      setRegistrationOpen(!registrationOpen);
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  const openRenameModal = (user: any) => {
+    setRenameModal({ userId: user.id, username: user.username });
+    setRenameInput(user.username);
+  };
+
+  const handleRename = async () => {
+    if (!renameModal || renameInput.trim().length < 3) return;
+    try {
+      await ApiService.renameUser(renameModal.userId, renameInput.trim());
+      setRenameModal(null);
+      loadUsers();
+    } catch (error: any) {
+      alert(error.message);
+    }
+  };
+
+  const openRoleModal = (user: any) => {
+    setRoleModal({ userId: user.id, username: user.username, currentRole: user.role });
+    setSelectedRole(user.role);
+  };
+
+  const handleRoleUpdate = async () => {
+    if (!roleModal) return;
+    try {
+      await ApiService.updateUserRole(roleModal.userId, selectedRole);
+      setRoleModal(null);
+      loadUsers();
+    } catch (error: any) {
+      alert(error.message);
+    }
+  };
+
   const tabs: { id: Tab; label: string; badge?: number }[] = [
-    { id: 'pending', label: 'Join Requests', badge: pendingUsers.length },
-    { id: 'users', label: 'Users' },
+    { id: 'pending', label: 'E-Mail Verifizierung', badge: pendingUsers.length },
+    { id: 'users', label: 'Mitglieder' },
     { id: 'analytics', label: 'Analytics' },
     { id: 'abiZeitung', label: 'Abi Zeitung' },
+    { id: 'settings', label: 'Einstellungen' },
   ];
 
   return (
@@ -222,32 +285,35 @@ export const AdminPage = () => {
           </div>
         </div>
 
-        {/* Pending Requests Tab */}
+        {/* Pending (email verification) Tab */}
         {activeTab === 'pending' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Join Requests</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Warte auf E-Mail-Bestätigung</h3>
+            <p className="text-sm text-gray-500 mb-4">Diese Nutzer haben sich registriert, aber ihre E-Mail noch nicht bestätigt. Manuelles Freischalten oder Löschen möglich.</p>
             {pendingUsers.length === 0 ? (
-              <p className="text-gray-500 py-8 text-center">No pending requests.</p>
+              <p className="text-gray-500 py-8 text-center">Keine ausstehenden Accounts.</p>
             ) : (
               <div className="space-y-3">
                 {pendingUsers.map((user: any) => (
                   <div key={user.id} className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <div>
                       <p className="font-semibold text-gray-900">{user.username}</p>
-                      <p className="text-sm text-gray-500">Requested {new Date(user.createdAt).toLocaleDateString()}</p>
+                      <p className="text-sm text-gray-500">{user.email}</p>
+                      <p className="text-xs text-gray-400">Registriert {new Date(user.createdAt).toLocaleDateString('de-DE')}</p>
                     </div>
                     <div className="flex gap-3">
                       <button
                         onClick={() => handleApprove(user.id)}
                         className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+                        title="Manuell freischalten (überspringt E-Mail-Bestätigung)"
                       >
-                        Approve
+                        Freischalten
                       </button>
                       <button
                         onClick={() => handleDeny(user.id, user.username)}
                         className="px-4 py-2 bg-red-100 text-red-600 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors"
                       >
-                        Deny
+                        Löschen
                       </button>
                     </div>
                   </div>
@@ -316,11 +382,17 @@ export const AdminPage = () => {
                       <tr key={user.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3 text-sm font-medium text-gray-900">{user.username}</td>
                         <td className="px-4 py-3 text-sm">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            user.role === 'ADMIN' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-600'
-                          }`}>
-                            {user.role}
-                          </span>
+                          <button
+                            onClick={() => openRoleModal(user)}
+                            className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
+                              user.role === 'ADMIN' ? 'bg-purple-100 text-purple-600' :
+                              user.role === 'ESSENSGRUPPE_MITGLIED' ? 'bg-blue-100 text-blue-600' :
+                              'bg-gray-100 text-gray-600'
+                            }`}
+                            title="Klicken zum Ändern"
+                          >
+                            {user.role === 'ESSENSGRUPPE_MITGLIED' ? 'EG Mitglied' : user.role}
+                          </button>
                         </td>
                         <td className="px-4 py-3 text-sm">
                           <span className={`px-2 py-1 rounded-full text-xs ${
@@ -343,6 +415,9 @@ export const AdminPage = () => {
                         <td className="px-4 py-3 text-sm text-gray-600">{user._count?.posts || 0}</td>
                         <td className="px-4 py-3 text-sm">
                           <div className="flex gap-2">
+                            <button onClick={() => openRenameModal(user)} className="text-indigo-600 hover:text-indigo-800 font-medium">
+                              Rename
+                            </button>
                             <button onClick={() => openPasswordModal(user)} className="text-blue-600 hover:text-blue-800 font-medium">
                               Password
                             </button>
@@ -398,6 +473,36 @@ export const AdminPage = () => {
                 ))}
               </div>
             )}
+          </motion.div>
+        )}
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card max-w-lg">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Einstellungen</h3>
+
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
+              <div>
+                <p className="font-semibold text-gray-900">Registrierung</p>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  {registrationOpen
+                    ? 'Offen — neue Nutzer können sich registrieren'
+                    : 'Geschlossen — Registrierung deaktiviert'}
+                </p>
+              </div>
+              <button
+                onClick={handleToggleRegistration}
+                disabled={settingsLoading || registrationOpen === null}
+                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${
+                  registrationOpen ? 'bg-green-500' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                    registrationOpen ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
           </motion.div>
         )}
       </div>
@@ -486,6 +591,86 @@ export const AdminPage = () => {
                 </div>
               </div>
             )}
+          </motion.div>
+        </div>
+      )}
+
+      {/* Rename Modal */}
+      {renameModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm"
+          >
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Nutzername ändern</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Aktuell: <span className="font-semibold">{renameModal.username}</span>
+            </p>
+            <input
+              type="text"
+              value={renameInput}
+              onChange={(e) => setRenameInput(e.target.value)}
+              className="input mb-1"
+              placeholder="Neuer Nutzername"
+              maxLength={20}
+            />
+            <p className="text-xs text-gray-400 mb-4">3–20 Zeichen, nur Buchstaben, Zahlen, Unterstrich</p>
+            <div className="flex gap-3">
+              <button onClick={() => setRenameModal(null)} className="flex-1 btn btn-outline py-2">Abbrechen</button>
+              <button
+                onClick={handleRename}
+                disabled={renameInput.trim().length < 3 || renameInput.trim() === renameModal.username}
+                className="flex-1 btn btn-primary py-2 disabled:opacity-50"
+              >
+                Speichern
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Role Modal */}
+      {roleModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm"
+          >
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Rolle ändern</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Nutzer: <span className="font-semibold">{roleModal.username}</span>
+            </p>
+            <div className="space-y-2 mb-4">
+              {(['ABI27', 'ESSENSGRUPPE_MITGLIED', 'ADMIN'] as const).map((role) => (
+                <label key={role} className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    name="role"
+                    value={role}
+                    checked={selectedRole === role}
+                    onChange={() => setSelectedRole(role)}
+                  />
+                  <div>
+                    <p className="font-medium text-gray-900 text-sm">
+                      {role === 'ESSENSGRUPPE_MITGLIED' ? 'Essensgruppe Mitglied' : role}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {role === 'ABI27' ? 'Standard nach E-Mail-Bestätigung' :
+                       role === 'ESSENSGRUPPE_MITGLIED' ? 'Innerer Kreis — vom Admin hochgestuft' :
+                       'Voller Zugriff auf Admin-Panel'}
+                    </p>
+                  </div>
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setRoleModal(null)} className="flex-1 btn btn-outline py-2">Abbrechen</button>
+              <button onClick={handleRoleUpdate} disabled={selectedRole === roleModal.currentRole} className="flex-1 btn btn-primary py-2 disabled:opacity-50">
+                Speichern
+              </button>
+            </div>
           </motion.div>
         </div>
       )}

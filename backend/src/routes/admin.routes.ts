@@ -4,6 +4,7 @@ import prisma from '../utils/prisma.util';
 import { authenticateToken, requireAdmin } from '../middleware/auth.middleware';
 import { hashPassword } from '../utils/password.util';
 import { AuthRequest } from '../types';
+import { sendAdminCreatedAccountEmail } from '../services/email.service';
 
 const router = Router();
 
@@ -42,7 +43,7 @@ router.get('/users', async (req: AuthRequest, res) => {
   }
 });
 
-// GET /api/admin/users/pending - Get pending join requests
+// GET /api/admin/users/pending - Get pending users (awaiting email verification)
 router.get('/users/pending', async (req: AuthRequest, res) => {
   try {
     const users = await prisma.user.findMany({
@@ -50,6 +51,8 @@ router.get('/users/pending', async (req: AuthRequest, res) => {
       select: {
         id: true,
         username: true,
+        email: true,
+        emailVerified: true,
         createdAt: true,
       },
       orderBy: { createdAt: 'asc' }
@@ -149,7 +152,7 @@ router.post('/users', async (req: AuthRequest, res) => {
       username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/),
       email: z.string().email(),
       password: z.string().min(6),
-      role: z.enum(['USER', 'ADMIN']).optional(),
+      role: z.enum(['ABI27', 'ESSENSGRUPPE_MITGLIED', 'ADMIN']).optional(),
     });
 
     const data = createUserSchema.parse(req.body);
@@ -174,8 +177,9 @@ router.post('/users', async (req: AuthRequest, res) => {
         username: data.username,
         email: data.email,
         passwordHash,
-        role: data.role || 'USER',
+        role: data.role || 'ABI27',
         status: 'ACTIVE',
+        emailVerified: true, // admin-created users skip email verification
         balance: 1000,
         transactions: {
           create: {
@@ -194,6 +198,12 @@ router.post('/users', async (req: AuthRequest, res) => {
         createdAt: true,
       }
     });
+
+    // Send credentials email to new user (non-fatal)
+    sendAdminCreatedAccountEmail(
+      { username: data.username, email: data.email },
+      data.password
+    ).catch(() => {});
 
     res.status(201).json(user);
   } catch (error) {
@@ -294,6 +304,105 @@ router.patch('/users/:id/password', async (req: AuthRequest, res) => {
     }
     console.error('Reset password error:', error);
     res.status(500).json({ error: 'Failed to reset password' });
+  }
+});
+
+// PATCH /api/admin/users/:id/role - Update user role
+router.patch('/users/:id/role', async (req: AuthRequest, res) => {
+  try {
+    const roleSchema = z.object({
+      role: z.enum(['ABI27', 'ESSENSGRUPPE_MITGLIED', 'ADMIN']),
+    });
+
+    const { id } = req.params;
+    const data = roleSchema.parse(req.body);
+
+    if (id === req.user!.id) {
+      return res.status(400).json({ error: 'Cannot change your own role' });
+    }
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: { role: data.role },
+      select: { id: true, username: true, role: true }
+    });
+
+    res.json(user);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors[0].message });
+    }
+    console.error('Update role error:', error);
+    res.status(500).json({ error: 'Failed to update role' });
+  }
+});
+
+// PATCH /api/admin/users/:id/username - Rename user
+router.patch('/users/:id/username', async (req: AuthRequest, res) => {
+  try {
+    const schema = z.object({
+      username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers, underscores'),
+    });
+
+    const { id } = req.params;
+    const { username } = schema.parse(req.body);
+
+    const existing = await prisma.user.findFirst({
+      where: { username, NOT: { id } }
+    });
+    if (existing) {
+      return res.status(400).json({ error: 'Username already taken' });
+    }
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: { username },
+      select: { id: true, username: true }
+    });
+
+    res.json(user);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors[0].message });
+    }
+    console.error('Rename user error:', error);
+    res.status(500).json({ error: 'Failed to rename user' });
+  }
+});
+
+// GET /api/admin/settings - Get app settings
+router.get('/settings', async (req: AuthRequest, res) => {
+  try {
+    const setting = await prisma.appSetting.findUnique({ where: { key: 'REGISTRATION_OPEN' } });
+    res.json({ registrationOpen: setting ? setting.value === 'true' : true });
+  } catch (error) {
+    console.error('Get settings error:', error);
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+// PATCH /api/admin/settings - Update app settings
+router.patch('/settings', async (req: AuthRequest, res) => {
+  try {
+    const settingsSchema = z.object({
+      registrationOpen: z.boolean(),
+    });
+
+    const data = settingsSchema.parse(req.body);
+
+    await prisma.appSetting.upsert({
+      where: { key: 'REGISTRATION_OPEN' },
+      update: { value: data.registrationOpen ? 'true' : 'false' },
+      create: { key: 'REGISTRATION_OPEN', value: data.registrationOpen ? 'true' : 'false' },
+    });
+
+    res.json({ registrationOpen: data.registrationOpen });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors[0].message });
+    }
+    console.error('Update settings error:', error);
+    res.status(500).json({ error: 'Failed to update settings' });
   }
 });
 

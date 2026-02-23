@@ -617,7 +617,6 @@ function Section({ title, icon, events, isAdmin, isAuthenticated, currentUserId,
 const MAX_CHARS = 4000;
 
 function AbiZeitungForm() {
-  const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
@@ -644,7 +643,7 @@ function AbiZeitungForm() {
       setSuccess(true);
       setTitle('');
       setContent('');
-      setTimeout(() => { setSuccess(false); setOpen(false); }, 3000);
+      setTimeout(() => { setSuccess(false); }, 3000);
     } catch {
       setError('Fehler beim Senden. Bitte erneut versuchen.');
     } finally {
@@ -654,67 +653,51 @@ function AbiZeitungForm() {
 
   return (
     <div className="mt-8 pt-8 border-t border-gray-200">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm font-medium"
-      >
-        <span>📰</span>
-        <span>Abi Zeitung – Anonymer Beitrag</span>
-        <span className="text-xs text-gray-400">{open ? '▲' : '▼'}</span>
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="mt-4 bg-white rounded-xl border border-gray-200 p-5">
-              <p className="text-xs text-gray-400 mb-4">
-                Dein Beitrag wird anonym gespeichert — kein Name, keine Zuordnung.
-                Er wird nur für das Abi-Magazin genutzt und ist nur für Admins sichtbar.
-              </p>
-              {success ? (
-                <div className="text-green-600 font-medium text-sm py-4 text-center">
-                  ✓ Beitrag anonym eingereicht!
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-3">
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={e => setTitle(e.target.value)}
-                    maxLength={200}
-                    placeholder="Titel des Beitrags..."
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                  <div>
-                    <textarea
-                      value={content}
-                      onChange={e => setContent(e.target.value)}
-                      maxLength={MAX_CHARS}
-                      rows={6}
-                      placeholder="Dein Beitrag... (max. 4000 Zeichen)"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-                    />
-                    <p className="text-xs text-gray-400 text-right">{content.length} / {MAX_CHARS}</p>
-                  </div>
-                  {error && <p className="text-red-600 text-sm">{error}</p>}
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 text-sm font-medium disabled:opacity-50"
-                  >
-                    {loading ? 'Wird gesendet...' : 'Anonym einreichen'}
-                  </button>
-                </form>
-              )}
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-2xl">📰</span>
+        <h2 className="text-xl font-bold text-gray-900">Abi Zeitung – Anonymer Beitrag</h2>
+      </div>
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <p className="text-xs text-gray-400 mb-4">
+          Dein Beitrag wird anonym gespeichert — kein Name, keine Zuordnung.
+          Er wird nur für das Abi-Magazin genutzt und ist nur für Admins sichtbar.
+        </p>
+        {success ? (
+          <div className="text-green-600 font-medium text-sm py-4 text-center">
+            ✓ Beitrag anonym eingereicht!
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <input
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              maxLength={200}
+              placeholder="Titel des Beitrags..."
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+            <div>
+              <textarea
+                value={content}
+                onChange={e => setContent(e.target.value)}
+                maxLength={MAX_CHARS}
+                rows={6}
+                placeholder="Dein Beitrag... (max. 4000 Zeichen)"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+              />
+              <p className="text-xs text-gray-400 text-right">{content.length} / {MAX_CHARS}</p>
             </div>
-          </motion.div>
+            {error && <p className="text-red-600 text-sm">{error}</p>}
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 text-sm font-medium disabled:opacity-50"
+            >
+              {loading ? 'Wird gesendet...' : 'Anonym einreichen'}
+            </button>
+          </form>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }

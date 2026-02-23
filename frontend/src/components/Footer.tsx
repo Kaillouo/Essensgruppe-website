@@ -29,7 +29,7 @@ export const Footer = () => {
             <div className="flex space-x-4">
               {/* Email */}
               <a
-                href="mailto:chef@essengruppe.de"
+                href="mailto:chef@essensgruppe.de"
                 className="text-gray-400 hover:text-white transition-colors"
                 title="Email"
               >

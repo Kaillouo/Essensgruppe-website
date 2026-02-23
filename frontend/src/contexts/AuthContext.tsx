@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: { username: string; password: string }) => Promise<void>;
+  login: (credentials: { identifier: string; password: string }) => Promise<void>;
   logout: () => void;
   updateUser: (user: User) => void;
 }
@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, []);
 
-  const login = async (credentials: { username: string; password: string }) => {
+  const login = async (credentials: { identifier: string; password: string }) => {
     const response: AuthResponse = await ApiService.login(credentials) as any;
     localStorage.setItem('token', response.token);
     setUser(response.user);

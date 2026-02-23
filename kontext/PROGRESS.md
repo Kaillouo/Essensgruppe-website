@@ -1,6 +1,6 @@
 # Project Progress Log
 
-**Last Updated:** 2026-02-19
+**Last Updated:** 2026-02-24
 **Current Phase:** Phase 2 - Forum System (COMPLETED)
 **Next Phase:** Phase 3 - Events + Links + MC
 
@@ -52,6 +52,27 @@ This document tracks the implementation progress of the Essensgruppe school comm
 - Prisma Vote model: polymorphic pattern instead of direct FK relations
 - CSS fix: removed invalid `border-border` Tailwind class
 - Used `prisma db push` instead of `prisma migrate dev` (advisory lock issues)
+
+---
+
+## Admin Improvements + Email Redesign ✅ COMPLETED (2026-02-24)
+
+### Admin Panel — Username Rename
+- Added `PATCH /api/admin/users/:id/username` backend route with uniqueness check + Zod validation
+- Added `renameUser()` to `ApiService`
+- Added "Rename" button + modal in Admin Panel → Mitglieder tab
+- Allows admin to correct dumb/inappropriate usernames without deleting accounts
+
+### Email Templates — Visual Redesign
+- **Banner:** Replaced `the-people.jpg` (remote URL) with `sacrefice.jpg` embedded as base64
+  - Sharp resizes to 580×520 at startup, result cached in memory
+  - Falls back to `https://essensgruppe.de/sacrefice.jpg` if file not found
+  - Switched from CSS `background-image` (stripped by Gmail) to `<img>` tag with base64 `src`
+  - 21% dark gray overlay (`rgba(20,20,20,0.21)`) + text-shadow for legibility
+  - Banner height increased to 240px to show the full "man" figure
+  - Crop position `center 70%` chosen to center the tied Ken doll figure
+- **Wave background:** Redesigned from 6 faint wide blobs to 18 uniform lines, stroke-width 3.5, opacity 0.09
+- **Preview tool:** `backend/src/scripts/preview-email.ts` — generates local HTML file without sending
 
 ---
 
@@ -641,7 +662,7 @@ backend/uploads/
 **Files changed:** `frontend/src/pages/AboutPage.tsx`, `frontend/src/pages/LandingPage.tsx`, `frontend/src/pages/LinksPage.tsx`, `frontend/src/pages/MinecraftPage.tsx`, `frontend/src/pages/EventsPage.tsx`, `frontend/src/pages/AdminPage.tsx`, `frontend/src/components/Footer.tsx`, `frontend/src/App.tsx`, `backend/src/server.ts`, `backend/src/routes/mc.routes.ts`, `backend/src/routes/abi.routes.ts`, `backend/prisma/schema.prisma`
 
 ### Phase 4.3a – About Us + Footer + Privacy Policy
-- **About page:** Added `the people.jpg` as full-bleed hero background (copied to `frontend/public/`). Removed "What We Offer" section. Added real email `chef@essengruppe.de`. Updated social links to real Instagram + GoFundMe URLs, removed TikTok.
+- **About page:** Added `the people.jpg` as full-bleed hero background (copied to `frontend/public/`). Removed "What We Offer" section. Added real email `chef@essensgruppe.de`. Updated social links to real Instagram + GoFundMe URLs, removed TikTok.
 - **Footer:** Replaced Facebook icon with Email icon. Removed TikTok. Added "Datenschutz" link to footer Quick Links.
 - **Privacy page:** New `frontend/src/pages/PrivacyPage.tsx` at route `/privacy`. Shows German privacy policy text.
 
@@ -695,7 +716,7 @@ The following items need real content/data from you before they're complete:
 - Log this in `kontext/ocichanges.md` when done.
 
 ### 4. About Us / Contact Details
-- Current email is `chef@essengruppe.de`. Update if needed.
+- Current email is `chef@essensgruppe.de`. Update if needed.
 - Add class photo to About page if desired (replace/supplement `the-people.jpg`).
 
 ### 5. Landing Page Video
@@ -706,5 +727,167 @@ The following items need real content/data from you before they're complete:
 
 ---
 
-**Last Updated By:** Claude Code (Phase 4.3)
-**Date:** 2026-02-22
+**Last Updated By:** Claude Code (Phase 5 — Email Redesign + Password Reset)
+**Date:** 2026-02-24
+
+---
+
+## Email Provider Switch: Zoho → Resend ✅ (2026-02-23)
+
+**Reason:** Zoho SMTP requires a paid plan for programmatic sending on custom domains.
+
+**Changes:**
+- `backend/src/utils/mailer.ts` — SMTP host changed to `smtp.resend.com:587`, auth user is literal string `'resend'`, password is `RESEND_API_KEY`
+- `backend/.env` / `.env.example` — replaced `EMAIL_USER` + `EMAIL_PASSWORD` with `RESEND_API_KEY`
+- Sender changed from `SupremeLeader@` to `Emperor@essensgruppe.de`
+- Domain `essensgruppe.de` verified in Resend dashboard (free tier: 3,000 emails/month)
+- Zoho Mail inbox unchanged — Resend is send-only, receiving still via Zoho
+
+**Domain spelling fix:** Corrected `essengruppe.de` → `essensgruppe.de` (with s after n) across all files: CLAUDE.md, .env, .env.example, Footer.tsx, AboutPage.tsx, PROGRESS.md, NextSteps.md
+
+---
+
+## Phase 5.1: Email Template Polish ✅ COMPLETED (2026-02-23)
+
+### Overview
+Replaced the single basic verification email with 4 fully designed, dark-themed HTML email templates. All emails fire automatically at the right moment in the user lifecycle.
+
+### New / Updated Files
+- `backend/src/services/email.service.ts` — complete rewrite with 4 exported functions
+- `backend/src/routes/auth.routes.ts` — welcome + admin alert wired in
+- `backend/src/routes/admin.routes.ts` — credentials email wired into admin user creation
+- `backend/src/scripts/send-test-emails.ts` — dev test script (send all 4 to any address)
+
+### 4 Templates
+
+| Function | Trigger | Recipient |
+|----------|---------|-----------|
+| `sendVerificationEmail(user, token)` | User registers | New user |
+| `sendWelcomeEmail(user)` | User clicks verification link → account activated | New user |
+| `sendAdminNewUserAlert(user)` | User registers (fires same time as verification email) | Admin (ADMIN_EMAIL) |
+| `sendAdminCreatedAccountEmail(user, tempPassword)` | Admin creates a user manually in admin panel | New user |
+
+### Design System
+All templates share:
+- Dark background: `#080812` / card `#0f0f1e`
+- Purple gradient header: `#6d28d9 → #4338ca → #3730a3` with decorative circles
+- EG badge in header, "Essensgruppe Portal" title, "Abi 2027 — Freiburg" tagline
+- Primary CTA button: `#7c3aed → #4f46e5` gradient, 12px border-radius
+- Footer: essensgruppe.de + Datenschutz links
+- Responsive (`@media max-width:600px` padding adjustments)
+- Google Fonts Inter loaded via `@import`
+- Hidden preheader text for inbox preview
+
+### Template-specific highlights
+- **Verification**: Shows raw verify URL in a code block for fallback; security note (24h expiry)
+- **Welcome**: Feature list with icon tiles (Forum, Events, Games, MC); gold coin banner "1.000 Startmünzen"
+- **Admin alert**: Orange "Neue Registrierung" badge; username + email in info card; link to admin panel
+- **Credentials**: Green "Account erstellt" badge; username + temp password in monospace code box; red warning to change password
+
+### Test Script
+```bash
+cd backend && npx tsx src/scripts/send-test-emails.ts your@email.com
+```
+Sends all 4 templates with dummy data. All go to the specified address (admin alert is redirected too).
+
+---
+
+## Phase 5.2: Email Redesign + Password Reset ✅ COMPLETED (2026-02-24)
+
+### Email Design Overhaul
+All templates (verification, welcome, password reset, admin alert, admin-created account) rebuilt with a new light theme:
+
+**Design system changes:**
+- Background: `#faf8ff` (light purple-tinted white) with animated SVG wave lines (6 sinusoidal strokes, horizontal drift loop 28s via CSS `@keyframes waveDrift`)
+- Header: `the-people.jpg` at `background-size: 115%` (slight zoom) + `linear-gradient(135deg, rgba(91,25,186,0.87), rgba(55,48,163,0.82))` overlay — photo shows through the purple tint
+- Card: white `#ffffff`, `border: 1px solid #ede9fe`, `box-shadow: 0 8px 48px rgba(109,40,217,0.13)`, `border-radius: 20px`
+- Body text: dark `#1e1b4b` / `#374151`; accent `#7c3aed`; muted `#6b7280`
+- Primary CTA button: `#7c3aed → #4f46e5` gradient with purple drop shadow
+- Footer: `#faf8ff` background, purple muted links
+- Subject lines: no emojis — clean impactful German text
+- Sender display name: **Essensgruppe Supreme Leader** (updated in `.env` + `.env.example`)
+
+**Updated file:** `backend/src/services/email.service.ts`
+- Shared `waveBg()` helper — generates SVG data URL with `encodeURIComponent` at module load
+- Shared `header()`, `primaryBtn()`, `infoBox()`, `alertBox()`, `footer()` components
+- All 5 send functions updated to use new design
+
+### New: Self-Service Password Reset
+
+**Schema addition** (`backend/prisma/schema.prisma`):
+- New `PasswordReset` model: id, userId (unique), token (unique), expiresAt, createdAt
+- Relation `passwordReset PasswordReset?` added to User model
+- Applied with `prisma db push` + `prisma generate`
+
+**New backend routes** (`backend/src/routes/auth.routes.ts`):
+| Method | Route | Description |
+|--------|-------|-------------|
+| `POST` | `/api/auth/forgot-password` | Body: `{ email }`. Creates 1-hour reset token, sends email. Always returns generic OK (no email enumeration). |
+| `POST` | `/api/auth/reset-password` | Body: `{ token, newPassword }`. Validates token, updates password hash, deletes token. |
+
+**New email template:** `sendPasswordResetEmail(user, token)`
+- Subject: "Passwort zurücksetzen — Essensgruppe Portal"
+- Red alert box: link expires in 1 hour
+- Fallback URL shown in code block
+
+**New frontend pages:**
+- `frontend/src/pages/ForgotPasswordPage.tsx` at `/forgot-password` — email input, shows generic success screen after submit
+- `frontend/src/pages/ResetPasswordPage.tsx` at `/reset-password?token=...` — new password + confirm, redirects to login on success
+
+**Updated files:**
+- `frontend/src/App.tsx` — `/forgot-password` and `/reset-password` routes added
+- `frontend/src/services/api.service.ts` — `forgotPassword(email)` and `resetPassword(token, newPassword)` added
+- `frontend/src/pages/LoginPage.tsx` — "Passwort vergessen?" link added next to password label
+- `backend/src/scripts/send-test-emails.ts` — updated to send 3 main templates (verification, welcome, password reset)
+
+---
+
+## Phase 5.0: Email Verification + Role Refactor ✅ COMPLETED (2026-02-23)
+
+### Overview
+Replaced admin-approval registration flow with email verification. New role system.
+
+### Key Changes:
+
+**Prisma Schema:**
+- `Role` enum: replaced `USER` with `ABI27` + `ESSENSGRUPPE_MITGLIED` (kept `ADMIN`)
+- `User.email` made required (was nullable)
+- `User.emailVerified Boolean @default(false)` added
+- New `EmailVerification` model (token, userId, expiresAt)
+- New `AppSetting` model (key/value store)
+
+**New Backend Files:**
+- `backend/src/utils/mailer.ts` — Zoho SMTP transporter (smtp.zoho.eu:587)
+- `backend/src/services/email.service.ts` — `sendVerificationEmail(user, token)`
+
+**Updated Backend Files:**
+- `backend/src/routes/auth.routes.ts`: `/register` requires email, creates verification token, sends email; new `GET /verify-email?token=`; `/login` accepts username OR email via `identifier` field
+- `backend/src/routes/admin.routes.ts`: pending tab now shows email column; admin-created users skip verification; new `PATCH /users/:id/role`; new `GET /settings` + `PATCH /settings`
+- `backend/src/types/index.ts`: `UserRole` type, `RegisterDto.email`, `LoginDto.identifier`
+- `backend/src/middleware/auth.middleware.ts`: role type updated
+- `backend/src/seed.ts`: admin email → `chef@essensgruppe.de`, emailVerified=true, seeds AppSetting
+
+**New Frontend File:**
+- `frontend/src/pages/VerifyEmailPage.tsx` — reads token from URL, calls verify API, shows success/error
+
+**Updated Frontend Files:**
+- `frontend/src/types/index.ts`: `UserRole` type, updated `LoginCredentials` + `RegisterCredentials`
+- `frontend/src/services/api.service.ts`: updated auth methods + new `verifyEmail`, `getAdminSettings`, `updateAdminSettings`, `updateUserRole`
+- `frontend/src/contexts/AuthContext.tsx`: login credential type updated to `identifier`
+- `frontend/src/pages/RegisterPage.tsx`: email field added, new success screen
+- `frontend/src/pages/LoginPage.tsx`: username field → identifier, German labels
+- `frontend/src/pages/AdminPage.tsx`: pending tab shows email + German labels; users table role badge clickable with role modal; new Einstellungen tab with registration toggle
+- `frontend/src/App.tsx`: `/verify-email` route added
+
+**Email SMTP Config (Zoho):**
+- Host: smtp.zoho.eu:587
+- User: Emperor@essensgruppe.de
+- Auth: App Password (2FA enabled)
+- Vars in `backend/.env`: EMAIL_USER, EMAIL_PASSWORD, EMAIL_FROM, ADMIN_EMAIL
+
+**New Role System:**
+| Role | Description | Default? |
+|------|-------------|---------|
+| `ABI27` | Any verified Abi 2027 student | ✅ After email verify |
+| `ESSENSGRUPPE_MITGLIED` | Inner circle | Admin upgrade |
+| `ADMIN` | Full rights | Seed only |

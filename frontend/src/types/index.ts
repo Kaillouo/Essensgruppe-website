@@ -1,9 +1,11 @@
+export type UserRole = 'ABI27' | 'ESSENSGRUPPE_MITGLIED' | 'ADMIN';
+
 // User types
 export interface User {
   id: string;
   username: string;
   email: string;
-  role: 'USER' | 'ADMIN';
+  role: UserRole;
   balance: number;
   avatarUrl: string | null;
   createdAt?: string;
@@ -16,12 +18,13 @@ export interface AuthResponse {
 }
 
 export interface LoginCredentials {
-  username: string;
+  identifier: string; // username or email
   password: string;
 }
 
 export interface RegisterCredentials {
   username: string;
+  email: string;
   password: string;
 }
 

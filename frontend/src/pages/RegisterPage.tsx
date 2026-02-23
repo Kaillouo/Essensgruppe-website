@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 export const RegisterPage = () => {
   const [formData, setFormData] = useState({
     username: '',
+    email: '',
     password: '',
     confirmPassword: '',
   });
@@ -32,6 +33,7 @@ export const RegisterPage = () => {
     try {
       await ApiService.register({
         username: formData.username,
+        email: formData.email,
         password: formData.password,
       });
       setSubmitted(true);
@@ -54,13 +56,13 @@ export const RegisterPage = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center"
         >
-          <div className="text-5xl mb-4">✅</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-3">Request Sent!</h1>
+          <div className="text-5xl mb-4">📧</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">Bestätigungs-E-Mail gesendet!</h1>
           <p className="text-gray-600 mb-6">
-            Your join request has been submitted. The admin will review it and let you know when your account is approved.
+            Wir haben eine Bestätigungs-E-Mail an <strong>{formData.email}</strong> geschickt. Klicke auf den Link in der E-Mail, um deinen Account zu aktivieren.
           </p>
           <p className="text-sm text-gray-500 mb-6">
-            You'll be able to log in once approved. In the meantime, feel free to check back later.
+            Der Link ist 24 Stunden gültig. Schau auch im Spam-Ordner nach.
           </p>
           <Link to="/login" className="btn btn-primary w-full py-3 text-center block">
             Go to Login
@@ -79,8 +81,8 @@ export const RegisterPage = () => {
       >
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Join Essensgruppe</h1>
-            <p className="text-gray-600">Request access — admin will approve you</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Registrieren</h1>
+            <p className="text-gray-600">Erstelle deinen Account — du bekommst eine Bestätigungs-E-Mail</p>
           </div>
 
           {error && (
@@ -115,8 +117,24 @@ export const RegisterPage = () => {
             </div>
 
             <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                E-Mail
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="input"
+                placeholder="deine@email.de"
+                required
+              />
+            </div>
+
+            <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
+                Passwort
               </label>
               <input
                 id="password"
@@ -133,7 +151,7 @@ export const RegisterPage = () => {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm Password
+                Passwort bestätigen
               </label>
               <input
                 id="confirmPassword"
@@ -158,19 +176,19 @@ export const RegisterPage = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Sending request...
+                  Registrieren...
                 </span>
               ) : (
-                'Send Join Request'
+                'Registrieren'
               )}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">
-              Already approved?{' '}
+              Schon registriert?{' '}
               <Link to="/login" className="text-primary-600 font-medium hover:text-primary-700">
-                Login here
+                Einloggen
               </Link>
             </p>
           </div>

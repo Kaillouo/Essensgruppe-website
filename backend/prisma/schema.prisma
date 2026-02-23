@@ -13,34 +13,72 @@ datasource db {
 model User {
   id            String     @id @default(uuid())
   username      String     @unique
-  email         String?    @unique
+  email         String     @unique
   passwordHash  String     @map("password_hash")
-  role          Role       @default(USER)
+  role          Role       @default(ABI27)
   status        UserStatus @default(PENDING)
+  emailVerified Boolean    @default(false) @map("email_verified")
   balance       Int        @default(1000) // Starting gambling balance
   avatarUrl     String?    @map("avatar_url")
   createdAt     DateTime   @default(now()) @map("created_at")
   updatedAt     DateTime   @updatedAt @map("updated_at")
 
   // Relations
-  posts         Post[]
-  comments      Comment[]
-  votes         Vote[]
-  events        Event[]
-  eventVotes    EventVote[]
-  eventPhotos   EventPhoto[]
-  announcements Announcement[]
-  transactions    Transaction[]
-  gamesHistory    GameHistory[]
-  predictions     Prediction[]
-  predictionBets  PredictionBet[]
+  posts              Post[]
+  comments           Comment[]
+  votes              Vote[]
+  events             Event[]
+  eventVotes         EventVote[]
+  eventPhotos        EventPhoto[]
+  announcements      Announcement[]
+  transactions       Transaction[]
+  gamesHistory       GameHistory[]
+  predictions        Prediction[]
+  predictionBets     PredictionBet[]
+  emailVerification  EmailVerification?
+  passwordReset      PasswordReset?
 
   @@map("users")
 }
 
 enum Role {
-  USER
+  ABI27
+  ESSENSGRUPPE_MITGLIED
   ADMIN
+}
+
+// Email verification tokens
+model EmailVerification {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_verifications")
+}
+
+// Password reset tokens
+model PasswordReset {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_resets")
+}
+
+// App-wide settings (key/value store)
+model AppSetting {
+  key   String @id
+  value String
+
+  @@map("app_settings")
 }
 
 enum UserStatus {

@@ -42,17 +42,37 @@ export class ApiService {
   }
 
   // Auth endpoints
-  static async register(credentials: { username: string; password: string }) {
+  static async register(credentials: { username: string; email: string; password: string }) {
     return this.request('/auth/register', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
   }
 
-  static async login(credentials: { username: string; password: string }) {
+  static async login(credentials: { identifier: string; password: string }) {
     return this.request('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
+    });
+  }
+
+  static async verifyEmail(token: string) {
+    return this.request(`/auth/verify-email?token=${encodeURIComponent(token)}`);
+  }
+
+  static async forgotPassword(email: string) {
+    return this.request('/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  static async resetPassword(token: string, newPassword: string) {
+    return this.request('/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, newPassword }),
     });
   }
 
@@ -169,6 +189,31 @@ export class ApiService {
 
   static async getAnalytics() {
     return this.request('/admin/analytics', {}, true);
+  }
+
+  static async updateUserRole(userId: string, role: string) {
+    return this.request(`/admin/users/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    }, true);
+  }
+
+  static async renameUser(userId: string, username: string) {
+    return this.request(`/admin/users/${userId}/username`, {
+      method: 'PATCH',
+      body: JSON.stringify({ username }),
+    }, true);
+  }
+
+  static async getAdminSettings() {
+    return this.request<{ registrationOpen: boolean }>('/admin/settings', {}, true);
+  }
+
+  static async updateAdminSettings(registrationOpen: boolean) {
+    return this.request('/admin/settings', {
+      method: 'PATCH',
+      body: JSON.stringify({ registrationOpen }),
+    }, true);
   }
 
   // Forum endpoints
