@@ -57,7 +57,11 @@ export class ApiService {
   }
 
   static async verifyEmail(token: string) {
-    return this.request(`/auth/verify-email?token=${encodeURIComponent(token)}`);
+    return this.request('/auth/verify-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
   }
 
   static async forgotPassword(email: string) {
@@ -166,7 +170,7 @@ export class ApiService {
     }, true);
   }
 
-  static async resetPassword(userId: string, newPassword: string) {
+  static async adminResetPassword(userId: string, newPassword: string) {
     return this.request(`/admin/users/${userId}/password`, {
       method: 'PATCH',
       body: JSON.stringify({ newPassword }),

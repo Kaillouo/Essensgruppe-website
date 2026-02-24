@@ -727,7 +727,7 @@ The following items need real content/data from you before they're complete:
 
 ---
 
-**Last Updated By:** Claude Code (Phase 5 — Email Redesign + Password Reset)
+**Last Updated By:** Claude Code (Bugfix — Password Reset)
 **Date:** 2026-02-24
 
 ---
@@ -798,8 +798,8 @@ Sends all 4 templates with dummy data. All go to the specified address (admin al
 All templates (verification, welcome, password reset, admin alert, admin-created account) rebuilt with a new light theme:
 
 **Design system changes:**
-- Background: `#faf8ff` (light purple-tinted white) with animated SVG wave lines (6 sinusoidal strokes, horizontal drift loop 28s via CSS `@keyframes waveDrift`)
-- Header: `the-people.jpg` at `background-size: 115%` (slight zoom) + `linear-gradient(135deg, rgba(91,25,186,0.87), rgba(55,48,163,0.82))` overlay — photo shows through the purple tint
+- Background: `#faf8ff` (light purple-tinted white) with SVG wave lines applied as inline `background-image` on outer `<td>` (not `<style>` block — Gmail strips those)
+- Header: pure purple gradient `#6d28d9 → #4338ca → #3730a3` — no photo (removed, caused layout issues in Gmail)
 - Card: white `#ffffff`, `border: 1px solid #ede9fe`, `box-shadow: 0 8px 48px rgba(109,40,217,0.13)`, `border-radius: 20px`
 - Body text: dark `#1e1b4b` / `#374151`; accent `#7c3aed`; muted `#6b7280`
 - Primary CTA button: `#7c3aed → #4f46e5` gradient with purple drop shadow
@@ -891,3 +891,76 @@ Replaced admin-approval registration flow with email verification. New role syst
 | `ABI27` | Any verified Abi 2027 student | ✅ After email verify |
 | `ESSENSGRUPPE_MITGLIED` | Inner circle | Admin upgrade |
 | `ADMIN` | Full rights | Seed only |
+
+---
+
+## Email Verification Bugfixes + Email Image Removal ✅ COMPLETED (2026-02-24)
+
+### Problems Fixed
+
+**1. Email scanner consuming the verify token (GET → POST)**
+- Email scanners (e.g. Gmail's safety scanner) pre-fetch links in emails via GET requests
+- This consumed the single-use token before the user ever clicked it, making verification always fail
+- **Fix:** Changed `GET /api/auth/verify-email?token=...` → `POST /api/auth/verify-email` with token in request body
+- Frontend: `VerifyEmailPage.tsx` now sends a POST; `api.service.ts` `verifyEmail()` updated accordingly
+
+**2. React StrictMode double-invocation consuming token**
+- React StrictMode runs effects twice in dev, firing the verify POST twice in quick succession
+- Second call failed ("token already used") and overwrote the success state with an error
+- **Fix:** Added `useRef(false)` guard in `VerifyEmailPage.tsx` — effect runs only once even with StrictMode
+
+**3. Stale PENDING accounts blocking re-registration**
+- If a user registered but never verified, their email/username slot was permanently occupied
+- Re-registering with same email or username returned "already taken" with no way to recover
+- **Fix:** `auth.routes.ts` registration now detects PENDING conflicts and deletes the stale record before creating a new one
+
+**4. Verify endpoint not idempotent (double-click error)**
+- Clicking the email link a second time (within 24h) returned "already used" error
+- **Fix:** Endpoint checks if `user.status === 'ACTIVE'` and returns success immediately — safe to click multiple times
+- Token is kept in DB for 24h (not deleted on first use), so repeated clicks always succeed within the window
+
+**5. `forgot-password` silent failure for unverified emails**
+- PENDING users who hadn't verified would get the generic "if this email exists..." message
+- This gave no useful feedback — user was stuck, couldn't reset password either
+- **Fix:** PENDING users now get a specific German error telling them to check their inbox for the verification link
+
+**6. Rate limiter messages not parseable as JSON**
+- `express-rate-limit` was returning plain strings as the response body
+- Frontend JSON parsing failed silently, showing no error message to user
+- **Fix:** All 3 limiters (`loginLimiter`, `apiLimiter`, `registerLimiter`) now return `{ error: '...' }` objects
+
+### Email Template: Banner Image Removed
+
+The previous email header used a banner photo (`sacrefice.jpg`) embedded as base64 via sharp:
+- `sharp` resized + encoded the image on startup
+- Caused slow startup; embedding a ~200 KB base64 blob in every email
+- The image caused layout issues in some email clients
+
+**New header:** Pure CSS purple gradient (`#6d28d9 → #4338ca → #3730a3`) — no image dependency, renders identically everywhere.
+
+**Files changed:**
+- `backend/src/services/email.service.ts` — removed `sharp` import, removed `getBannerSrc()` / `_cachedBanner`, `header()` no longer takes a `bannerSrc` param, replaced `<img>` banner with gradient `<td>`
+- `backend/src/scripts/preview-email.ts` — same removals applied to local preview script
+- Wave SVG background moved from CSS `body` rule (stripped by Gmail) to inline `background-image` on outer `<td>` (survives Gmail)
+
+**Other:**
+- `backend/src/server.ts` — added `app.use('/content', express.static(...))` to serve the `content/` folder publicly (was needed for a previous image approach, kept for potential future use)
+
+---
+
+## Bugfix: Password Reset "Requires Admin Access" ✅ FIXED (2026-02-24)
+
+### Problem
+Clicking the reset-password link from email resulted in "requires admin access" error.
+
+### Root Cause
+`ApiService` had **two static methods with the same name** `resetPassword`:
+1. Line 75: public reset — called `/auth/reset-password` (no auth)
+2. Line 173: admin reset — called `/admin/users/${userId}/password` (requires ADMIN role)
+
+JavaScript class method resolution: the second definition silently overwrites the first. So `ResetPasswordPage` was actually hitting the admin endpoint with the reset token as a userId — which correctly rejected it as unauthorized.
+
+### Fix
+- Renamed the admin method from `resetPassword` → `adminResetPassword` in `frontend/src/services/api.service.ts`
+- Updated the call in `frontend/src/pages/AdminPage.tsx` line 184 to use `adminResetPassword`
+- Public `resetPassword(token, newPassword)` is now the only method by that name and works for any user with the link

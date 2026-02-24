@@ -181,7 +181,7 @@ export const AdminPage = () => {
   const handlePasswordReset = async () => {
     if (!passwordModal || newPasswordInput.length < 6) return;
     try {
-      const result: any = await ApiService.resetPassword(passwordModal.userId, newPasswordInput);
+      const result: any = await ApiService.adminResetPassword(passwordModal.userId, newPasswordInput);
       setShownPassword(result.password);
     } catch (error: any) {
       alert(error.message);
