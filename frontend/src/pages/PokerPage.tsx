@@ -41,6 +41,7 @@ interface TableState {
   bbIndex: number;
   minRaise: number;
   queueCount: number;
+  soloMode: boolean;
 }
 
 interface HandResult {
@@ -603,7 +604,7 @@ export const PokerPage = () => {
   // Derived
   const mySeat = tableState?.seats.find((s) => s?.userId === user?.id) ?? null;
   const mySeatIndex = mySeat?.seatIndex ?? -1;
-  const isMyTurn = tableState?.actionSeatIndex === mySeatIndex && mySeatIndex !== -1;
+  const isMyTurn = !tableState?.soloMode && tableState?.actionSeatIndex === mySeatIndex && mySeatIndex !== -1;
   const canSit = !mySeat && queuePosition === null;
   const canCheck = isMyTurn && (mySeat?.currentBet ?? 0) === (tableState?.currentBet ?? 0);
   const callAmount = isMyTurn ? Math.min((tableState?.currentBet ?? 0) - (mySeat?.currentBet ?? 0), mySeat?.chips ?? 0) : 0;
@@ -1055,10 +1056,14 @@ export const PokerPage = () => {
               Choose a seat to join the table
             </p>
           </div>
+        ) : tableState?.soloMode && mySeat ? (
+          <p className="text-white/40 text-xs tracking-wide italic">
+            Practice mode — board auto-runs, no chips change
+          </p>
         ) : tableState?.phase === 'WAITING' && mySeat ? (
           <p className="text-white/30 text-xs tracking-wide">
             {(tableState.seats.filter(s => s !== null).length ?? 0) < 2
-              ? 'Waiting for one more player…'
+              ? 'Hand starting soon…'
               : 'Hand starting soon…'}
           </p>
         ) : (

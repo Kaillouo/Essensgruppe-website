@@ -37,6 +37,7 @@ interface Table {
   sbIndex: number;
   bbIndex: number;
   minRaise: number;
+  soloMode: boolean;
 }
 
 interface QueueEntry {
@@ -236,6 +237,7 @@ function publicState() {
     bbIndex: table.bbIndex,
     minRaise: table.minRaise,
     queueCount: tableQueue.length,
+    soloMode: table.soloMode,
   };
 }
 
@@ -363,6 +365,7 @@ function processAction(
 ) {
   const seat = table.seats[seatIndex];
   if (!seat || seat.folded || seat.allIn) return;
+  if (table.soloMode) return; // board auto-runs in solo mode
   if (table.actionSeatIndex !== seatIndex) return;
   if (table.phase === 'WAITING' || table.phase === 'SHOWDOWN') return;
 
@@ -422,6 +425,8 @@ function processAction(
 }
 
 function resetForNextHand() {
+  table.soloMode = false;
+
   for (let i = 0; i < 10; i++) {
     const s = table.seats[i];
     if (s && s.chips <= 0) {
@@ -442,28 +447,35 @@ function resetForNextHand() {
 
   broadcastState();
   const occupied = table.seats.filter(Boolean).length;
-  if (occupied >= 2) tryScheduleStart();
+  if (occupied >= 1) tryScheduleStart();
 }
 
 function tryScheduleStart() {
   const occupied = table.seats.filter(Boolean).length;
-  if (occupied >= 2 && table.phase === 'WAITING') {
-    if (startHandTimer) return;
-    startHandTimer = setTimeout(startNewHand, 2500);
-  }
+  if (occupied === 0 || table.phase !== 'WAITING') return;
+  if (startHandTimer) return;
+  // Solo practice starts faster (1.5s), multiplayer waits 2.5s
+  startHandTimer = setTimeout(startNewHand, occupied === 1 ? 1500 : 2500);
 }
 
 function startNewHand() {
   startHandTimer = null;
 
   const occupied = table.seats.filter((s): s is Seat => s !== null);
-  if (occupied.length < 2) {
+  if (occupied.length === 0) {
     table.phase = 'WAITING';
     broadcastState();
     return;
   }
 
-  // Reset per-hand seat state
+  if (occupied.length === 1) {
+    return startSoloHand(occupied[0]);
+  }
+
+  // ── Multi-player hand ─────────────────────────────────────────────────────
+  table.soloMode = false;
+
+  // Reset per-hand seat state — all seated players join the new hand
   for (const seat of table.seats) {
     if (seat) {
       seat.holeCards = null;
@@ -479,8 +491,6 @@ function startNewHand() {
   table.pot = 0;
   table.minRaise = 4;
   table.phase = 'PREFLOP';
-
-  // ── Multi-player hand ────────────────────────────────────────────────────
   table.currentBet = 2; // BB
 
   let d = table.dealerIndex < 0 ? -1 : table.dealerIndex;
@@ -517,6 +527,80 @@ function startNewHand() {
   prisma.user.update({ where: { id: bb.userId }, data: { balance: bb.chips } }).catch(console.error);
 
   broadcastState();
+}
+
+// ── Solo practice mode ────────────────────────────────────────────────────────
+
+function startSoloHand(seat: Seat) {
+  table.soloMode = true;
+
+  seat.holeCards = null;
+  seat.folded = false;
+  seat.allIn = false;
+  seat.currentBet = 0;
+  seat.acted = false;
+
+  table.deck = shuffle(makeDeck());
+  table.communityCards = [];
+  table.pot = 0;
+  table.currentBet = 0;
+  table.minRaise = 4;
+  table.phase = 'PREFLOP';
+  table.dealerIndex = seat.seatIndex;
+  table.sbIndex = seat.seatIndex;
+  table.bbIndex = seat.seatIndex;
+  table.actionSeatIndex = -1; // no player action needed — board auto-runs
+
+  seat.holeCards = [table.deck.pop()!, table.deck.pop()!];
+
+  broadcastState();
+  setTimeout(soloAdvance, 2000);
+}
+
+function soloAdvance() {
+  if (!table.soloMode) return; // cancelled (player left or 2nd player joined and hand ended)
+  if (table.phase === 'WAITING') return;
+
+  switch (table.phase) {
+    case 'PREFLOP':
+      table.phase = 'FLOP';
+      table.communityCards = [table.deck.pop()!, table.deck.pop()!, table.deck.pop()!];
+      break;
+    case 'FLOP':
+      table.phase = 'TURN';
+      table.communityCards.push(table.deck.pop()!);
+      break;
+    case 'TURN':
+      table.phase = 'RIVER';
+      table.communityCards.push(table.deck.pop()!);
+      break;
+    case 'RIVER':
+      return resolveSolo();
+    default:
+      return;
+  }
+
+  broadcastState();
+  setTimeout(soloAdvance, 1500);
+}
+
+function resolveSolo() {
+  const seat = table.seats.find((s): s is Seat => s !== null);
+  if (!seat || !seat.holeCards) { resetForNextHand(); return; }
+
+  const allCards = [...seat.holeCards, ...table.communityCards].map(toPS);
+  const hand = Hand.solve(allCards);
+
+  ioRef.emit('poker:hand_result', {
+    winners: [{ seatIndex: seat.seatIndex, username: seat.username, handName: hand.name, holeCards: seat.holeCards }],
+    allHoleCards: [{ seatIndex: seat.seatIndex, holeCards: seat.holeCards }],
+    pot: 0,
+    showdown: true,
+    soloMode: true,
+  });
+
+  broadcastState();
+  setTimeout(resetForNextHand, 4000);
 }
 
 // ── Shared seat logic ─────────────────────────────────────────────────────────
