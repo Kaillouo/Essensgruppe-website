@@ -70,3 +70,21 @@ export const requireAdmin = (
 
   next();
 };
+
+// Requires ESSENSGRUPPE_MITGLIED or ADMIN role.
+// Used for routes that inner-circle members (and admins) can access but regular ABI27 users cannot.
+export const requireMember = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  if (req.user.role !== 'ESSENSGRUPPE_MITGLIED' && req.user.role !== 'ADMIN') {
+    return res.status(403).json({ error: 'Essensgruppe member access required' });
+  }
+
+  next();
+};
