@@ -1,6 +1,6 @@
 # Architecture
 
-**Last Updated:** 2026-02-24
+**Last Updated:** 2026-02-25
 
 Monorepo: `backend/` (Express + TypeScript) and `frontend/` (React + Vite + TypeScript)
 
@@ -14,9 +14,9 @@ backend/
     server.ts                  # Express + Socket.io entry point
     seed.ts                    # DB seed (admin account)
     middleware/
-      auth.middleware.ts       # authenticateToken, requireAdmin
+      auth.middleware.ts       # authenticateToken, optionalAuth, requireAdmin, requireMember
       upload.middleware.ts     # multer for avatars + event photos
-      rateLimiter.middleware.ts # login (5/min), API (20/min), register (3/hr)
+      rateLimiter.middleware.ts # login (5/min), register (3/hr), forgotPassword (5/15min), resetPassword (5/15min)
     routes/
       auth.routes.ts           # register, verify-email, login, forgot/reset password
       user.routes.ts           # profile, avatar upload

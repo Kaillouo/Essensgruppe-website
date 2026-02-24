@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-02-25 — Security Audit (security/audit branch)
+- Added rate limiting to `forgot-password` and `reset-password` endpoints (5 req/15min per IP)
+- Added JWT_SECRET production startup guard in `server.ts` — crashes if `JWT_SECRET` unset in production
+- Added `requireMember` middleware to `auth.middleware.ts` (ESSENSGRUPPE_MITGLIED or ADMIN; needed by post-visibility branch)
+- Explicitly disabled source maps in frontend production build (`vite.config.ts`)
+- Created `context/features/securities.md` with full audit findings and middleware reference
+
 ## 2026-02-24 — Context Reorganization
 - Restructured project documentation: new `context/` folder replacing `kontext/`
 - Rewrote CLAUDE.md as lean ~5KB quick card with maintenance rules
