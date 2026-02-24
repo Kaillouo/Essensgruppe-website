@@ -26,3 +26,21 @@ export const registerLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// Forgot-password rate limiter: 5 requests per 15 minutes per IP
+export const forgotPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,
+  message: { error: 'Zu viele Anfragen. Bitte versuche es in 15 Minuten erneut.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Reset-password rate limiter: 5 requests per 15 minutes per IP
+export const resetPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,
+  message: { error: 'Zu viele Anfragen. Bitte versuche es in 15 Minuten erneut.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

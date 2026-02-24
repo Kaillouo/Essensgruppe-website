@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import prisma from '../utils/prisma.util';
 import { hashPassword, comparePassword } from '../utils/password.util';
 import { generateToken } from '../utils/jwt.util';
-import { loginLimiter, registerLimiter } from '../middleware/rateLimiter.middleware';
+import { loginLimiter, registerLimiter, forgotPasswordLimiter, resetPasswordLimiter } from '../middleware/rateLimiter.middleware';
 import { AuthResponse } from '../types';
 import { sendVerificationEmail, sendWelcomeEmail, sendAdminNewUserAlert, sendPasswordResetEmail } from '../services/email.service';
 
@@ -217,7 +217,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 });
 
 // POST /api/auth/forgot-password — request a password reset link
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email || typeof email !== 'string') {
@@ -254,7 +254,7 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 // POST /api/auth/reset-password — set new password using a valid token
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', resetPasswordLimiter, async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 
