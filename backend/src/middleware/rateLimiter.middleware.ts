@@ -4,7 +4,7 @@ import rateLimit from 'express-rate-limit';
 export const loginLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 5,
-  message: 'Too many login attempts, please try again after a minute',
+  message: { error: 'Too many login attempts, please try again after a minute' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -13,7 +13,7 @@ export const loginLimiter = rateLimit({
 export const apiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 20,
-  message: 'Too many requests, please try again later',
+  message: { error: 'Too many requests, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -22,7 +22,7 @@ export const apiLimiter = rateLimit({
 export const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 3,
-  message: 'Too many registration attempts, please try again later',
+  message: { error: 'Too many registration attempts, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
 });

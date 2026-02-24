@@ -53,6 +53,9 @@ app.use('/api/abi', abiRoutes);
 // Serve uploaded files (avatars, post images, event images)
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
+// Serve content assets (used in email templates — must be publicly accessible)
+app.use('/content', express.static(path.join(__dirname, '..', '..', 'content')));
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Essensgruppe API is running' });

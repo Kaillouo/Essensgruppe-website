@@ -33,14 +33,26 @@ router.post('/register', registerLimiter, async (req, res) => {
       return res.status(403).json({ error: 'Registrierung ist derzeit geschlossen.' });
     }
 
+    // Check username conflict — PENDING accounts are stale (unverified), clean them up
     const existingUsername = await prisma.user.findUnique({ where: { username: data.username } });
     if (existingUsername) {
-      return res.status(400).json({ error: 'Username already taken' });
+      if (existingUsername.status === 'PENDING') {
+        await prisma.emailVerification.deleteMany({ where: { userId: existingUsername.id } });
+        await prisma.user.delete({ where: { id: existingUsername.id } });
+      } else {
+        return res.status(400).json({ error: 'Username already taken' });
+      }
     }
 
+    // Check email conflict — same logic: clean up stale PENDING accounts
     const existingEmail = await prisma.user.findUnique({ where: { email: data.email } });
     if (existingEmail) {
-      return res.status(400).json({ error: 'Email already in use' });
+      if (existingEmail.status === 'PENDING') {
+        await prisma.emailVerification.deleteMany({ where: { userId: existingEmail.id } });
+        await prisma.user.delete({ where: { id: existingEmail.id } });
+      } else {
+        return res.status(400).json({ error: 'Email already in use' });
+      }
     }
 
     const passwordHash = await hashPassword(data.password);
@@ -84,10 +96,11 @@ router.post('/register', registerLimiter, async (req, res) => {
   }
 });
 
-// GET /api/auth/verify-email?token=xxx — activate account after email click
-router.get('/verify-email', async (req, res) => {
+// POST /api/auth/verify-email — activate account after email click
+// Uses POST (not GET) so email scanner pre-fetching doesn't consume the token
+router.post('/verify-email', async (req, res) => {
   try {
-    const { token } = req.query;
+    const { token } = req.body;
 
     if (!token || typeof token !== 'string') {
       return res.status(400).json({ error: 'Invalid token' });
@@ -99,12 +112,17 @@ router.get('/verify-email', async (req, res) => {
     });
 
     if (!verification) {
-      return res.status(400).json({ error: 'Ungültiger oder bereits verwendeter Bestätigungslink.' });
+      return res.status(400).json({ error: 'Dieser Bestätigungslink wurde bereits verwendet oder ist ungültig.' });
     }
 
     if (verification.expiresAt < new Date()) {
-      await prisma.emailVerification.delete({ where: { token } });
+      await prisma.emailVerification.deleteMany({ where: { token } });
       return res.status(400).json({ error: 'Der Bestätigungslink ist abgelaufen. Bitte registriere dich erneut.' });
+    }
+
+    // Already verified — idempotent: return success so repeated/double clicks always work
+    if (verification.user.status === 'ACTIVE') {
+      return res.json({ message: 'E-Mail erfolgreich bestätigt! Du kannst dich jetzt einloggen.' });
     }
 
     // Activate user
@@ -122,8 +140,9 @@ router.get('/verify-email', async (req, res) => {
       },
     });
 
-    // Delete verification token
-    await prisma.emailVerification.delete({ where: { token } });
+    // Keep the token in DB until it expires naturally (24h).
+    // This makes the endpoint idempotent: repeated clicks within 24h always succeed.
+    // After expiry the token is gone and returns "already used" above.
 
     // Send welcome email (non-fatal)
     sendWelcomeEmail({ username: verification.user.username, email: verification.user.email }).catch(() => {});
@@ -207,7 +226,12 @@ router.post('/forgot-password', async (req, res) => {
 
     const user = await prisma.user.findUnique({ where: { email } });
 
-    // Always return the same message to avoid leaking whether the email exists
+    // PENDING = registered but not verified yet — tell them clearly
+    if (user && user.status === 'PENDING') {
+      return res.status(400).json({ error: 'Diese E-Mail-Adresse wurde noch nicht bestätigt. Bitte überprüfe dein Postfach und klicke den Bestätigungslink.' });
+    }
+
+    // Non-existent or other non-active status — generic message to avoid leaking
     const OK = { message: 'Falls ein Account mit dieser E-Mail existiert, erhältst du in Kürze eine E-Mail.' };
 
     if (!user || user.status !== 'ACTIVE') return res.json(OK);

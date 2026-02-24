@@ -2,22 +2,14 @@
  * Generates a local HTML preview of the verification email — no sending.
  * Run: npx tsx src/scripts/preview-email.ts
  * Output: Desktop/email-preview.html
+ *
+ * Uses base64 image (works in browser). Real emails use CID attachments.
  */
-import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
 
 async function main() {
-
-// ── Banner ────────────────────────────────────────────────────────────────────
-const imgPath = path.resolve(__dirname, '../../../content/sacrefice.jpg');
-const buf = await sharp(imgPath)
-  .rotate()
-  .resize(580, 520, { fit: 'cover', position: 'top' })
-  .jpeg({ quality: 75 })
-  .toBuffer();
-const bannerSrc = `data:image/jpeg;base64,${buf.toString('base64')}`;
 
 // ── Waves ─────────────────────────────────────────────────────────────────────
 const W = 720, H = 600, amp = 18, count = 18;
@@ -26,7 +18,7 @@ const wavePaths = Array.from({ length: count }, (_, i) => {
   return `<path d='M0,${y} C90,${y - amp} 180,${y + amp} 270,${y} C360,${y - amp} 450,${y + amp} 540,${y} C630,${y - amp} ${W},${y} ${W},${y}' stroke='rgb(109,40,217)' stroke-width='3.5' stroke-opacity='0.09' fill='none'/>`;
 }).join('');
 const waveSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}'>${wavePaths}</svg>`;
-const WAVE_BG = `url("data:image/svg+xml,${encodeURIComponent(waveSvg)}")`;
+const WAVE_URI = `data:image/svg+xml,${encodeURIComponent(waveSvg)}`;
 
 // ── HTML ──────────────────────────────────────────────────────────────────────
 const html = `<!DOCTYPE html>
@@ -38,17 +30,8 @@ const html = `<!DOCTYPE html>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
   *{box-sizing:border-box;}
-  body,html{margin:0;padding:0;width:100%;}
-  body{
-    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    background-color:#faf8ff;
-    background-image:${WAVE_BG};
-    background-repeat:repeat;
-    background-size:720px 600px;
-    -webkit-font-smoothing:antialiased;
-    animation:waveDrift 28s linear infinite;
-  }
-  @keyframes waveDrift{from{background-position:0 0;}to{background-position:720px 0;}}
+  body,html{margin:0;padding:0;width:100%;background-color:#faf8ff;}
+  body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;}
   a{text-decoration:none;}
   img{display:block;border:0;max-width:100%;}
 </style>
@@ -56,30 +39,20 @@ const html = `<!DOCTYPE html>
 <body>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr>
-    <td style="padding:40px 16px;">
+    <td style="padding:40px 16px;background-color:#faf8ff;background-image:url('${WAVE_URI}');background-repeat:repeat;background-size:720px 600px;">
       <table role="presentation" align="center" width="100%" cellpadding="0" cellspacing="0" border="0"
         style="max-width:580px;margin:0 auto;background:#ffffff;border-radius:20px;border:1px solid #ede9fe;overflow:hidden;box-shadow:0 8px 48px rgba(109,40,217,0.13);">
 
         <!-- HEADER -->
         <tr>
-          <td style="padding:0;position:relative;overflow:hidden;height:240px;background:#1a1a1a;">
-            <img src="${bannerSrc}" width="580" alt="" role="presentation"
-              style="display:block;position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center 70%;opacity:1;border:0;">
-            <div style="position:absolute;inset:0;background:rgba(20,20,20,0.21);"></div>
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-              style="position:relative;z-index:2;height:240px;">
-              <tr>
-                <td style="padding:32px 40px;vertical-align:bottom;">
-                  <div style="display:inline-block;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:5px 13px;margin-bottom:12px;">
-                    <span style="font-size:11px;font-weight:800;color:#fff;letter-spacing:2px;text-transform:uppercase;">EG</span>
-                  </div>
-                  <div>
-                    <span style="font-size:22px;font-weight:900;color:#ffffff;letter-spacing:-0.4px;line-height:1.2;display:block;text-shadow:0 1px 6px rgba(0,0,0,0.55);">Essensgruppe Portal</span>
-                    <span style="font-size:12px;color:rgba(255,255,255,0.85);font-weight:500;margin-top:4px;display:block;text-shadow:0 1px 4px rgba(0,0,0,0.4);">Abi 2027 &mdash; Freiburg</span>
-                  </div>
-                </td>
-              </tr>
-            </table>
+          <td style="padding:32px 40px;background:linear-gradient(135deg,#6d28d9 0%,#4338ca 60%,#3730a3 100%);">
+            <div style="display:inline-block;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:5px 13px;margin-bottom:14px;">
+              <span style="font-size:11px;font-weight:800;color:#fff;letter-spacing:2px;text-transform:uppercase;">EG</span>
+            </div>
+            <div>
+              <span style="font-size:24px;font-weight:900;color:#ffffff;letter-spacing:-0.4px;line-height:1.2;display:block;">Essensgruppe Portal</span>
+              <span style="font-size:12px;color:rgba(255,255,255,0.8);font-weight:500;margin-top:5px;display:block;">Abi 2027 &mdash; Freiburg</span>
+            </div>
           </td>
         </tr>
 

@@ -1,42 +1,22 @@
 import { transporter } from '../utils/mailer';
-import sharp from 'sharp';
-import path from 'path';
 
 const SENDER = '"Essensgruppe Supreme Leader" <Emperor@essensgruppe.de>';
 
-// ─── Banner image (sacrefice.jpg, lazily loaded & cached) ────────────────────
-
-let _cachedBanner: string | null = null;
-
-async function getBannerSrc(): Promise<string> {
-  if (_cachedBanner !== null) return _cachedBanner;
-  try {
-    const imgPath = path.resolve(__dirname, '../../../content/sacrefice.jpg');
-    const buf = await sharp(imgPath)
-      .rotate()
-      .resize(580, 520, { fit: 'cover', position: 'top' })
-      .jpeg({ quality: 75 })
-      .toBuffer();
-    _cachedBanner = `data:image/jpeg;base64,${buf.toString('base64')}`;
-  } catch {
-    _cachedBanner = 'https://essensgruppe.de/sacrefice.jpg';
-  }
-  return _cachedBanner;
-}
-
 // ─── Animated SVG wave background ────────────────────────────────────────────
+// Applied as an inline style on the outer <td> — <style> blocks are stripped
+// by Gmail, but inline styles survive.
 
-function waveBg(): string {
+function waveSvgDataUri(): string {
   const W = 720, H = 600, amp = 18, count = 18;
   const paths = Array.from({ length: count }, (_, i) => {
     const y = Math.round((i + 0.5) * (H / count));
     return `<path d='M0,${y} C90,${y - amp} 180,${y + amp} 270,${y} C360,${y - amp} 450,${y + amp} 540,${y} C630,${y - amp} ${W},${y} ${W},${y}' stroke='rgb(109,40,217)' stroke-width='3.5' stroke-opacity='0.09' fill='none'/>`;
   }).join('');
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}'>${paths}</svg>`;
-  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
-const WAVE_URL = waveBg();
+const WAVE_URI = waveSvgDataUri();
 
 // ─── Shared HTML wrapper ─────────────────────────────────────────────────────
 
@@ -51,19 +31,7 @@ function emailWrapper(title: string, preheader: string, bodyRows: string): strin
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
     *{box-sizing:border-box;}
     body,html{margin:0;padding:0;width:100%!important;}
-    body{
-      font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-      background-color:#faf8ff;
-      background-image:${WAVE_URL};
-      background-repeat:repeat;
-      background-size:720px 600px;
-      -webkit-font-smoothing:antialiased;
-      animation:waveDrift 28s linear infinite;
-    }
-    @keyframes waveDrift{
-      from{background-position:0 0;}
-      to{background-position:720px 0;}
-    }
+    body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;}
     a{text-decoration:none;}
     img{display:block;border:0;max-width:100%;}
     @media only screen and (max-width:600px){
@@ -75,13 +43,13 @@ function emailWrapper(title: string, preheader: string, bodyRows: string): strin
     }
   </style>
 </head>
-<body>
+<body style="margin:0;padding:0;background-color:#faf8ff;">
   <!-- preheader -->
   <div style="display:none;max-height:0;overflow:hidden;">${preheader}&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;&#8203;</div>
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr>
-      <td class="wrap" style="padding:40px 16px;">
+      <td class="wrap" style="padding:40px 16px;background-color:#faf8ff;background-image:url('${WAVE_URI}');background-repeat:repeat;background-size:720px 600px;">
         <table role="presentation" align="center" width="100%" cellpadding="0" cellspacing="0" border="0"
           style="max-width:580px;margin:0 auto;background:#ffffff;border-radius:20px;border:1px solid #ede9fe;overflow:hidden;box-shadow:0 8px 48px rgba(109,40,217,0.13);">
           ${bodyRows}
@@ -95,30 +63,17 @@ function emailWrapper(title: string, preheader: string, bodyRows: string): strin
 
 // ─── Shared components ────────────────────────────────────────────────────────
 
-function header(bannerSrc: string, tagline = 'Abi 2027 &mdash; Freiburg'): string {
+function header(tagline = 'Abi 2027 &mdash; Freiburg'): string {
   return `
   <tr>
-    <td style="padding:0;position:relative;overflow:hidden;height:240px;background:#1a1a1a;">
-      <!-- banner photo -->
-      <img src="${bannerSrc}" width="580" alt="" role="presentation"
-        style="display:block;position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center 70%;opacity:1;border:0;">
-      <!-- subtle gray overlay 21% opacity -->
-      <div style="position:absolute;inset:0;background:rgba(20,20,20,0.21);"></div>
-      <!-- text -->
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-        style="position:relative;z-index:2;height:240px;">
-        <tr>
-          <td style="padding:32px 40px;vertical-align:bottom;">
-            <div style="display:inline-block;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:5px 13px;margin-bottom:12px;">
-              <span style="font-size:11px;font-weight:800;color:#fff;letter-spacing:2px;text-transform:uppercase;">EG</span>
-            </div>
-            <div>
-              <span style="font-size:22px;font-weight:900;color:#ffffff;letter-spacing:-0.4px;line-height:1.2;display:block;text-shadow:0 1px 6px rgba(0,0,0,0.55);">Essensgruppe Portal</span>
-              <span style="font-size:12px;color:rgba(255,255,255,0.85);font-weight:500;margin-top:4px;display:block;text-shadow:0 1px 4px rgba(0,0,0,0.4);">${tagline}</span>
-            </div>
-          </td>
-        </tr>
-      </table>
+    <td style="padding:32px 40px;background:linear-gradient(135deg,#6d28d9 0%,#4338ca 60%,#3730a3 100%);">
+      <div style="display:inline-block;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:5px 13px;margin-bottom:14px;">
+        <span style="font-size:11px;font-weight:800;color:#fff;letter-spacing:2px;text-transform:uppercase;">EG</span>
+      </div>
+      <div>
+        <span style="font-size:24px;font-weight:900;color:#ffffff;letter-spacing:-0.4px;line-height:1.2;display:block;">Essensgruppe Portal</span>
+        <span style="font-size:12px;color:rgba(255,255,255,0.8);font-weight:500;margin-top:5px;display:block;">${tagline}</span>
+      </div>
     </td>
   </tr>`;
 }
@@ -172,10 +127,8 @@ function footer(): string {
 
 export async function sendVerificationEmail(user: { username: string; email: string }, token: string): Promise<void> {
   const url = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
-  const banner = await getBannerSrc();
-
   const rows = `
-  ${header(banner)}
+  ${header()}
   <tr>
     <td class="b-pad" style="padding:36px 40px;">
       <h2 style="margin:0 0 6px;font-size:24px;font-weight:900;color:#1e1b4b;letter-spacing:-0.4px;">E-Mail bestätigen</h2>
@@ -212,7 +165,6 @@ export async function sendVerificationEmail(user: { username: string; email: str
 
 export async function sendWelcomeEmail(user: { username: string; email: string }): Promise<void> {
   const loginUrl = `${process.env.FRONTEND_URL}/login`;
-  const banner = await getBannerSrc();
 
   const features: { icon: string; title: string; desc: string }[] = [
     { icon: '💬', title: 'Essensgruppe Forum', desc: 'Bubble-Forum für Diskussionen mit deiner Klasse' },
@@ -239,7 +191,7 @@ export async function sendWelcomeEmail(user: { username: string; email: string }
     </tr>`).join('');
 
   const rows = `
-  ${header(banner)}
+  ${header()}
   <tr>
     <td class="b-pad" style="padding:36px 40px;">
       <h2 style="margin:0 0 6px;font-size:24px;font-weight:900;color:#1e1b4b;letter-spacing:-0.4px;">Willkommen in der Essensgruppe!</h2>
@@ -280,10 +232,9 @@ export async function sendWelcomeEmail(user: { username: string; email: string }
 
 export async function sendPasswordResetEmail(user: { username: string; email: string }, token: string): Promise<void> {
   const url = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-  const banner = await getBannerSrc();
 
   const rows = `
-  ${header(banner, 'Passwort zurücksetzen')}
+  ${header('Passwort zurücksetzen')}
   <tr>
     <td class="b-pad" style="padding:36px 40px;">
       <h2 style="margin:0 0 6px;font-size:24px;font-weight:900;color:#1e1b4b;letter-spacing:-0.4px;">Neues Passwort festlegen</h2>
@@ -323,10 +274,9 @@ export async function sendAdminNewUserAlert(newUser: { username: string; email: 
   if (!adminEmail) return;
 
   const adminUrl = `${process.env.FRONTEND_URL}/admin`;
-  const banner = await getBannerSrc();
 
   const rows = `
-  ${header(banner, 'Admin-Benachrichtigung')}
+  ${header('Admin-Benachrichtigung')}
   <tr>
     <td class="b-pad" style="padding:36px 40px;">
       <div style="display:inline-block;background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:4px 11px;margin-bottom:18px;">
@@ -364,10 +314,8 @@ export async function sendAdminCreatedAccountEmail(
   tempPassword: string
 ): Promise<void> {
   const loginUrl = `${process.env.FRONTEND_URL}/login`;
-  const banner = await getBannerSrc();
-
   const rows = `
-  ${header(banner)}
+  ${header()}
   <tr>
     <td class="b-pad" style="padding:36px 40px;">
       <div style="display:inline-block;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:6px;padding:4px 11px;margin-bottom:18px;">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ApiService } from '../services/api.service';
 import { motion } from 'framer-motion';
@@ -7,8 +7,13 @@ export const VerifyEmailPage = () => {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
+  const called = useRef(false);
 
   useEffect(() => {
+    // Guard against React StrictMode double-invocation in dev
+    if (called.current) return;
+    called.current = true;
+
     const token = searchParams.get('token');
 
     if (!token) {
