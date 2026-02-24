@@ -174,9 +174,10 @@ router.post('/me/avatar', (req: AuthRequest, res) => {
     }
 
     try {
-      // Resize to 256x256 square, overwrite the file in place
+      // Auto-orient from EXIF first (phone photos), then crop and resize
       const tmpPath = file.path + '.tmp';
       await sharp(file.path)
+        .rotate()
         .resize(256, 256, { fit: 'cover', position: 'centre' })
         .jpeg({ quality: 85 })
         .toFile(tmpPath);

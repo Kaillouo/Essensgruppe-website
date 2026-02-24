@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { ApiService } from '../services/api.service';
 import { motion } from 'framer-motion';
+import { AvatarCropModal } from '../components/AvatarCropModal';
 
 export const ProfilePage = () => {
   const { user, updateUser, logout } = useAuth();
@@ -20,27 +21,33 @@ export const ProfilePage = () => {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const handleAvatarClick = () => {
     avatarInputRef.current?.click();
   };
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setCropFile(file);
+    // Reset input so same file can be re-selected next time
+    if (avatarInputRef.current) avatarInputRef.current.value = '';
+  };
+
+  const handleCropConfirm = async (blob: Blob) => {
+    setCropFile(null);
     setAvatarUploading(true);
     setMessage({ type: '', text: '' });
     try {
-      const updated: any = await ApiService.uploadAvatar(file);
+      const updated: any = await ApiService.uploadAvatar(blob);
       updateUser(updated);
       setMessage({ type: 'success', text: 'Profile picture updated!' });
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
     } finally {
       setAvatarUploading(false);
-      // Reset input so same file can be re-selected
-      if (avatarInputRef.current) avatarInputRef.current.value = '';
     }
   };
 
@@ -104,6 +111,14 @@ export const ProfilePage = () => {
   };
 
   return (
+    <>
+    {cropFile && (
+      <AvatarCropModal
+        file={cropFile}
+        onConfirm={handleCropConfirm}
+        onCancel={() => setCropFile(null)}
+      />
+    )}
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <motion.h1
@@ -360,5 +375,6 @@ export const ProfilePage = () => {
         </motion.div>
       </div>
     </div>
+    </>
   );
 };

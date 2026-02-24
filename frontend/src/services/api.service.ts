@@ -105,10 +105,10 @@ export class ApiService {
     }, true);
   }
 
-  static async uploadAvatar(file: File) {
+  static async uploadAvatar(blob: Blob) {
     const token = localStorage.getItem('token');
     const formData = new FormData();
-    formData.append('avatar', file);
+    formData.append('avatar', blob, 'avatar.jpg');
     const response = await fetch(`${API_URL}/users/me/avatar`, {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
