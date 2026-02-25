@@ -22,6 +22,15 @@ import { registerPokerSocket } from './socket/poker.socket';
 // Load environment variables
 dotenv.config();
 
+// Fail fast if JWT_SECRET is missing in production — a missing secret means tokens
+// are signed with the known fallback string, which is a complete auth bypass.
+if (!process.env.JWT_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('FATAL: JWT_SECRET environment variable is required in production');
+  }
+  console.warn('⚠️  JWT_SECRET not set — using insecure fallback (development only)');
+}
+
 const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 3000;
