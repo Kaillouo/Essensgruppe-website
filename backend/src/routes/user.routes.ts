@@ -27,6 +27,7 @@ router.get('/me', async (req: AuthRequest, res) => {
         role: true,
         balance: true,
         avatarUrl: true,
+        lastDailyClaim: true,
         createdAt: true,
         _count: {
           select: {
@@ -47,6 +48,59 @@ router.get('/me', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('Get profile error:', error);
     res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+});
+
+// POST /api/users/daily-claim - Claim daily 1000 coins
+router.post('/daily-claim', async (req: AuthRequest, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      select: { id: true, balance: true, lastDailyClaim: true }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const now = new Date();
+    const lastClaim = user.lastDailyClaim ? new Date(user.lastDailyClaim) : null;
+    const canClaim = !lastClaim || (now.getTime() - lastClaim.getTime()) > 24 * 60 * 60 * 1000;
+
+    if (!canClaim) {
+      // Calculate next claim time
+      const nextClaimTime = new Date(lastClaim!.getTime() + 24 * 60 * 60 * 1000);
+      const msUntilClaim = nextClaimTime.getTime() - now.getTime();
+      return res.json({ claimed: false, nextClaimIn: msUntilClaim });
+    }
+
+    // Award 1000 coins
+    const dailyCoins = 1000;
+    const newBalance = user.balance + dailyCoins;
+
+    // Update user and create transaction
+    const [updatedUser] = await Promise.all([
+      prisma.user.update({
+        where: { id: req.user!.id },
+        data: {
+          balance: newBalance,
+          lastDailyClaim: now
+        },
+        select: { balance: true }
+      }),
+      prisma.transaction.create({
+        data: {
+          userId: req.user!.id,
+          amount: dailyCoins,
+          type: 'DAILY_COINS'
+        }
+      })
+    ]);
+
+    res.json({ claimed: true, newBalance: updatedUser.balance });
+  } catch (error) {
+    console.error('Daily claim error:', error);
+    res.status(500).json({ error: 'Failed to claim daily coins' });
   }
 });
 

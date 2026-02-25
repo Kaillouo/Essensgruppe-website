@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { DailyCoinsClaim } from '../components/DailyCoinsClaim';
 
 const SECTIONS = [
   { label: 'Forum', desc: 'Threads, discussions, and class chat', to: '/forum', locked: true },
@@ -61,7 +62,7 @@ export const LandingPage = () => {
             Abitur 2027 Community Portal
           </motion.p>
 
-          {!isAuthenticated && (
+          {!isAuthenticated ? (
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -73,6 +74,14 @@ export const LandingPage = () => {
               >
                 Ich bin Teil der Essensgruppe
               </Link>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+            >
+              <DailyCoinsClaim autoClaim={true} />
             </motion.div>
           )}
 
