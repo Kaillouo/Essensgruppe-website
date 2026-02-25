@@ -3,15 +3,16 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 
 const SECTIONS = [
-  { label: 'Forum', desc: 'Threads, discussions, and class chat', to: '/forum', locked: true },
-  { label: 'ABI 27', desc: 'Events, planning, and photo galleries', to: '/events', locked: false },
-  { label: 'Games', desc: 'Coins, poker, slots and more', to: '/games', locked: false },
-  { label: 'About Us', desc: 'Who we are', to: '/about', locked: false },
-  { label: 'MC', desc: 'Minecraft server and BlueMap', to: '/mc', locked: true },
+  { label: 'Forum', desc: 'Threads, discussions, and class chat', to: '/forum', locked: true, roleRequired: null as string[] | null },
+  { label: 'ABI 27', desc: 'Events, planning, and photo galleries', to: '/events', locked: false, roleRequired: null as string[] | null },
+  { label: 'Links', desc: 'Useful links for school and class', to: '/links', locked: false, roleRequired: null as string[] | null },
+  { label: 'Games', desc: 'Coins, poker, slots and more', to: '/games', locked: true, roleRequired: null as string[] | null },
+  { label: 'About Us', desc: 'Who we are', to: '/about', locked: false, roleRequired: null as string[] | null },
+  { label: 'MC', desc: 'Minecraft server and BlueMap', to: '/mc', locked: true, roleRequired: ['ESSENSGRUPPE_MITGLIED', 'ADMIN'] as string[] | null },
 ];
 
 export const LandingPage = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { scrollYProgress } = useScroll();
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.8]);
@@ -82,7 +83,9 @@ export const LandingPage = () => {
       {/* Sections list */}
       <section className="py-16 px-4 bg-gray-950">
         <div className="max-w-xl mx-auto">
-          {SECTIONS.map((item, i) => (
+          {SECTIONS.filter(item =>
+            !item.roleRequired || (isAuthenticated && item.roleRequired.includes(user?.role ?? ''))
+          ).map((item, i) => (
             <motion.div
               key={item.to}
               initial={{ opacity: 0, x: -20 }}

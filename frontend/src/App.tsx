@@ -102,7 +102,7 @@ function AppContent() {
           <Route
             path="/mc"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireRole={['ESSENSGRUPPE_MITGLIED', 'ADMIN']}>
                 <MinecraftPage />
               </ProtectedRoute>
             }

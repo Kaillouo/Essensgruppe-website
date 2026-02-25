@@ -16,11 +16,12 @@ export const Navbar = () => {
     setIsProfileOpen(false);
   };
 
+  const isMember = user?.role === 'ESSENSGRUPPE_MITGLIED' || user?.role === 'ADMIN';
   const navLinks = isAuthenticated ? [
     { name: 'Forum', path: '/forum' },
     { name: 'ABI 27', path: '/events' },
     { name: 'Links', path: '/links' },
-    { name: 'MC', path: '/mc' },
+    ...(isMember ? [{ name: 'MC', path: '/mc' }] : []),
     { name: 'Games', path: '/games' },
     { name: 'About Us', path: '/about' },
   ] : [];
