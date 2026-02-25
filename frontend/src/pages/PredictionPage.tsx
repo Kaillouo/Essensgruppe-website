@@ -508,11 +508,11 @@ export const PredictionPage = () => {
 
               {canSetVisibility && (
                 <div className="mb-4">
-                  <label className="block text-xs text-gray-400 mb-1.5 font-medium">Sichtbarkeit</label>
-                  <select value={createVisibility} onChange={e => setCreateVisibility(e.target.value as 'ALL' | 'ESSENSGRUPPE_ONLY')} className="w-full bg-[#0a0e1a] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary-600/50">
-                    <option value="ALL">Alle</option>
-                    <option value="ESSENSGRUPPE_ONLY">Nur Essensgruppe</option>
-                  </select>
+                  <label className="block text-xs mb-1.5 font-medium" style={{ color: 'rgba(255,255,255,0.55)', letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: 11 }}>Sichtbarkeit</label>
+                  <div style={{ display: 'flex', background: 'rgba(255,255,255,0.06)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.10)', overflow: 'hidden' }}>
+                    <button type="button" onClick={() => setCreateVisibility('ALL')} style={{ flex: 1, padding: '9px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', background: createVisibility === 'ALL' ? 'rgba(99,102,241,0.30)' : 'transparent', color: createVisibility === 'ALL' ? '#c4b5fd' : 'rgba(255,255,255,0.35)', border: 'none', borderRight: '1px solid rgba(255,255,255,0.08)', transition: 'all 0.15s', fontFamily: 'inherit' }}>Alle</button>
+                    <button type="button" onClick={() => setCreateVisibility('ESSENSGRUPPE_ONLY')} style={{ flex: 1, padding: '9px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', background: createVisibility === 'ESSENSGRUPPE_ONLY' ? 'rgba(99,102,241,0.30)' : 'transparent', color: createVisibility === 'ESSENSGRUPPE_ONLY' ? '#c4b5fd' : 'rgba(255,255,255,0.35)', border: 'none', transition: 'all 0.15s', fontFamily: 'inherit' }}>Nur Essensgruppe</button>
+                  </div>
                 </div>
               )}
 

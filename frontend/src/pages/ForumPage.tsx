@@ -634,10 +634,10 @@ const CreatePostModal = ({ onClose, onCreated }: { onClose: () => void; onCreate
           {canSetVisibility && (
             <div>
               <label style={{ display: 'block', color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: 600, marginBottom: 6, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Sichtbarkeit</label>
-              <select value={visibility} onChange={e => setVisibility(e.target.value as 'ALL' | 'ESSENSGRUPPE_ONLY')} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#e2e8f0', padding: '10px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}>
-                <option value="ALL">Alle</option>
-                <option value="ESSENSGRUPPE_ONLY">Nur Essensgruppe</option>
-              </select>
+              <div style={{ display: 'flex', background: 'rgba(255,255,255,0.06)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.10)', overflow: 'hidden' }}>
+                <button type="button" onClick={() => setVisibility('ALL')} style={{ flex: 1, padding: '9px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', background: visibility === 'ALL' ? 'rgba(99,102,241,0.30)' : 'transparent', color: visibility === 'ALL' ? '#c4b5fd' : 'rgba(255,255,255,0.35)', border: 'none', borderRight: '1px solid rgba(255,255,255,0.08)', transition: 'all 0.15s', fontFamily: 'inherit' }}>Alle</button>
+                <button type="button" onClick={() => setVisibility('ESSENSGRUPPE_ONLY')} style={{ flex: 1, padding: '9px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', background: visibility === 'ESSENSGRUPPE_ONLY' ? 'rgba(99,102,241,0.30)' : 'transparent', color: visibility === 'ESSENSGRUPPE_ONLY' ? '#c4b5fd' : 'rgba(255,255,255,0.35)', border: 'none', transition: 'all 0.15s', fontFamily: 'inherit' }}>Nur Essensgruppe</button>
+              </div>
             </div>
           )}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
