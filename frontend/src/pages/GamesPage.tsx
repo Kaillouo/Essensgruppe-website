@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useSocket } from '../contexts/SocketContext';
+import { DailyCoinsClaim } from '../components/DailyCoinsClaim';
 
 type Tab = 'singleplayer' | 'multiplayer';
 
@@ -124,22 +125,25 @@ export const GamesPage = () => {
     <div className="min-h-screen bg-[#080d1a] text-white py-8 px-4">
       <div className="max-w-6xl mx-auto">
 
-        {/* Header — title + balance inline */}
+        {/* Header — title + balance + daily claim */}
         <motion.div
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="flex items-center justify-between mb-8"
+          className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 gap-4"
         >
           <div>
             <h1 className="text-3xl font-bold text-white">Games</h1>
             <p className="text-gray-500 mt-1 text-sm">Bet your coins and climb the leaderboard</p>
           </div>
-          <div className="flex items-center gap-2 bg-[#111827] border border-yellow-800/40 rounded-xl px-4 py-2.5">
-            <span className="text-yellow-400 text-lg">🪙</span>
-            <span className="text-xl font-bold text-yellow-400">
-              {(user?.balance ?? 0).toLocaleString()}
-            </span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-[#111827] border border-yellow-800/40 rounded-xl px-4 py-2.5">
+              <span className="text-yellow-400 text-lg">🪙</span>
+              <span className="text-xl font-bold text-yellow-400">
+                {(user?.balance ?? 0).toLocaleString()}
+              </span>
+            </div>
+            <DailyCoinsClaim />
           </div>
         </motion.div>
 

@@ -19,6 +19,7 @@ model User {
   status        UserStatus @default(PENDING)
   emailVerified Boolean    @default(false) @map("email_verified")
   balance       Int        @default(1000) // Starting gambling balance
+  lastDailyClaim DateTime? @map("last_daily_claim") // Track daily coin claim
   avatarUrl     String?    @map("avatar_url")
   createdAt     DateTime   @default(now()) @map("created_at")
   updatedAt     DateTime   @updatedAt @map("updated_at")
@@ -255,6 +256,7 @@ enum TransactionType {
   PREDICTION_BET
   PREDICTION_WIN
   ADMIN_ADJUSTMENT
+  DAILY_COINS
 }
 
 // Prediction market

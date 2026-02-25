@@ -1,6 +1,6 @@
 # Project Status
 
-**Last Updated:** 2026-02-25
+**Last Updated:** 2026-02-26
 
 ## Features
 
@@ -25,6 +25,7 @@
 | Role System | DONE | ABI27, ESSENSGRUPPE_MITGLIED, ADMIN |
 | Security Audit | DONE | Rate limits, JWT guard, source maps — see context/features/securities.md |
 | Post/Event/Prediction Visibility | DONE | ESSENSGRUPPE_ONLY toggle for members; ABI27 filtered server-side |
+| Daily Login Reward | DONE | 1000 coins/day with 24h cooldown, auto-claim on landing page |
 | Forum Graph/Bubble View | PLANNED | See context/features/forum-bubbles.md |
 | Frontend Theme Overhaul | PLANNED | See context/features/frontend-theme.md |
 | Mobile Optimization | TODO | |
@@ -39,4 +40,4 @@
 
 ## Current Branch
 
-`email-verification` — email system + password reset complete, ready to merge to main
+`feature/daily-coins` — daily login reward system (1000 coins/24h) implemented, ready to merge
