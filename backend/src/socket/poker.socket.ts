@@ -555,7 +555,7 @@ function startSoloHand(seat: Seat) {
   seat.holeCards = [table.deck.pop()!, table.deck.pop()!];
 
   broadcastState();
-  setTimeout(soloAdvance, 2000);
+  // Player manually advances via poker:solo_continue
 }
 
 function soloAdvance() {
@@ -582,7 +582,7 @@ function soloAdvance() {
   }
 
   broadcastState();
-  setTimeout(soloAdvance, 1500);
+  // Player manually advances via poker:solo_continue
 }
 
 function resolveSolo() {
@@ -769,6 +769,13 @@ export function registerPokerSocket(io: Server) {
     socket.on('poker:action', (action: { type: 'fold' | 'check' | 'call' | 'raise'; amount?: number }) => {
       const idx = table.seats.findIndex((s) => s?.userId === userId);
       if (idx !== -1) processAction(idx, action);
+    });
+
+    socket.on('poker:solo_continue', () => {
+      if (!table.soloMode) return;
+      const seat = table.seats.find((s) => s?.userId === userId);
+      if (!seat) return;
+      soloAdvance();
     });
 
     socket.on('poker:emote', ({ emoji }: { emoji: string }) => {

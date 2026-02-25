@@ -1056,9 +1056,17 @@ export const PokerPage = () => {
               Choose a seat to join the table
             </p>
           </div>
+        ) : tableState?.soloMode && mySeat && tableState?.phase !== 'WAITING' && tableState?.phase !== 'SHOWDOWN' ? (
+          <button
+            onClick={() => socketRef.current?.emit('poker:solo_continue')}
+            className="px-6 py-2.5 rounded-lg font-semibold text-sm transition-all active:scale-[0.96]"
+            style={{ background: 'rgba(99,102,241,0.18)', border: '1px solid rgba(99,102,241,0.3)', color: '#c4b5fd' }}
+          >
+            {tableState.phase === 'RIVER' ? 'Showdown →' : 'Weiter →'}
+          </button>
         ) : tableState?.soloMode && mySeat ? (
           <p className="text-white/40 text-xs tracking-wide italic">
-            Practice mode — board auto-runs, no chips change
+            Practice mode — no chips change
           </p>
         ) : tableState?.phase === 'WAITING' && mySeat ? (
           <p className="text-white/30 text-xs tracking-wide">
