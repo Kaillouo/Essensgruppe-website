@@ -27,12 +27,12 @@ export const Navbar = () => {
   ] : [];
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
+    <nav className="bg-[#0d1420] border-b border-white/[0.06] sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <span className="text-2xl font-bold text-primary-600">Essensgruppe</span>
+            <span className="text-2xl font-bold text-primary-400">Essensgruppe</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -43,8 +43,8 @@ export const Navbar = () => {
                 to={link.path}
                 className={`px-3 py-2 rounded-lg font-medium transition-colors ${
                   location.pathname === link.path
-                    ? 'text-primary-600 bg-primary-50'
-                    : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                    ? 'text-primary-400 bg-white/[0.08]'
+                    : 'text-white/70 hover:text-primary-400 hover:bg-white/[0.06]'
                 }`}
               >
                 {link.name}
@@ -57,9 +57,9 @@ export const Navbar = () => {
             {isAuthenticated ? (
               <>
                 {/* Available balance (balance minus active prediction reservations) */}
-                <div className="hidden md:flex items-center space-x-2 px-4 py-2 bg-yellow-50 rounded-lg" title={user?.reserved ? `${user.balance} total · ${user.reserved} reserved` : undefined}>
-                  <span className="text-yellow-600 font-bold">{(user?.balance ?? 0) - (user?.reserved ?? 0)}</span>
-                  <span className="text-sm text-gray-600">coins</span>
+                <div className="hidden md:flex items-center space-x-2 px-4 py-2 bg-yellow-400/[0.12] rounded-lg" title={user?.reserved ? `${user.balance} total · ${user.reserved} reserved` : undefined}>
+                  <span className="text-yellow-400 font-bold">{(user?.balance ?? 0) - (user?.reserved ?? 0)}</span>
+                  <span className="text-sm text-white/50">coins</span>
                   {(user?.reserved ?? 0) > 0 && (
                     <span className="text-xs text-orange-400 font-medium">({user!.reserved} reserved)</span>
                   )}
@@ -69,7 +69,7 @@ export const Navbar = () => {
                 <div className="relative">
                   <button
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="flex items-center space-x-2 p-2 rounded-lg hover:bg-white/[0.06] transition-colors"
                   >
                     <div className="w-8 h-8 rounded-full overflow-hidden bg-primary-600 flex items-center justify-center text-white font-medium">
                       {user?.avatarUrl ? (
@@ -86,16 +86,16 @@ export const Navbar = () => {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 border border-gray-200"
+                        className="absolute right-0 mt-2 w-48 bg-[#111827] rounded-lg shadow-lg py-2 border border-white/[0.08]"
                       >
-                        <div className="px-4 py-2 border-b border-gray-200">
-                          <p className="font-medium text-gray-900">{user?.username}</p>
-                          <p className="text-sm text-gray-500">{user?.role}</p>
+                        <div className="px-4 py-2 border-b border-white/[0.06]">
+                          <p className="font-medium text-white">{user?.username}</p>
+                          <p className="text-sm text-white/40">{user?.role}</p>
                         </div>
                         <Link
                           to="/profile"
                           onClick={() => setIsProfileOpen(false)}
-                          className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                          className="block px-4 py-2 text-white/70 hover:bg-white/[0.06]"
                         >
                           Profile
                         </Link>
@@ -103,14 +103,14 @@ export const Navbar = () => {
                           <Link
                             to="/admin"
                             onClick={() => setIsProfileOpen(false)}
-                            className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                            className="block px-4 py-2 text-white/70 hover:bg-white/[0.06]"
                           >
                             Admin Panel
                           </Link>
                         )}
                         <button
                           onClick={handleLogout}
-                          className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+                          className="block w-full text-left px-4 py-2 text-red-400 hover:bg-white/[0.06]"
                         >
                           Logout
                         </button>
@@ -133,7 +133,7 @@ export const Navbar = () => {
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+              className="md:hidden p-2 rounded-lg hover:bg-white/[0.06] text-white/70"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {isMenuOpen ? (
@@ -162,16 +162,16 @@ export const Navbar = () => {
                   onClick={() => setIsMenuOpen(false)}
                   className={`block px-4 py-2 rounded-lg ${
                     location.pathname === link.path
-                      ? 'text-primary-600 bg-primary-50'
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'text-primary-400 bg-white/[0.08]'
+                      : 'text-white/70 hover:bg-white/[0.06]'
                   }`}
                 >
                   {link.name}
                 </Link>
               ))}
               {isAuthenticated && (
-                <div className="px-4 py-2 mt-2 border-t border-gray-200">
-                  <p className="text-sm text-gray-600">Available: <span className="font-bold text-yellow-600">{(user?.balance ?? 0) - (user?.reserved ?? 0)}</span> coins{(user?.reserved ?? 0) > 0 && <span className="text-xs text-orange-400"> ({user!.reserved} reserved)</span>}</p>
+                <div className="px-4 py-2 mt-2 border-t border-white/[0.06]">
+                  <p className="text-sm text-white/50">Available: <span className="font-bold text-yellow-400">{(user?.balance ?? 0) - (user?.reserved ?? 0)}</span> coins{(user?.reserved ?? 0) > 0 && <span className="text-xs text-orange-400"> ({user!.reserved} reserved)</span>}</p>
                 </div>
               )}
             </motion.div>
