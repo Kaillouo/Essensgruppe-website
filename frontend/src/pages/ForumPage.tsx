@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ApiService } from '../services/api.service';
 import { Post } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 
 type SortMode = 'new' | 'hot' | 'top';
 
@@ -124,6 +125,9 @@ function BubbleContent({ post, r, theme }: { post: Post; r: number; theme: Theme
       >{post.title}</p>
       {r > 58 && (
         <div style={{ fontSize: 9, color: theme.accent, flexShrink: 0 }}>↑ {post.voteScore}</div>
+      )}
+      {post.visibility === 'ESSENSGRUPPE_ONLY' && (
+        <div style={{ fontSize: 8, background: 'rgba(74,26,107,0.85)', color: '#d4a0ff', padding: '1px 5px', borderRadius: 4, flexShrink: 0 }}>Nur EG</div>
       )}
     </motion.div>
   );
@@ -584,17 +588,20 @@ export const ForumPage = () => {
 
 // ── CreatePostModal ───────────────────────────────────────────────────────────
 const CreatePostModal = ({ onClose, onCreated }: { onClose: () => void; onCreated: (p: Post) => void }) => {
+  const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [visibility, setVisibility] = useState<'ALL' | 'ESSENSGRUPPE_ONLY'>('ALL');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const canSetVisibility = user?.role === 'ESSENSGRUPPE_MITGLIED' || user?.role === 'ADMIN';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) return;
     setIsSubmitting(true); setError('');
     try {
-      onCreated((await ApiService.createPost({ title: title.trim(), content: content.trim() })) as Post);
+      onCreated((await ApiService.createPost({ title: title.trim(), content: content.trim(), visibility })) as Post);
     } catch (err: any) { setError(err.message); }
     finally { setIsSubmitting(false); }
   };
@@ -624,6 +631,15 @@ const CreatePostModal = ({ onClose, onCreated }: { onClose: () => void; onCreate
             <textarea value={content} onChange={e => setContent(e.target.value)} placeholder="Was beschäftigt dich?" maxLength={10000} required rows={6} style={{ ...inp, resize: 'vertical', minHeight: 140 }} />
             <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, margin: '4px 0 0', textAlign: 'right' }}>{content.length}/10000</p>
           </div>
+          {canSetVisibility && (
+            <div>
+              <label style={{ display: 'block', color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: 600, marginBottom: 6, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Sichtbarkeit</label>
+              <select value={visibility} onChange={e => setVisibility(e.target.value as 'ALL' | 'ESSENSGRUPPE_ONLY')} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#e2e8f0', padding: '10px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}>
+                <option value="ALL">Alle</option>
+                <option value="ESSENSGRUPPE_ONLY">Nur Essensgruppe</option>
+              </select>
+            </div>
+          )}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
             <button type="button" onClick={onClose} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'rgba(255,255,255,0.6)', padding: '9px 20px', fontSize: 14, cursor: 'pointer' }}>Abbrechen</button>
             <motion.button type="submit" disabled={isSubmitting || !title.trim() || !content.trim()} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}

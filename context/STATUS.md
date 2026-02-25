@@ -24,6 +24,7 @@
 | About Us + Privacy | DONE | |
 | Role System | DONE | ABI27, ESSENSGRUPPE_MITGLIED, ADMIN |
 | Security Audit | DONE | Rate limits, JWT guard, source maps — see context/features/securities.md |
+| Post/Event/Prediction Visibility | DONE | ESSENSGRUPPE_ONLY toggle for members; ABI27 filtered server-side |
 | Forum Graph/Bubble View | PLANNED | See context/features/forum-bubbles.md |
 | Frontend Theme Overhaul | PLANNED | See context/features/frontend-theme.md |
 | Mobile Optimization | TODO | |

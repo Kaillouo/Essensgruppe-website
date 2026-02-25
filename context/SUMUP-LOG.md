@@ -12,6 +12,11 @@
 - Explicitly disabled source maps in frontend production build (`vite.config.ts`)
 - Created `context/features/securities.md` with full audit findings and middleware reference
 
+## 2026-02-25 — Visibility Feature (feature/post-visibility)
+- Added `visibility String @default("ALL")` field to Post, Event, Prediction Prisma models; ran `prisma db push`
+- Backend: `post.routes.ts`, `event.routes.ts`, `prediction.routes.ts` — ABI27 users filtered to `visibility='ALL'` items only; ESSENSGRUPPE_MITGLIED/ADMIN can create `ESSENSGRUPPE_ONLY` items
+- Frontend: `types/index.ts` + `api.service.ts` updated; `ForumPage`, `EventsPage`, `PredictionPage` each have a visibility select (Alle/Nur Essensgruppe) shown only to members/admins, plus a "Nur EG" badge on restricted items
+
 ## 2026-02-24 — Context Reorganization
 - Restructured project documentation: new `context/` folder replacing `kontext/`
 - Rewrote CLAUDE.md as lean ~5KB quick card with maintenance rules
