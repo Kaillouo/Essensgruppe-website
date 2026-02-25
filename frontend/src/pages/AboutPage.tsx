@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 
 export const AboutPage = () => {
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-[#0a0e1a] py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -25,21 +25,21 @@ export const AboutPage = () => {
           </div>
 
           <div className="card mb-6">
-            <div className="prose max-w-none text-gray-700">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Our Mission</h3>
+            <div className="prose max-w-none text-white/70">
+              <h3 className="text-xl font-bold text-white mb-3">Our Mission</h3>
               <p className="mb-4">
                 To create a unified digital space where our class can collaborate, communicate, and celebrate
                 our journey to Abitur 2027. We believe in building strong connections and making our final
                 school years memorable and enjoyable.
               </p>
 
-              <h3 className="text-xl font-bold text-gray-900 mb-3 mt-6">Contact</h3>
+              <h3 className="text-xl font-bold text-white mb-3 mt-6">Contact</h3>
               <p className="mb-2">
                 For questions, suggestions, or issues, reach out to us directly:
               </p>
               <a
                 href="mailto:chef@essensgruppe.de"
-                className="text-primary-600 hover:text-primary-700 font-medium"
+                className="text-primary-400 hover:text-primary-300 font-medium"
               >
                 chef@essensgruppe.de
               </a>
@@ -47,22 +47,22 @@ export const AboutPage = () => {
           </div>
 
           <div className="card text-center">
-            <p className="text-gray-600 mb-4">Follow our journey</p>
+            <p className="text-white/50 mb-4">Follow our journey</p>
             <div className="flex justify-center space-x-4">
               <a
                 href="https://instagram.com/thg_abi27"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary-600 hover:text-primary-700 font-medium"
+                className="text-primary-400 hover:text-primary-300 font-medium"
               >
                 Instagram
               </a>
-              <span className="text-gray-400">•</span>
+              <span className="text-white/20">•</span>
               <a
                 href="https://gofund.me/6c2bc4e83"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary-600 hover:text-primary-700 font-medium"
+                className="text-primary-400 hover:text-primary-300 font-medium"
               >
                 GoFundMe
               </a>

@@ -87,12 +87,12 @@ function PhotoCarousel({ eventId, photos, currentUserId, isAdmin, canUpload, onP
   if (photos.length === 0) {
     if (!canUpload) return null;
     return (
-      <div className="mt-3 pt-3 border-t border-gray-100">
+      <div className="mt-3 pt-3 border-t border-white/[0.06]">
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-500 hover:bg-gray-200 disabled:opacity-50"
+          className="text-xs px-2 py-1 rounded bg-white/[0.06] text-white/50 hover:bg-white/10 disabled:opacity-50"
         >
           {uploading ? 'Uploading...' : '📷 Add Photo'}
         </button>
@@ -101,11 +101,11 @@ function PhotoCarousel({ eventId, photos, currentUserId, isAdmin, canUpload, onP
   }
 
   return (
-    <div className="mt-3 pt-3 border-t border-gray-100">
+    <div className="mt-3 pt-3 border-t border-white/[0.06]">
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
 
       {/* Carousel */}
-      <div className="relative rounded-lg overflow-hidden bg-gray-100" style={{ height: 220 }}>
+      <div className="relative rounded-lg overflow-hidden bg-black/40" style={{ height: 220 }}>
         {/* Image */}
         <AnimatePresence mode="wait" initial={false}>
           <motion.img
@@ -283,55 +283,56 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6"
+        style={{ background: 'rgba(10,14,26,0.97)', border: '1px solid rgba(255,255,255,0.08)' }}
+        className="rounded-2xl shadow-2xl w-full max-w-lg p-6"
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Propose an Event</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+          <h2 className="text-xl font-bold text-white">Propose an Event</h2>
+          <button onClick={onClose} className="text-white/40 hover:text-white/70 text-2xl leading-none">×</button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+            <label className="block text-sm font-medium text-white/55 mb-1">Title *</label>
             <input
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
               maxLength={200}
               placeholder="Event title..."
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full border border-white/10 bg-white/[0.04] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500/50 placeholder-white/20"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+            <label className="block text-sm font-medium text-white/55 mb-1">Description *</label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
               maxLength={5000}
               rows={4}
               placeholder="What's the event about? Why should we do it?"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+              className="w-full border border-white/10 bg-white/[0.04] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500/50 resize-none placeholder-white/20"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date (optional)</label>
+              <label className="block text-sm font-medium text-white/55 mb-1">Date (optional)</label>
               <input
                 type="date"
                 value={date}
                 onChange={e => setDate(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full border border-white/10 bg-white/[0.04] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500/50 [color-scheme:dark]"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Budget in € (optional)</label>
+              <label className="block text-sm font-medium text-white/55 mb-1">Budget in € (optional)</label>
               <input
                 type="number"
                 min="0"
@@ -339,20 +340,20 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
                 value={budget}
                 onChange={e => setBudget(e.target.value)}
                 placeholder="0.00"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full border border-white/10 bg-white/[0.04] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500/50 placeholder-white/20"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Location (optional)</label>
+            <label className="block text-sm font-medium text-white/55 mb-1">Location (optional)</label>
             <input
               type="text"
               value={location}
               onChange={e => setLocation(e.target.value)}
               maxLength={200}
               placeholder="Where would this take place?"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full border border-white/10 bg-white/[0.04] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500/50 placeholder-white/20"
             />
           </div>
 
@@ -366,10 +367,10 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
             </div>
           )}
 
-          {error && <p className="text-red-600 text-sm">{error}</p>}
+          {error && <p className="text-red-400 text-sm">{error}</p>}
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-white/10 rounded-lg text-white/60 hover:bg-white/[0.04]">
               Cancel
             </button>
             <button type="submit" disabled={loading} className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50">
@@ -476,7 +477,8 @@ function EventCard({ event, isAdmin, isAuthenticated, currentUserId, onVote, onD
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow"
+      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+      className="rounded-xl p-5 hover:bg-white/[0.06] transition-colors"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
@@ -488,13 +490,13 @@ function EventCard({ event, isAdmin, isAuthenticated, currentUserId, onVote, onD
               <span style={{ fontSize: 11, background: '#4a1a6b', color: '#d4a0ff', padding: '2px 6px', borderRadius: 4 }}>Nur EG</span>
             )}
             {event.date && (
-              <span className="text-xs text-gray-500">📅 {formatDate(event.date)}</span>
+              <span className="text-xs text-white/40">📅 {formatDate(event.date)}</span>
             )}
           </div>
-          <h3 className="text-base font-semibold text-gray-900 leading-snug">{event.title}</h3>
-          <p className="text-sm text-gray-600 mt-1 line-clamp-3">{event.description}</p>
+          <h3 className="text-base font-semibold text-white leading-snug">{event.title}</h3>
+          <p className="text-sm text-white/55 mt-1 line-clamp-3">{event.description}</p>
 
-          <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 flex-wrap">
+          <div className="flex items-center gap-4 mt-3 text-xs text-white/35 flex-wrap">
             {event.location && <span>📍 {event.location}</span>}
             {event.budget !== null && <span>💰 {formatBudget(event.budget)}</span>}
             <span>by {event.user.username} · {timeAgo(event.createdAt)}</span>
@@ -509,19 +511,19 @@ function EventCard({ event, isAdmin, isAuthenticated, currentUserId, onVote, onD
                 <button
                   onClick={() => onVote(event.id, 1)}
                   className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    event.userVote === 1 ? 'bg-green-500 text-white' : 'text-gray-400 hover:bg-green-50 hover:text-green-600'
+                    event.userVote === 1 ? 'bg-green-500 text-white' : 'text-white/30 hover:bg-green-500/10 hover:text-green-400'
                   }`}
                   title="Upvote"
                 >
                   ▲
                 </button>
-                <span className={`text-sm font-bold ${event.votes > 0 ? 'text-green-600' : event.votes < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+                <span className={`text-sm font-bold ${event.votes > 0 ? 'text-green-400' : event.votes < 0 ? 'text-red-400' : 'text-white/40'}`}>
                   {event.votes}
                 </span>
                 <button
                   onClick={() => onVote(event.id, -1)}
                   className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                    event.userVote === -1 ? 'bg-red-500 text-white' : 'text-gray-400 hover:bg-red-50 hover:text-red-600'
+                    event.userVote === -1 ? 'bg-red-500 text-white' : 'text-white/30 hover:bg-red-500/10 hover:text-red-400'
                   }`}
                   title="Downvote"
                 >
@@ -529,7 +531,7 @@ function EventCard({ event, isAdmin, isAuthenticated, currentUserId, onVote, onD
                 </button>
               </>
             ) : (
-              <span className={`text-sm font-bold ${event.votes > 0 ? 'text-green-600' : event.votes < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+              <span className={`text-sm font-bold ${event.votes > 0 ? 'text-green-400' : event.votes < 0 ? 'text-red-400' : 'text-white/40'}`}>
                 {event.votes}
               </span>
             )}
@@ -549,11 +551,11 @@ function EventCard({ event, isAdmin, isAuthenticated, currentUserId, onVote, onD
 
       {/* Admin / creator actions */}
       {(isAdmin || event.user.id === currentUserId) && (
-        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.06]">
           {isAdmin && (
             <button
               onClick={() => onStatusChange(event)}
-              className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200"
+              className="text-xs px-2 py-1 rounded bg-white/[0.06] text-white/50 hover:bg-white/10"
             >
               Move Status
             </button>
@@ -561,7 +563,7 @@ function EventCard({ event, isAdmin, isAuthenticated, currentUserId, onVote, onD
           {!confirmDelete ? (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="text-xs px-2 py-1 rounded bg-red-50 text-red-600 hover:bg-red-100"
+              className="text-xs px-2 py-1 rounded bg-red-500/10 text-red-400 hover:bg-red-500/20"
             >
               Delete
             </button>
@@ -669,18 +671,18 @@ function AbiZeitungForm() {
   };
 
   return (
-    <div className="mt-8 pt-8 border-t border-gray-200">
+    <div className="mt-8 pt-8 border-t border-white/[0.06]">
       <div className="flex items-center gap-2 mb-4">
         <span className="text-2xl">📰</span>
-        <h2 className="text-xl font-bold text-gray-900">Abi Zeitung – Anonymer Beitrag</h2>
+        <h2 className="text-xl font-bold text-white">Abi Zeitung – Anonymer Beitrag</h2>
       </div>
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <p className="text-xs text-gray-400 mb-4">
+      <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }} className="rounded-xl p-5">
+        <p className="text-xs text-white/40 mb-4">
           Dein Beitrag wird anonym gespeichert — kein Name, keine Zuordnung.
           Er wird nur für das Abi-Magazin genutzt und ist nur für Admins sichtbar.
         </p>
         {success ? (
-          <div className="text-green-600 font-medium text-sm py-4 text-center">
+          <div className="text-green-400 font-medium text-sm py-4 text-center">
             ✓ Beitrag anonym eingereicht!
           </div>
         ) : (
@@ -691,7 +693,7 @@ function AbiZeitungForm() {
               onChange={e => setTitle(e.target.value)}
               maxLength={200}
               placeholder="Titel des Beitrags..."
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full border border-white/10 bg-white/[0.04] text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500/50 placeholder-white/20"
             />
             <div>
               <textarea
@@ -700,15 +702,15 @@ function AbiZeitungForm() {
                 maxLength={MAX_CHARS}
                 rows={6}
                 placeholder="Dein Beitrag... (max. 4000 Zeichen)"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                className="w-full border border-white/10 bg-white/[0.04] text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500/50 resize-none placeholder-white/20"
               />
-              <p className="text-xs text-gray-400 text-right">{content.length} / {MAX_CHARS}</p>
+              <p className="text-xs text-white/30 text-right">{content.length} / {MAX_CHARS}</p>
             </div>
-            {error && <p className="text-red-600 text-sm">{error}</p>}
+            {error && <p className="text-red-400 text-sm">{error}</p>}
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 text-sm font-medium disabled:opacity-50"
+              className="px-4 py-2 bg-white/10 text-white/80 rounded-lg hover:bg-white/15 text-sm font-medium disabled:opacity-50"
             >
               {loading ? 'Wird gesendet...' : 'Anonym einreichen'}
             </button>
@@ -790,7 +792,7 @@ export const EventsPage = () => {
   const tabTitles = { PROPOSED: 'Proposed Events', IN_PLANNING: 'In Planning', COMPLETED: 'Completed' };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0a0e1a]">
       {/* Camping hero banner */}
       <div
         className="relative h-40 flex items-center justify-center overflow-hidden"
@@ -832,22 +834,22 @@ export const EventsPage = () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6">
+          <div className="flex gap-1 rounded-xl p-1 mb-6" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
             {tabs.map(tab => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === tab.key
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-white/10 text-white shadow-sm'
+                    : 'text-white/40 hover:text-white/70'
                 }`}
               >
                 <span>{tab.icon}</span>
                 <span>{tab.label}</span>
                 {tab.count > 0 && (
                   <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                    activeTab === tab.key ? 'bg-primary-100 text-primary-700' : 'bg-gray-200 text-gray-500'
+                    activeTab === tab.key ? 'bg-primary-600/30 text-primary-300' : 'bg-white/10 text-white/40'
                   }`}>
                     {tab.count}
                   </span>

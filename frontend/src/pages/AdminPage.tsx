@@ -251,18 +251,18 @@ export const AdminPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-[#0a0e1a] py-8 px-4">
       <div className="max-w-7xl mx-auto">
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold text-gray-900 mb-8"
+          className="text-3xl font-bold text-white mb-8"
         >
           Admin Panel
         </motion.h1>
 
         {/* Tabs */}
-        <div className="mb-6 border-b border-gray-200">
+        <div className="mb-6 border-b border-white/[0.06]">
           <div className="flex space-x-8">
             {tabs.map((tab) => (
               <button
@@ -270,8 +270,8 @@ export const AdminPage = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`pb-4 px-2 font-medium border-b-2 transition-colors flex items-center gap-2 ${
                   activeTab === tab.id
-                    ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                    ? 'border-primary-400 text-primary-400'
+                    : 'border-transparent text-white/50 hover:text-white/80'
                 }`}
               >
                 {tab.label}
@@ -288,18 +288,18 @@ export const AdminPage = () => {
         {/* Pending (email verification) Tab */}
         {activeTab === 'pending' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card">
-            <h3 className="text-lg font-bold text-gray-900 mb-1">Warte auf E-Mail-Bestätigung</h3>
-            <p className="text-sm text-gray-500 mb-4">Diese Nutzer haben sich registriert, aber ihre E-Mail noch nicht bestätigt. Manuelles Freischalten oder Löschen möglich.</p>
+            <h3 className="text-lg font-bold text-white mb-1">Warte auf E-Mail-Bestätigung</h3>
+            <p className="text-sm text-white/50 mb-4">Diese Nutzer haben sich registriert, aber ihre E-Mail noch nicht bestätigt. Manuelles Freischalten oder Löschen möglich.</p>
             {pendingUsers.length === 0 ? (
-              <p className="text-gray-500 py-8 text-center">Keine ausstehenden Accounts.</p>
+              <p className="text-white/40 py-8 text-center">Keine ausstehenden Accounts.</p>
             ) : (
               <div className="space-y-3">
                 {pendingUsers.map((user: any) => (
-                  <div key={user.id} className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div key={user.id} className="flex items-center justify-between p-4 bg-yellow-400/[0.06] border border-yellow-400/20 rounded-lg">
                     <div>
-                      <p className="font-semibold text-gray-900">{user.username}</p>
-                      <p className="text-sm text-gray-500">{user.email}</p>
-                      <p className="text-xs text-gray-400">Registriert {new Date(user.createdAt).toLocaleDateString('de-DE')}</p>
+                      <p className="font-semibold text-white">{user.username}</p>
+                      <p className="text-sm text-white/50">{user.email}</p>
+                      <p className="text-xs text-white/30">Registriert {new Date(user.createdAt).toLocaleDateString('de-DE')}</p>
                     </div>
                     <div className="flex gap-3">
                       <button
@@ -311,7 +311,7 @@ export const AdminPage = () => {
                       </button>
                       <button
                         onClick={() => handleDeny(user.id, user.username)}
-                        className="px-4 py-2 bg-red-100 text-red-600 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors"
+                        className="px-4 py-2 bg-red-500/10 text-red-400 text-sm font-medium rounded-lg hover:bg-red-500/20 transition-colors"
                       >
                         Löschen
                       </button>
@@ -327,28 +327,28 @@ export const AdminPage = () => {
         {activeTab === 'analytics' && analytics && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card">
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Active Members</h3>
-              <p className="text-3xl font-bold text-gray-900">{analytics.totalUsers}</p>
+              <h3 className="text-sm font-medium text-white/50 mb-2">Active Members</h3>
+              <p className="text-3xl font-bold text-white">{analytics.totalUsers}</p>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="card">
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Pending Requests</h3>
-              <p className="text-3xl font-bold text-yellow-600">{analytics.pendingUsers}</p>
+              <h3 className="text-sm font-medium text-white/50 mb-2">Pending Requests</h3>
+              <p className="text-3xl font-bold text-yellow-400">{analytics.pendingUsers}</p>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card">
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Total Posts</h3>
-              <p className="text-3xl font-bold text-gray-900">{analytics.totalPosts}</p>
+              <h3 className="text-sm font-medium text-white/50 mb-2">Total Posts</h3>
+              <p className="text-3xl font-bold text-white">{analytics.totalPosts}</p>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card">
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Total Events</h3>
-              <p className="text-3xl font-bold text-gray-900">{analytics.totalEvents}</p>
+              <h3 className="text-sm font-medium text-white/50 mb-2">Total Events</h3>
+              <p className="text-3xl font-bold text-white">{analytics.totalEvents}</p>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card md:col-span-2 lg:col-span-4">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Recent Members</h3>
+              <h3 className="text-lg font-bold text-white mb-4">Recent Members</h3>
               <div className="space-y-2">
                 {analytics.recentUsers?.map((user: any, index: number) => (
-                  <div key={index} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-0">
-                    <span className="font-medium text-gray-900">{user.username}</span>
-                    <span className="text-sm text-gray-600">{new Date(user.createdAt).toLocaleDateString()}</span>
+                  <div key={index} className="flex justify-between items-center py-2 border-b border-white/[0.06] last:border-0">
+                    <span className="font-medium text-white">{user.username}</span>
+                    <span className="text-sm text-white/50">{new Date(user.createdAt).toLocaleDateString()}</span>
                   </div>
                 ))}
               </div>
@@ -359,35 +359,35 @@ export const AdminPage = () => {
         {/* Users Tab */}
         {activeTab === 'users' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">All Members</h3>
+            <h3 className="text-lg font-bold text-white mb-4">All Members</h3>
             {isLoading ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-400 mx-auto"></div>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-white/[0.04] border-b border-white/[0.06]">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Username</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Role</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Status</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Balance</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Posts</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Actions</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Username</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Role</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Status</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Balance</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Posts</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-white/[0.06]">
                     {users.map((user: any) => (
-                      <tr key={user.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900">{user.username}</td>
+                      <tr key={user.id} className="hover:bg-white/[0.03]">
+                        <td className="px-4 py-3 text-sm font-medium text-white">{user.username}</td>
                         <td className="px-4 py-3 text-sm">
                           <button
                             onClick={() => openRoleModal(user)}
                             className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
-                              user.role === 'ADMIN' ? 'bg-purple-100 text-purple-600' :
-                              user.role === 'ESSENSGRUPPE_MITGLIED' ? 'bg-blue-100 text-blue-600' :
-                              'bg-gray-100 text-gray-600'
+                              user.role === 'ADMIN' ? 'bg-purple-500/20 text-purple-400' :
+                              user.role === 'ESSENSGRUPPE_MITGLIED' ? 'bg-blue-500/20 text-blue-400' :
+                              'bg-white/10 text-white/60'
                             }`}
                             title="Klicken zum Ändern"
                           >
@@ -396,9 +396,9 @@ export const AdminPage = () => {
                         </td>
                         <td className="px-4 py-3 text-sm">
                           <span className={`px-2 py-1 rounded-full text-xs ${
-                            user.status === 'ACTIVE' ? 'bg-green-100 text-green-600' :
-                            user.status === 'BANNED' ? 'bg-red-100 text-red-600' :
-                            'bg-yellow-100 text-yellow-600'
+                            user.status === 'ACTIVE' ? 'bg-green-500/20 text-green-400' :
+                            user.status === 'BANNED' ? 'bg-red-500/20 text-red-400' :
+                            'bg-yellow-500/20 text-yellow-400'
                           }`}>
                             {user.status}
                           </span>
@@ -406,31 +406,31 @@ export const AdminPage = () => {
                         <td className="px-4 py-3 text-sm">
                           <button
                             onClick={() => openBalanceModal(user)}
-                            className="font-medium text-yellow-600 hover:text-yellow-800 underline"
+                            className="font-medium text-yellow-400 hover:text-yellow-300 underline"
                             title="Click to edit balance"
                           >
                             {user.balance} coins
                           </button>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{user._count?.posts || 0}</td>
+                        <td className="px-4 py-3 text-sm text-white/50">{user._count?.posts || 0}</td>
                         <td className="px-4 py-3 text-sm">
                           <div className="flex gap-2">
-                            <button onClick={() => openRenameModal(user)} className="text-indigo-600 hover:text-indigo-800 font-medium">
+                            <button onClick={() => openRenameModal(user)} className="text-indigo-400 hover:text-indigo-300 font-medium">
                               Rename
                             </button>
-                            <button onClick={() => openPasswordModal(user)} className="text-blue-600 hover:text-blue-800 font-medium">
+                            <button onClick={() => openPasswordModal(user)} className="text-blue-400 hover:text-blue-300 font-medium">
                               Password
                             </button>
                             {user.status === 'BANNED' ? (
-                              <button onClick={() => handleUnban(user.id)} className="text-green-600 hover:text-green-800 font-medium">
+                              <button onClick={() => handleUnban(user.id)} className="text-green-400 hover:text-green-300 font-medium">
                                 Unban
                               </button>
                             ) : (
-                              <button onClick={() => handleBan(user.id)} className="text-orange-500 hover:text-orange-700 font-medium">
+                              <button onClick={() => handleBan(user.id)} className="text-orange-400 hover:text-orange-300 font-medium">
                                 Ban
                               </button>
                             )}
-                            <button onClick={() => handleDeleteUser(user.id)} className="text-red-600 hover:text-red-800 font-medium">
+                            <button onClick={() => handleDeleteUser(user.id)} className="text-red-400 hover:text-red-300 font-medium">
                               Delete
                             </button>
                           </div>
@@ -447,24 +447,24 @@ export const AdminPage = () => {
         {/* Abi Zeitung Tab */}
         {activeTab === 'abiZeitung' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">📰 Abi Zeitung – Anonyme Beiträge</h3>
+            <h3 className="text-lg font-bold text-white mb-4">📰 Abi Zeitung – Anonyme Beiträge</h3>
             {abiLoading ? (
-              <div className="text-center py-8 text-gray-400">Lade Beiträge...</div>
+              <div className="text-center py-8 text-white/40">Lade Beiträge...</div>
             ) : abiSubmissions.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-8">Noch keine Beiträge.</p>
+              <p className="text-white/40 text-sm text-center py-8">Noch keine Beiträge.</p>
             ) : (
               <div className="space-y-4">
                 {abiSubmissions.map((s: any) => (
-                  <div key={s.id} className="border border-gray-200 rounded-xl p-4">
+                  <div key={s.id} className="border border-white/[0.06] rounded-xl p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900">{s.title}</h4>
-                        <p className="text-sm text-gray-600 mt-2 whitespace-pre-wrap">{s.content}</p>
-                        <p className="text-xs text-gray-400 mt-2">{new Date(s.createdAt).toLocaleString('de-DE')}</p>
+                        <h4 className="font-semibold text-white">{s.title}</h4>
+                        <p className="text-sm text-white/60 mt-2 whitespace-pre-wrap">{s.content}</p>
+                        <p className="text-xs text-white/30 mt-2">{new Date(s.createdAt).toLocaleString('de-DE')}</p>
                       </div>
                       <button
                         onClick={() => handleDeleteAbiSubmission(s.id)}
-                        className="text-xs px-2 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100 flex-shrink-0"
+                        className="text-xs px-2 py-1 bg-red-500/10 text-red-400 rounded hover:bg-red-500/20 flex-shrink-0"
                       >
                         Löschen
                       </button>
@@ -478,12 +478,12 @@ export const AdminPage = () => {
         {/* Settings Tab */}
         {activeTab === 'settings' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card max-w-lg">
-            <h3 className="text-lg font-bold text-gray-900 mb-6">Einstellungen</h3>
+            <h3 className="text-lg font-bold text-white mb-6">Einstellungen</h3>
 
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <div className="flex items-center justify-between p-4 bg-white/[0.04] rounded-xl border border-white/[0.06]">
               <div>
-                <p className="font-semibold text-gray-900">Registrierung</p>
-                <p className="text-sm text-gray-500 mt-0.5">
+                <p className="font-semibold text-white">Registrierung</p>
+                <p className="text-sm text-white/50 mt-0.5">
                   {registrationOpen
                     ? 'Offen — neue Nutzer können sich registrieren'
                     : 'Geschlossen — Registrierung deaktiviert'}
@@ -493,7 +493,7 @@ export const AdminPage = () => {
                 onClick={handleToggleRegistration}
                 disabled={settingsLoading || registrationOpen === null}
                 className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${
-                  registrationOpen ? 'bg-green-500' : 'bg-gray-300'
+                  registrationOpen ? 'bg-green-500' : 'bg-white/20'
                 }`}
               >
                 <span
@@ -513,23 +513,23 @@ export const AdminPage = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm"
+            className="bg-[#111827] border border-white/[0.08] rounded-2xl shadow-2xl p-6 w-full max-w-sm"
           >
-            <h3 className="text-lg font-bold text-gray-900 mb-1">Edit Balance</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              {balanceModal.username} — current: <span className="font-semibold text-yellow-600">{balanceModal.currentBalance} coins</span>
+            <h3 className="text-lg font-bold text-white mb-1">Edit Balance</h3>
+            <p className="text-sm text-white/50 mb-4">
+              {balanceModal.username} — current: <span className="font-semibold text-yellow-400">{balanceModal.currentBalance} coins</span>
             </p>
 
             <div className="flex gap-2 mb-4">
               <button
                 onClick={() => { setBalanceMode('set'); setBalanceInput(String(balanceModal.currentBalance)); }}
-                className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${balanceMode === 'set' ? 'bg-primary-600 text-white border-primary-600' : 'border-gray-300 text-gray-600'}`}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${balanceMode === 'set' ? 'bg-primary-600 text-white border-primary-600' : 'border-white/10 text-white/50'}`}
               >
                 Set to
               </button>
               <button
                 onClick={() => { setBalanceMode('adjust'); setBalanceInput('0'); }}
-                className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${balanceMode === 'adjust' ? 'bg-primary-600 text-white border-primary-600' : 'border-gray-300 text-gray-600'}`}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${balanceMode === 'adjust' ? 'bg-primary-600 text-white border-primary-600' : 'border-white/10 text-white/50'}`}
               >
                 Add / Remove
               </button>
@@ -556,20 +556,20 @@ export const AdminPage = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm"
+            className="bg-[#111827] border border-white/[0.08] rounded-2xl shadow-2xl p-6 w-full max-w-sm"
           >
-            <h3 className="text-lg font-bold text-gray-900 mb-1">Reset Password</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              User: <span className="font-semibold">{passwordModal.username}</span>
+            <h3 className="text-lg font-bold text-white mb-1">Reset Password</h3>
+            <p className="text-sm text-white/50 mb-4">
+              User: <span className="font-semibold text-white">{passwordModal.username}</span>
             </p>
 
             {shownPassword ? (
               <div>
-                <p className="text-sm text-gray-600 mb-2">New password set to:</p>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                  <p className="text-lg font-mono font-bold text-green-700 select-all">{shownPassword}</p>
+                <p className="text-sm text-white/60 mb-2">New password set to:</p>
+                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 text-center">
+                  <p className="text-lg font-mono font-bold text-green-400 select-all">{shownPassword}</p>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">Copy this and give it to the user.</p>
+                <p className="text-xs text-white/30 mt-2">Copy this and give it to the user.</p>
                 <button onClick={() => setPasswordModal(null)} className="w-full btn btn-primary py-2 mt-4">
                   Done
                 </button>
@@ -601,11 +601,11 @@ export const AdminPage = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm"
+            className="bg-[#111827] border border-white/[0.08] rounded-2xl shadow-2xl p-6 w-full max-w-sm"
           >
-            <h3 className="text-lg font-bold text-gray-900 mb-1">Nutzername ändern</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              Aktuell: <span className="font-semibold">{renameModal.username}</span>
+            <h3 className="text-lg font-bold text-white mb-1">Nutzername ändern</h3>
+            <p className="text-sm text-white/50 mb-4">
+              Aktuell: <span className="font-semibold text-white">{renameModal.username}</span>
             </p>
             <input
               type="text"
@@ -615,7 +615,7 @@ export const AdminPage = () => {
               placeholder="Neuer Nutzername"
               maxLength={20}
             />
-            <p className="text-xs text-gray-400 mb-4">3–20 Zeichen, nur Buchstaben, Zahlen, Unterstrich</p>
+            <p className="text-xs text-white/30 mb-4">3–20 Zeichen, nur Buchstaben, Zahlen, Unterstrich</p>
             <div className="flex gap-3">
               <button onClick={() => setRenameModal(null)} className="flex-1 btn btn-outline py-2">Abbrechen</button>
               <button
@@ -636,15 +636,15 @@ export const AdminPage = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm"
+            className="bg-[#111827] border border-white/[0.08] rounded-2xl shadow-2xl p-6 w-full max-w-sm"
           >
-            <h3 className="text-lg font-bold text-gray-900 mb-1">Rolle ändern</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              Nutzer: <span className="font-semibold">{roleModal.username}</span>
+            <h3 className="text-lg font-bold text-white mb-1">Rolle ändern</h3>
+            <p className="text-sm text-white/50 mb-4">
+              Nutzer: <span className="font-semibold text-white">{roleModal.username}</span>
             </p>
             <div className="space-y-2 mb-4">
               {(['ABI27', 'ESSENSGRUPPE_MITGLIED', 'ADMIN'] as const).map((role) => (
-                <label key={role} className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-gray-50">
+                <label key={role} className="flex items-center gap-3 p-3 rounded-lg border border-white/[0.06] cursor-pointer hover:bg-white/[0.04]">
                   <input
                     type="radio"
                     name="role"
@@ -653,10 +653,10 @@ export const AdminPage = () => {
                     onChange={() => setSelectedRole(role)}
                   />
                   <div>
-                    <p className="font-medium text-gray-900 text-sm">
+                    <p className="font-medium text-white text-sm">
                       {role === 'ESSENSGRUPPE_MITGLIED' ? 'Essensgruppe Mitglied' : role}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-white/40">
                       {role === 'ABI27' ? 'Standard nach E-Mail-Bestätigung' :
                        role === 'ESSENSGRUPPE_MITGLIED' ? 'Innerer Kreis — vom Admin hochgestuft' :
                        'Voller Zugriff auf Admin-Panel'}

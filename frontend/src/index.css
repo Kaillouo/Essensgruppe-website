@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-white text-gray-900 antialiased;
+    @apply bg-[#0a0e1a] text-white antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 }
@@ -35,17 +35,17 @@
     @apply bg-gray-200 text-gray-900 hover:bg-gray-300 active:scale-95;
   }
   .btn-outline {
-    @apply border-2 border-primary-600 text-primary-600 hover:bg-primary-50 active:scale-95;
+    @apply border-2 border-primary-500 text-primary-400 hover:bg-primary-500/10 active:scale-95;
   }
 
   /* Input styles */
   .input {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all;
+    @apply w-full px-4 py-2 border border-white/10 bg-white/[0.04] text-white rounded-lg placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-primary-600/40 focus:border-primary-600/50 transition-all;
   }
 
   /* Card styles */
   .card {
-    @apply bg-white rounded-xl shadow-md p-6 transition-shadow hover:shadow-lg;
+    @apply bg-white/[0.04] border border-white/[0.06] rounded-xl p-6 transition-shadow hover:bg-white/[0.06];
   }
 }
 

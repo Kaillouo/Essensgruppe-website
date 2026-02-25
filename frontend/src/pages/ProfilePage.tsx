@@ -32,7 +32,6 @@ export const ProfilePage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     setCropFile(file);
-    // Reset input so same file can be re-selected next time
     if (avatarInputRef.current) avatarInputRef.current.value = '';
   };
 
@@ -52,21 +51,17 @@ export const ProfilePage = () => {
   };
 
   useEffect(() => {
-    // Load user profile with stats
     ApiService.getProfile().then((data: any) => {
       setStats(data._count);
     });
-
-    // Load recent transactions
     ApiService.getTransactions().then((data: any) => {
-      setTransactions(data.slice(0, 5)); // Show last 5
+      setTransactions(data.slice(0, 5));
     });
   }, []);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage({ type: '', text: '' });
-
     try {
       const updated: any = await ApiService.updateProfile(formData);
       updateUser(updated);
@@ -80,12 +75,10 @@ export const ProfilePage = () => {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage({ type: '', text: '' });
-
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setMessage({ type: 'error', text: 'New passwords do not match' });
       return;
     }
-
     try {
       await ApiService.changePassword({
         currentPassword: passwordData.currentPassword,
@@ -119,12 +112,12 @@ export const ProfilePage = () => {
         onCancel={() => setCropFile(null)}
       />
     )}
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-[#0a0e1a] py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold text-gray-900 mb-8"
+          className="text-3xl font-bold text-white mb-8"
         >
           My Profile
         </motion.h1>
@@ -135,7 +128,7 @@ export const ProfilePage = () => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className={`mb-6 px-4 py-3 rounded-lg ${
-              message.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+              message.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
             }`}
           >
             {message.text}
@@ -149,7 +142,6 @@ export const ProfilePage = () => {
             animate={{ opacity: 1, y: 0 }}
             className="card"
           >
-            {/* Hidden file input */}
             <input
               ref={avatarInputRef}
               type="file"
@@ -159,26 +151,20 @@ export const ProfilePage = () => {
             />
 
             <div className="flex items-center mb-6">
-              {/* Clickable avatar */}
               <button
                 type="button"
                 onClick={handleAvatarClick}
                 disabled={avatarUploading}
-                className="relative w-20 h-20 rounded-full overflow-hidden group focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                className="relative w-20 h-20 rounded-full overflow-hidden group focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-transparent"
                 title="Click to change profile picture"
               >
                 {user?.avatarUrl ? (
-                  <img
-                    src={user.avatarUrl}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full bg-primary-600 flex items-center justify-center text-white text-3xl font-bold">
                     {user?.username.charAt(0).toUpperCase()}
                   </div>
                 )}
-                {/* Hover overlay */}
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center">
                   {avatarUploading ? (
                     <svg className="w-6 h-6 text-white animate-spin" fill="none" viewBox="0 0 24 24">
@@ -195,50 +181,35 @@ export const ProfilePage = () => {
               </button>
 
               <div className="ml-4">
-                <h2 className="text-2xl font-bold text-gray-900">{user?.username}</h2>
-                <p className="text-gray-600">{user?.role}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Click Profilspicture to change</p>
+                <h2 className="text-2xl font-bold text-white">{user?.username}</h2>
+                <p className="text-white/50">{user?.role}</p>
+                <p className="text-xs text-white/30 mt-0.5">Click Profilspicture to change</p>
               </div>
             </div>
 
             {!isEditing ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">Email</label>
-                  <p className="text-gray-900">{user?.email}</p>
+                  <label className="block text-sm font-medium text-white/50">Email</label>
+                  <p className="text-white/80">{user?.email}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">Member Since</label>
-                  <p className="text-gray-900">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</p>
+                  <label className="block text-sm font-medium text-white/50">Member Since</label>
+                  <p className="text-white/80">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</p>
                 </div>
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="btn btn-outline w-full"
-                >
+                <button onClick={() => setIsEditing(true)} className="btn btn-outline w-full">
                   Edit Profile
                 </button>
               </div>
             ) : (
               <form onSubmit={handleUpdateProfile} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
-                  <input
-                    type="text"
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    className="input"
-                    required
-                  />
+                  <label className="block text-sm font-medium text-white/60 mb-2">Username</label>
+                  <input type="text" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} className="input" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="input"
-                    required
-                  />
+                  <label className="block text-sm font-medium text-white/60 mb-2">Email</label>
+                  <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input" required />
                 </div>
                 <div className="flex gap-2">
                   <button type="submit" className="btn btn-primary flex-1">Save</button>
@@ -255,23 +226,23 @@ export const ProfilePage = () => {
             transition={{ delay: 0.1 }}
             className="card"
           >
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Statistics</h3>
+            <h3 className="text-xl font-bold text-white mb-4">Statistics</h3>
             <div className="space-y-4">
-              <div className="flex justify-between items-center py-3 border-b border-gray-200">
-                <span className="text-gray-600">Gambling Balance</span>
-                <span className="text-2xl font-bold text-yellow-600">{user?.balance} coins</span>
+              <div className="flex justify-between items-center py-3 border-b border-white/[0.06]">
+                <span className="text-white/50">Gambling Balance</span>
+                <span className="text-2xl font-bold text-yellow-400">{user?.balance} coins</span>
               </div>
-              <div className="flex justify-between items-center py-3 border-b border-gray-200">
-                <span className="text-gray-600">Forum Posts</span>
-                <span className="text-xl font-bold text-gray-900">{stats?.posts || 0}</span>
+              <div className="flex justify-between items-center py-3 border-b border-white/[0.06]">
+                <span className="text-white/50">Forum Posts</span>
+                <span className="text-xl font-bold text-white">{stats?.posts || 0}</span>
               </div>
-              <div className="flex justify-between items-center py-3 border-b border-gray-200">
-                <span className="text-gray-600">Comments</span>
-                <span className="text-xl font-bold text-gray-900">{stats?.comments || 0}</span>
+              <div className="flex justify-between items-center py-3 border-b border-white/[0.06]">
+                <span className="text-white/50">Comments</span>
+                <span className="text-xl font-bold text-white">{stats?.comments || 0}</span>
               </div>
               <div className="flex justify-between items-center py-3">
-                <span className="text-gray-600">Votes Given</span>
-                <span className="text-xl font-bold text-gray-900">{stats?.votes || 0}</span>
+                <span className="text-white/50">Votes Given</span>
+                <span className="text-xl font-bold text-white">{stats?.votes || 0}</span>
               </div>
             </div>
           </motion.div>
@@ -284,23 +255,23 @@ export const ProfilePage = () => {
           transition={{ delay: 0.2 }}
           className="card mt-6"
         >
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Recent Transactions</h3>
+          <h3 className="text-xl font-bold text-white mb-4">Recent Transactions</h3>
           {transactions.length > 0 ? (
             <div className="space-y-2">
               {transactions.map((tx: any) => (
-                <div key={tx.id} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-0">
+                <div key={tx.id} className="flex justify-between items-center py-2 border-b border-white/[0.06] last:border-0">
                   <div>
-                    <p className="font-medium text-gray-900">{tx.type.replace('_', ' ')}</p>
-                    <p className="text-sm text-gray-600">{new Date(tx.createdAt).toLocaleString()}</p>
+                    <p className="font-medium text-white/80">{tx.type.replace('_', ' ')}</p>
+                    <p className="text-sm text-white/40">{new Date(tx.createdAt).toLocaleString()}</p>
                   </div>
-                  <span className={`font-bold ${tx.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <span className={`font-bold ${tx.amount >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {tx.amount >= 0 ? '+' : ''}{tx.amount}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-600">No transactions yet</p>
+            <p className="text-white/40">No transactions yet</p>
           )}
         </motion.div>
 
@@ -311,7 +282,7 @@ export const ProfilePage = () => {
           transition={{ delay: 0.3 }}
           className="card mt-6"
         >
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Change Password</h3>
+          <h3 className="text-xl font-bold text-white mb-4">Change Password</h3>
           {!isChangingPassword ? (
             <button onClick={() => setIsChangingPassword(true)} className="btn btn-outline">
               Change Password
@@ -319,35 +290,16 @@ export const ProfilePage = () => {
           ) : (
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-                <input
-                  type="password"
-                  value={passwordData.currentPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                  className="input"
-                  required
-                />
+                <label className="block text-sm font-medium text-white/60 mb-2">Current Password</label>
+                <input type="password" value={passwordData.currentPassword} onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} className="input" required />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                <input
-                  type="password"
-                  value={passwordData.newPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                  className="input"
-                  required
-                  minLength={6}
-                />
+                <label className="block text-sm font-medium text-white/60 mb-2">New Password</label>
+                <input type="password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} className="input" required minLength={6} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-                <input
-                  type="password"
-                  value={passwordData.confirmPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                  className="input"
-                  required
-                />
+                <label className="block text-sm font-medium text-white/60 mb-2">Confirm New Password</label>
+                <input type="password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} className="input" required />
               </div>
               <div className="flex gap-2">
                 <button type="submit" className="btn btn-primary flex-1">Update Password</button>
@@ -362,14 +314,11 @@ export const ProfilePage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="card mt-6 border-2 border-red-200"
+          className="card mt-6 border-red-500/20"
         >
-          <h3 className="text-xl font-bold text-red-600 mb-4">Danger Zone</h3>
-          <p className="text-gray-600 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
-          <button
-            onClick={handleDeleteAccount}
-            className="btn bg-red-600 text-white hover:bg-red-700"
-          >
+          <h3 className="text-xl font-bold text-red-400 mb-4">Danger Zone</h3>
+          <p className="text-white/40 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
+          <button onClick={handleDeleteAccount} className="btn bg-red-600 text-white hover:bg-red-700">
             Delete Account
           </button>
         </motion.div>
