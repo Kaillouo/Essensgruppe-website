@@ -73,3 +73,32 @@
 - `GET /api/users/me` includes `reserved` field
 - Slots, Blackjack, Poker `seatPlayer()`: all check available balance (not total) before accepting bets
 - Navbar shows available balance with "(N reserved)" indicator; PredictionPage modal explains reserved betting
+
+## 2026-02-25 — Round 2 Fixes (fix/round2 branch)
+
+### Fix 1: Visibility toggle UI
+- Replaced <select> dropdown with two-button toggle (Alle / Nur Essensgruppe) in ForumPage, EventsPage, PredictionPage
+- Used inline dark styles — no white-on-white issue, readable on dark backgrounds
+
+### Fix 2: MC page access control
+- Extended ProtectedRoute with requireRole?: string[] prop
+- App.tsx: MC route now requireRole={['ESSENSGRUPPE_MITGLIED', 'ADMIN']}
+- LandingPage: SECTIONS array has roleRequired field; filters MC from unauthorized users
+- Navbar: MC link only shown to isMember (ESSENSGRUPPE_MITGLIED or ADMIN)
+
+### Fix 3: Poker solo mode manual advance
+- Backend: removed all setTimeout(soloAdvance, ...) auto-timers from startSoloHand and soloAdvance
+- Added poker:solo_continue socket event handler — player drives each street advance
+- Frontend: replaced "board auto-runs" text with "Weiter" / "Showdown" button
+
+### Fix 4: Poker result inline banner
+- Backend: added investedThisHand tracking to Seat; included allInvestments in all poker:hand_result emits
+- Frontend: deleted WinnerBanner overlay; added inline top banner + per-seat win/loss badges on seats
+
+### Fix 5: Dark theme consistency
+- index.css: body bg #0a0e1a, .card/.input/.btn-outline use dark base classes globally
+- AboutPage, ProfilePage, EventsPage, AdminPage: all rewritten to dark equivalents
+
+### Fix 6: Navbar dark accent
+- Navbar bg-white shadow-md => bg-[#0d1420] border-b border-white/[0.06]
+- All link/text/dropdown/mobile-menu colors updated to dark theme variants

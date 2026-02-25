@@ -27,7 +27,7 @@
 | Post/Event/Prediction Visibility | DONE | ESSENSGRUPPE_ONLY toggle for members; ABI27 filtered server-side |
 | Daily Login Reward | DONE | 1000 coins/day with 24h cooldown, auto-claim on landing page |
 | Forum Graph/Bubble View | PLANNED | See context/features/forum-bubbles.md |
-| Frontend Theme Overhaul | PLANNED | See context/features/frontend-theme.md |
+| Frontend Theme Overhaul | DONE | Dark theme applied globally (fix/round2) |
 | Mobile Optimization | TODO | |
 | Production Deploy (OCI) | PARTIAL | Server running but needs build optimization |
 
