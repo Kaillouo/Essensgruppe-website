@@ -24,3 +24,29 @@
 - Phase 5.0: Email verification + role refactor (ABI27/ESSENSGRUPPE_MITGLIED/ADMIN)
 - Phase 5.1-5.2: Email templates (5 designs), password reset flow, Resend SMTP switch
 - Multiple bugfix sessions: token consumption by scanners, StrictMode double-fire, rate limiter JSON, duplicate method names
+
+## 2026-02-25 — Bug Fix Session (fix/known-bugs branch)
+
+### Bug 1: Avatar EXIF rotation + crop UI
+- Backend: added `.rotate()` before `.resize()` in Sharp pipeline (user.routes.ts) to auto-orient phone photos from EXIF
+- Frontend: new `AvatarCropModal.tsx` — click/drag to set crop center, canvas crops client-side before upload
+- `api.service.ts` uploadAvatar now accepts `Blob`; ProfilePage opens modal before uploading
+
+### Bug 2: Poker solo mode broken
+- `soloMode` was declared in the Table object but never implemented — `tryScheduleStart()` required 2+ players
+- Added `soloMode: boolean` to Table interface; `tryScheduleStart()` now fires for 1 player (1.5s delay)
+- `startNewHand()` routes to new `startSoloHand()` for 1 player: deals hole cards, auto-advances streets every 1.5s via `soloAdvance()`, resolves hand at showdown with no balance change
+- `processAction()` ignores input during solo mode; frontend shows "Practice mode" message, hides action buttons
+
+### Bug 3: iOS Safari layout
+- Added `.h-dvh-nav`, `.pb-safe`, `.bottom-safe-4` utility classes to index.css using `100dvh` and `env(safe-area-inset-bottom)`
+- ForumPage: fixed container height to use `.h-dvh-nav` class; added `WebkitBackdropFilter` to all `backdropFilter` usages; fixed zoom buttons with `.bottom-safe-4`
+- PokerPage: added `WebkitBackdropFilter` to header + action bar; added `.pb-safe` to action bar
+
+### Bug 4: Prediction market reserved betting
+- New `backend/src/utils/balance.util.ts` with `getReservedBalance()` / `getAvailableBalance()`
+- `/bet` route: no longer deducts balance — reserves amount, checks available balance (balance - sum of active prediction bets)
+- `/resolve` route: losers' balance deducted NOW; winners get only the winnings (stake never taken); no-winner scenario = reservations freed, no balance changes
+- `GET /api/users/me` includes `reserved` field
+- Slots, Blackjack, Poker `seatPlayer()`: all check available balance (not total) before accepting bets
+- Navbar shows available balance with "(N reserved)" indicator; PredictionPage modal explains reserved betting
