@@ -45,6 +45,7 @@ export interface Post {
   title: string;
   content: string;
   imageUrl: string | null;
+  visibility: 'ALL' | 'ESSENSGRUPPE_ONLY';
   createdAt: string;
   updatedAt: string;
   user: PostUser;
@@ -93,6 +94,7 @@ export interface Event {
   budget: number | null;
   status: 'PROPOSED' | 'IN_PLANNING' | 'COMPLETED';
   votes: number;
+  visibility: 'ALL' | 'ESSENSGRUPPE_ONLY';
   createdAt: string;
   updatedAt: string;
   user: EventUser;

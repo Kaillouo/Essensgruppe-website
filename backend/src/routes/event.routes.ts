@@ -10,6 +10,9 @@ import { AuthRequest } from '../types';
 
 const router = Router();
 
+// Helper: is user an Essensgruppe member or admin?
+const isMember = (role: string) => role === 'ESSENSGRUPPE_MITGLIED' || role === 'ADMIN';
+
 const createEventSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200),
   description: z.string().min(1, 'Description is required').max(5000),
@@ -29,7 +32,11 @@ const statusSchema = z.object({
 // GET /api/events — list all events (public, optional auth for userVote)
 router.get('/', optionalAuth as any, async (req: AuthRequest, res: Response) => {
   try {
+    // Non-members (and unauthenticated) only see publicly visible events
+    const visibilityFilter = req.user && isMember(req.user.role) ? undefined : { visibility: 'ALL' };
+
     const events = await prisma.event.findMany({
+      where: visibilityFilter,
       orderBy: [{ status: 'asc' }, { votes: 'desc' }, { createdAt: 'desc' }],
       include: {
         user: { select: { id: true, username: true, avatarUrl: true } },
@@ -53,6 +60,7 @@ router.get('/', optionalAuth as any, async (req: AuthRequest, res: Response) => 
       budget: e.budget,
       status: e.status,
       votes: e.votes,
+      visibility: e.visibility,
       createdAt: e.createdAt,
       updatedAt: e.updatedAt,
       user: e.user,
@@ -71,6 +79,13 @@ router.get('/', optionalAuth as any, async (req: AuthRequest, res: Response) => 
 router.post('/', authenticateToken as any, async (req: AuthRequest, res: Response) => {
   try {
     const data = createEventSchema.parse(req.body);
+
+    // Only members/admins can set ESSENSGRUPPE_ONLY; everyone else gets ALL
+    const visibility =
+      isMember(req.user!.role) && req.body.visibility === 'ESSENSGRUPPE_ONLY'
+        ? 'ESSENSGRUPPE_ONLY'
+        : 'ALL';
+
     const event = await prisma.event.create({
       data: {
         userId: req.user!.id,
@@ -81,12 +96,13 @@ router.post('/', authenticateToken as any, async (req: AuthRequest, res: Respons
         budget: data.budget ?? null,
         status: 'PROPOSED',
         votes: 0,
+        visibility,
       },
       include: {
         user: { select: { id: true, username: true, avatarUrl: true } },
       },
     });
-    res.status(201).json({ ...event, userVote: 0, photos: [] });
+    res.status(201).json({ ...event, visibility: event.visibility, userVote: 0, photos: [] });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors[0].message });

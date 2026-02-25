@@ -231,7 +231,7 @@ export class ApiService {
     return this.request(`/posts/${id}`, {}, true);
   }
 
-  static async createPost(data: { title: string; content: string; imageUrl?: string }) {
+  static async createPost(data: { title: string; content: string; imageUrl?: string; visibility?: string }) {
     return this.request('/posts', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -285,6 +285,7 @@ export class ApiService {
     date?: string | null;
     location?: string | null;
     budget?: number | null;
+    visibility?: string;
   }) {
     return this.request('/events', {
       method: 'POST',
@@ -355,7 +356,7 @@ export class ApiService {
     return this.request('/predictions', {}, true);
   }
 
-  static async createPrediction(data: { title: string; closeDate: string }) {
+  static async createPrediction(data: { title: string; closeDate: string; visibility?: string }) {
     return this.request('/predictions', {
       method: 'POST',
       body: JSON.stringify(data),

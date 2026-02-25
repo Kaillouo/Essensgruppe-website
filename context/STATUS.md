@@ -1,6 +1,6 @@
 # Project Status
 
-**Last Updated:** 2026-02-24
+**Last Updated:** 2026-02-25
 
 ## Features
 
@@ -23,6 +23,7 @@
 | Admin Panel | DONE | Users, settings, analytics, balance, Abi Zeitung |
 | About Us + Privacy | DONE | |
 | Role System | DONE | ABI27, ESSENSGRUPPE_MITGLIED, ADMIN |
+| Post/Event/Prediction Visibility | DONE | ESSENSGRUPPE_ONLY toggle for members; ABI27 filtered server-side |
 | Forum Graph/Bubble View | PLANNED | See context/features/forum-bubbles.md |
 | Frontend Theme Overhaul | PLANNED | See context/features/frontend-theme.md |
 | Mobile Optimization | TODO | |

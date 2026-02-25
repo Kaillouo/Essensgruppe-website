@@ -7,6 +7,9 @@ import { AuthRequest } from '../types';
 const router = Router();
 router.use(authenticateToken as any);
 
+// Helper: is user an Essensgruppe member or admin?
+const isMember = (role: string) => role === 'ESSENSGRUPPE_MITGLIED' || role === 'ADMIN';
+
 const createSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(300),
   closeDate: z.string().datetime('Invalid date'),
@@ -29,6 +32,7 @@ function mapPrediction(
     closeDate: Date;
     status: string;
     outcome: boolean | null;
+    visibility: string;
     createdAt: Date;
     updatedAt: Date;
     creator: { id: string; username: string };
@@ -40,18 +44,19 @@ function mapPrediction(
   const noBets  = p.bets.filter((b) => !b.side);
   const userBet = p.bets.find((b) => b.userId === viewerId);
   return {
-    id:        p.id,
-    title:     p.title,
-    closeDate: p.closeDate,
-    status:    p.status,
-    outcome:   p.outcome,
-    createdAt: p.createdAt,
-    creator:   p.creator,
-    totalYes:  yesBets.reduce((s, b) => s + b.amount, 0),
-    totalNo:   noBets.reduce((s, b) => s + b.amount, 0),
-    yesCount:  yesBets.length,
-    noCount:   noBets.length,
-    userBet:   userBet ? { side: userBet.side, amount: userBet.amount } : null,
+    id:         p.id,
+    title:      p.title,
+    closeDate:  p.closeDate,
+    status:     p.status,
+    outcome:    p.outcome,
+    visibility: p.visibility,
+    createdAt:  p.createdAt,
+    creator:    p.creator,
+    totalYes:   yesBets.reduce((s, b) => s + b.amount, 0),
+    totalNo:    noBets.reduce((s, b) => s + b.amount, 0),
+    yesCount:   yesBets.length,
+    noCount:    noBets.length,
+    userBet:    userBet ? { side: userBet.side, amount: userBet.amount } : null,
   };
 }
 
@@ -63,7 +68,11 @@ const betInclude = {
 // GET /api/predictions
 router.get('/', async (req: AuthRequest, res: Response) => {
   try {
+    // Non-members only see publicly visible predictions
+    const where = isMember(req.user!.role) ? undefined : { visibility: 'ALL' };
+
     const predictions = await prisma.prediction.findMany({
+      where,
       orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
       include: betInclude,
     });
@@ -78,8 +87,15 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 router.post('/', async (req: AuthRequest, res: Response) => {
   try {
     const { title, closeDate } = createSchema.parse(req.body);
+
+    // Only members/admins can set ESSENSGRUPPE_ONLY; everyone else gets ALL
+    const visibility =
+      isMember(req.user!.role) && req.body.visibility === 'ESSENSGRUPPE_ONLY'
+        ? 'ESSENSGRUPPE_ONLY'
+        : 'ALL';
+
     const prediction = await prisma.prediction.create({
-      data: { creatorId: req.user!.id, title, closeDate: new Date(closeDate) },
+      data: { creatorId: req.user!.id, title, closeDate: new Date(closeDate), visibility },
       include: betInclude,
     });
     res.status(201).json(mapPrediction(prediction, req.user!.id));

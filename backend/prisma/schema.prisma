@@ -93,9 +93,10 @@ model Post {
   userId    String   @map("user_id")
   title     String
   content   String   @db.Text
-  imageUrl  String?  @map("image_url")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  imageUrl   String?  @map("image_url")
+  visibility String   @default("ALL")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   // Relations
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -163,6 +164,7 @@ model Event {
   budget      Float?
   status      EventStatus @default(PROPOSED)
   votes       Int         @default(0) // Net votes (upvotes - downvotes)
+  visibility  String      @default("ALL")
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
 
@@ -261,9 +263,10 @@ model Prediction {
   creatorId String           @map("creator_id")
   title     String
   closeDate DateTime         @map("close_date")
-  status    PredictionStatus @default(OPEN)
-  outcome   Boolean?         // true = YES won, false = NO won, null = not resolved yet
-  createdAt DateTime         @default(now()) @map("created_at")
+  status     PredictionStatus @default(OPEN)
+  outcome    Boolean?         // true = YES won, false = NO won, null = not resolved yet
+  visibility String           @default("ALL")
+  createdAt  DateTime         @default(now()) @map("created_at")
   updatedAt DateTime         @updatedAt @map("updated_at")
 
   creator User            @relation(fields: [creatorId], references: [id], onDelete: Cascade)

@@ -6,6 +6,9 @@ import { AuthRequest } from '../types';
 
 const router = Router();
 
+// Helper: is user an Essensgruppe member or admin?
+const isMember = (role: string) => role === 'ESSENSGRUPPE_MITGLIED' || role === 'ADMIN';
+
 // All routes require authentication
 router.use(authenticateToken as any);
 
@@ -27,6 +30,10 @@ router.get('/', async (req: AuthRequest, res: Response) => {
     const { sort = 'new', search } = req.query;
 
     const where: any = {};
+    // Non-members only see publicly visible posts
+    if (!isMember(req.user!.role)) {
+      where.visibility = 'ALL';
+    }
     if (search && typeof search === 'string') {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
@@ -96,6 +103,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       title: post.title,
       content: post.content,
       imageUrl: post.imageUrl,
+      visibility: post.visibility,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
       user: post.user,
@@ -131,12 +139,19 @@ router.post('/', async (req: AuthRequest, res: Response) => {
   try {
     const data = createPostSchema.parse(req.body);
 
+    // Only members/admins can set ESSENSGRUPPE_ONLY; everyone else gets ALL
+    const visibility =
+      isMember(req.user!.role) && req.body.visibility === 'ESSENSGRUPPE_ONLY'
+        ? 'ESSENSGRUPPE_ONLY'
+        : 'ALL';
+
     const post = await prisma.post.create({
       data: {
         title: data.title,
         content: data.content,
         imageUrl: data.imageUrl || null,
         userId: req.user!.id,
+        visibility,
       },
       include: {
         user: {
@@ -268,6 +283,7 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
       title: post.title,
       content: post.content,
       imageUrl: post.imageUrl,
+      visibility: post.visibility,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
       user: post.user,

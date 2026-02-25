@@ -10,6 +10,7 @@ interface Prediction {
   closeDate: string;
   status: 'OPEN' | 'CLOSED';
   outcome: boolean | null;
+  visibility: 'ALL' | 'ESSENSGRUPPE_ONLY';
   createdAt: string;
   creator: { id: string; username: string };
   totalYes: number;
@@ -100,8 +101,10 @@ export const PredictionPage = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [createTitle, setCreateTitle] = useState('');
   const [createDate, setCreateDate] = useState('');
+  const [createVisibility, setCreateVisibility] = useState<'ALL' | 'ESSENSGRUPPE_ONLY'>('ALL');
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState('');
+  const canSetVisibility = user?.role === 'ESSENSGRUPPE_MITGLIED' || user?.role === 'ADMIN';
 
   // Bet modal
   const [betTarget, setBetTarget] = useState<Prediction | null>(null);
@@ -154,11 +157,13 @@ export const PredictionPage = () => {
       const created = await ApiService.createPrediction({
         title: createTitle.trim(),
         closeDate: new Date(createDate).toISOString(),
+        visibility: createVisibility,
       }) as Prediction;
       setPredictions((prev) => [created, ...prev]);
       setShowCreate(false);
       setCreateTitle('');
       setCreateDate('');
+      setCreateVisibility('ALL');
       setTab('open');
     } catch (err: any) {
       setCreateError(err.message || 'Failed to create');
@@ -339,7 +344,12 @@ export const PredictionPage = () => {
                   >
                     {/* Title + status */}
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-white font-semibold leading-snug">{pred.title}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-semibold leading-snug">{pred.title}</p>
+                        {pred.visibility === 'ESSENSGRUPPE_ONLY' && (
+                          <span style={{ fontSize: 11, background: '#4a1a6b', color: '#d4a0ff', padding: '2px 6px', borderRadius: 4, display: 'inline-block', marginTop: 4 }}>Nur EG</span>
+                        )}
+                      </div>
                       {isClosed ? (
                         <span className={`flex-shrink-0 text-xs px-2.5 py-0.5 rounded-full font-semibold ${
                           pred.outcome ? 'bg-green-900/50 text-green-400 border border-green-700/40'
@@ -494,6 +504,16 @@ export const PredictionPage = () => {
                 onChange={(e) => setCreateDate(e.target.value)}
                 className="w-full bg-[#0a0e1a] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary-600/50 mb-5 [color-scheme:dark]"
               />
+
+              {canSetVisibility && (
+                <div className="mb-4">
+                  <label className="block text-xs text-gray-400 mb-1.5 font-medium">Sichtbarkeit</label>
+                  <select value={createVisibility} onChange={e => setCreateVisibility(e.target.value as 'ALL' | 'ESSENSGRUPPE_ONLY')} className="w-full bg-[#0a0e1a] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary-600/50">
+                    <option value="ALL">Alle</option>
+                    <option value="ESSENSGRUPPE_ONLY">Nur Essensgruppe</option>
+                  </select>
+                </div>
+              )}
 
               {createError && <p className="text-red-400 text-xs mb-4">{createError}</p>}
 

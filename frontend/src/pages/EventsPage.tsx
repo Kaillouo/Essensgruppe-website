@@ -244,13 +244,16 @@ interface CreateModalProps {
 }
 
 function CreateModal({ onClose, onCreated }: CreateModalProps) {
+  const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
   const [location, setLocation] = useState('');
   const [budget, setBudget] = useState('');
+  const [visibility, setVisibility] = useState<'ALL' | 'ESSENSGRUPPE_ONLY'>('ALL');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const canSetVisibility = user?.role === 'ESSENSGRUPPE_MITGLIED' || user?.role === 'ADMIN';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -267,6 +270,7 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
         date: date ? new Date(date).toISOString() : null,
         location: location.trim() || null,
         budget: budget ? parseFloat(budget) : null,
+        visibility,
       };
       const created = await ApiService.createEvent(data) as Event;
       onCreated(created);
@@ -351,6 +355,16 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
+
+          {canSetVisibility && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Sichtbarkeit</label>
+              <select value={visibility} onChange={e => setVisibility(e.target.value as 'ALL' | 'ESSENSGRUPPE_ONLY')} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <option value="ALL">Alle</option>
+                <option value="ESSENSGRUPPE_ONLY">Nur Essensgruppe</option>
+              </select>
+            </div>
+          )}
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
 
@@ -470,6 +484,9 @@ function EventCard({ event, isAdmin, isAuthenticated, currentUserId, onVote, onD
             <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${statusColors[event.status]}`}>
               {statusLabels[event.status]}
             </span>
+            {event.visibility === 'ESSENSGRUPPE_ONLY' && (
+              <span style={{ fontSize: 11, background: '#4a1a6b', color: '#d4a0ff', padding: '2px 6px', borderRadius: 4 }}>Nur EG</span>
+            )}
             {event.date && (
               <span className="text-xs text-gray-500">📅 {formatDate(event.date)}</span>
             )}
