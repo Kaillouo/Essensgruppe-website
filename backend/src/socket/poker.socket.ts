@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import crypto from 'crypto';
 import prisma from '../utils/prisma.util';
+import { getReservedBalance } from '../utils/balance.util';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { Hand } = require('pokersolver') as { Hand: any };
@@ -624,18 +625,20 @@ async function seatPlayer(
   }
 
   let dbUser: { balance: number; avatarUrl: string | null } | null = null;
+  let reserved = 0;
   try {
-    dbUser = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { balance: true, avatarUrl: true },
-    });
+    [dbUser, reserved] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, select: { balance: true, avatarUrl: true } }),
+      getReservedBalance(userId),
+    ]);
   } catch (err) {
     console.error('[seatPlayer] DB error:', err);
     socket.emit('poker:error', 'Database error — try again');
     return;
   }
-  if (!dbUser || dbUser.balance < 10) {
-    socket.emit('poker:error', `Need at least 10 chips to sit down (you have ${dbUser?.balance ?? 0})`);
+  const availableChips = (dbUser?.balance ?? 0) - reserved;
+  if (!dbUser || availableChips < 10) {
+    socket.emit('poker:error', `Need at least 10 available chips to sit down (available: ${availableChips})`);
     return;
   }
   // Remove from watchers
@@ -647,7 +650,7 @@ async function seatPlayer(
     username,
     avatarUrl: dbUser.avatarUrl,
     socketId: socket.id,
-    chips: dbUser.balance,
+    chips: availableChips,
     holeCards: null,
     folded: midHand, // folded if joining mid-hand
     allIn: false,

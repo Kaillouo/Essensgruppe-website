@@ -7,6 +7,7 @@ export interface User {
   email: string;
   role: UserRole;
   balance: number;
+  reserved?: number; // sum of active prediction bet reservations
   avatarUrl: string | null;
   createdAt?: string;
 }

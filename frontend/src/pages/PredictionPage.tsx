@@ -174,8 +174,9 @@ export const PredictionPage = () => {
       setBetError('Enter a valid amount');
       return;
     }
-    if (amount > (user?.balance ?? 0)) {
-      setBetError('Insufficient balance');
+    const available = (user?.balance ?? 0) - (user?.reserved ?? 0);
+    if (amount > available) {
+      setBetError(`Insufficient available balance (available: ${available})`);
       return;
     }
     setBetLoading(true);
@@ -533,7 +534,8 @@ export const PredictionPage = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <h2 className="text-base font-bold text-white mb-1">Place Bet</h2>
-              <p className="text-xs text-gray-500 mb-5 leading-relaxed">"{betTarget.title}"</p>
+              <p className="text-xs text-gray-500 mb-1 leading-relaxed">"{betTarget.title}"</p>
+              <p className="text-xs text-orange-400/80 mb-4">Coins are <strong>reserved</strong> now and only deducted if you lose when the prediction resolves.</p>
 
               {/* Yes / No toggle */}
               <div className="flex gap-2 mb-5">
@@ -564,10 +566,10 @@ export const PredictionPage = () => {
               <input
                 type="number"
                 min="1"
-                max={user?.balance ?? 0}
+                max={(user?.balance ?? 0) - (user?.reserved ?? 0)}
                 value={betAmount}
                 onChange={(e) => setBetAmount(e.target.value)}
-                placeholder={`Max: ${(user?.balance ?? 0).toLocaleString()}`}
+                placeholder={`Available: ${((user?.balance ?? 0) - (user?.reserved ?? 0)).toLocaleString()}`}
                 className="w-full bg-[#0a0e1a] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary-600/50 mb-2"
                 autoFocus
                 onKeyDown={(e) => { if (e.key === 'Enter') handleBet(); }}
@@ -576,13 +578,10 @@ export const PredictionPage = () => {
               {/* Potential win preview */}
               {betAmount && !isNaN(parseInt(betAmount)) && parseInt(betAmount) > 0 && (
                 <p className="text-xs text-gray-500 mb-4">
-                  Potential payout if{' '}
-                  <span className={betSide ? 'text-green-400' : 'text-red-400'}>
-                    {betSide ? 'YES' : 'NO'}
-                  </span>{' '}
-                  wins:{' '}
+                  If <span className={betSide ? 'text-green-400' : 'text-red-400'}>{betSide ? 'YES' : 'NO'}</span> wins,
+                  you keep your <span className="text-white">{parseInt(betAmount)}</span> + earn{' '}
                   <span className="text-yellow-400 font-semibold">
-                    🪙 {potentialWin(betTarget, betSide, parseInt(betAmount)).toLocaleString()}
+                    🪙 ~{(potentialWin(betTarget, betSide, parseInt(betAmount)) - parseInt(betAmount)).toLocaleString()} extra
                   </span>
                   <span className="text-gray-600"> (estimate)</span>
                 </p>

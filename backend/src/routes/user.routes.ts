@@ -8,6 +8,7 @@ import { authenticateToken } from '../middleware/auth.middleware';
 import { hashPassword, comparePassword } from '../utils/password.util';
 import { uploadAvatar } from '../middleware/upload.middleware';
 import { AuthRequest, UpdateProfileDto, ChangePasswordDto } from '../types';
+import { getReservedBalance } from '../utils/balance.util';
 
 const router = Router();
 
@@ -41,7 +42,8 @@ router.get('/me', async (req: AuthRequest, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json(user);
+    const reserved = await getReservedBalance(user.id);
+    res.json({ ...user, reserved });
   } catch (error) {
     console.error('Get profile error:', error);
     res.status(500).json({ error: 'Failed to fetch profile' });

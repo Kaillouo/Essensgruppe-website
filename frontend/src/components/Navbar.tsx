@@ -55,10 +55,13 @@ export const Navbar = () => {
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                {/* Balance */}
-                <div className="hidden md:flex items-center space-x-2 px-4 py-2 bg-yellow-50 rounded-lg">
-                  <span className="text-yellow-600 font-bold">{user?.balance || 0}</span>
+                {/* Available balance (balance minus active prediction reservations) */}
+                <div className="hidden md:flex items-center space-x-2 px-4 py-2 bg-yellow-50 rounded-lg" title={user?.reserved ? `${user.balance} total · ${user.reserved} reserved` : undefined}>
+                  <span className="text-yellow-600 font-bold">{(user?.balance ?? 0) - (user?.reserved ?? 0)}</span>
                   <span className="text-sm text-gray-600">coins</span>
+                  {(user?.reserved ?? 0) > 0 && (
+                    <span className="text-xs text-orange-400 font-medium">({user!.reserved} reserved)</span>
+                  )}
                 </div>
 
                 {/* Profile Dropdown */}
@@ -167,7 +170,7 @@ export const Navbar = () => {
               ))}
               {isAuthenticated && (
                 <div className="px-4 py-2 mt-2 border-t border-gray-200">
-                  <p className="text-sm text-gray-600">Balance: <span className="font-bold text-yellow-600">{user?.balance}</span> coins</p>
+                  <p className="text-sm text-gray-600">Available: <span className="font-bold text-yellow-600">{(user?.balance ?? 0) - (user?.reserved ?? 0)}</span> coins{(user?.reserved ?? 0) > 0 && <span className="text-xs text-orange-400"> ({user!.reserved} reserved)</span>}</p>
                 </div>
               )}
             </motion.div>

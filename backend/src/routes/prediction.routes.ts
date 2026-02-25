@@ -3,6 +3,7 @@ import { z } from 'zod';
 import prisma from '../utils/prisma.util';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { AuthRequest } from '../types';
+import { getReservedBalance } from '../utils/balance.util';
 
 const router = Router();
 router.use(authenticateToken as any);
@@ -107,14 +108,17 @@ router.post('/:id/bet', async (req: AuthRequest, res: Response) => {
     if (prediction.bets.find((b) => b.userId === userId))
                                             return res.status(400).json({ error: 'You have already placed a bet' });
 
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { balance: true } });
-    if (!user || user.balance < amount)     return res.status(400).json({ error: 'Insufficient balance' });
-
-    await prisma.$transaction([
-      prisma.user.update({ where: { id: userId }, data: { balance: { decrement: amount } } }),
-      prisma.predictionBet.create({ data: { predictionId: id, userId, side, amount } }),
-      prisma.transaction.create({ data: { userId, amount: -amount, type: 'PREDICTION_BET', game: 'prediction' } }),
+    // Reserve the amount: don't deduct yet, but check available balance
+    const [user, reserved] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, select: { balance: true } }),
+      getReservedBalance(userId),
     ]);
+    const available = (user?.balance ?? 0) - reserved;
+    if (!user || available < amount)
+      return res.status(400).json({ error: `Insufficient available balance (available: ${available})` });
+
+    // Record reservation — balance is NOT deducted yet
+    await prisma.predictionBet.create({ data: { predictionId: id, userId, side, amount } });
 
     const updated = await prisma.prediction.findUnique({ where: { id }, include: betInclude });
     res.json(mapPrediction(updated!, userId));
@@ -148,24 +152,28 @@ router.post('/:id/resolve', async (req: AuthRequest, res: Response) => {
 
     const payoutOps: Parameters<typeof prisma.$transaction>[0] = [];
 
-    if (totalWin > 0) {
-      // Winners get stake back + proportional share of losers' pool
+    if (totalWin > 0 && totalLose > 0) {
+      // Winners: reserved amount stays (never deducted), they receive proportional share of losers' pool
       for (const bet of winnerBets) {
         const winnings = Math.floor((bet.amount / totalWin) * totalLose);
-        const payout   = bet.amount + winnings;
-        payoutOps.push(
-          prisma.user.update({ where: { id: bet.userId }, data: { balance: { increment: payout } } }),
-          prisma.transaction.create({ data: { userId: bet.userId, amount: payout, type: 'PREDICTION_WIN', game: 'prediction' } }),
-        );
+        if (winnings > 0) {
+          payoutOps.push(
+            prisma.user.update({ where: { id: bet.userId }, data: { balance: { increment: winnings } } }),
+            prisma.transaction.create({ data: { userId: bet.userId, amount: winnings, type: 'PREDICTION_WIN', game: 'prediction' } }),
+          );
+        }
       }
-    } else if (loserBets.length > 0) {
-      // Nobody bet on the winning side → refund everyone
+      // Losers: NOW deduct the reserved amount from their actual balance
       for (const bet of loserBets) {
         payoutOps.push(
-          prisma.user.update({ where: { id: bet.userId }, data: { balance: { increment: bet.amount } } }),
-          prisma.transaction.create({ data: { userId: bet.userId, amount: bet.amount, type: 'PREDICTION_WIN', game: 'prediction' } }),
+          prisma.user.update({ where: { id: bet.userId }, data: { balance: { decrement: bet.amount } } }),
+          prisma.transaction.create({ data: { userId: bet.userId, amount: -bet.amount, type: 'PREDICTION_BET', game: 'prediction' } }),
         );
       }
+    } else if (totalWin > 0 && totalLose === 0) {
+      // Everyone bet on the winning side — nobody loses anything (reservations freed)
+    } else {
+      // Nobody bet on the winning side — all reservations freed (no balance changes needed)
     }
 
     await prisma.$transaction([

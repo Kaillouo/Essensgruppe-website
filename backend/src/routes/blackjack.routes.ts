@@ -4,6 +4,7 @@ import { randomInt } from 'crypto';
 import prisma from '../utils/prisma.util';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { AuthRequest } from '../types';
+import { getReservedBalance } from '../utils/balance.util';
 
 const router = Router();
 router.use(authenticateToken as any);
@@ -158,9 +159,13 @@ router.post('/deal', async (req: AuthRequest, res: Response) => {
     const { bet } = dealSchema.parse(req.body);
     const userId = req.user!.id;
 
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { balance: true } });
-    if (!user || user.balance < bet) {
-      return res.status(400).json({ error: 'Insufficient balance' });
+    const [user, reserved] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, select: { balance: true } }),
+      getReservedBalance(userId),
+    ]);
+    const available = (user?.balance ?? 0) - reserved;
+    if (!user || available < bet) {
+      return res.status(400).json({ error: `Insufficient available balance (available: ${available})` });
     }
 
     // Deduct bet immediately
@@ -270,9 +275,13 @@ router.post('/double', async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Cannot double now' });
     }
 
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { balance: true } });
-    if (!user || user.balance < state.originalBet) {
-      return res.status(400).json({ error: 'Insufficient balance to double' });
+    const [user, reserved] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, select: { balance: true } }),
+      getReservedBalance(userId),
+    ]);
+    const available = (user?.balance ?? 0) - reserved;
+    if (!user || available < state.originalBet) {
+      return res.status(400).json({ error: 'Insufficient available balance to double' });
     }
 
     // Deduct additional bet equal to original bet
