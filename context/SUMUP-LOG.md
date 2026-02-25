@@ -43,6 +43,11 @@
 - ForumPage: fixed container height to use `.h-dvh-nav` class; added `WebkitBackdropFilter` to all `backdropFilter` usages; fixed zoom buttons with `.bottom-safe-4`
 - PokerPage: added `WebkitBackdropFilter` to header + action bar; added `.pb-safe` to action bar
 
+### Bug 5: Registration "string error"
+- Zod validators `z.string().min(3)` / `.max(20)` / `.min(6)` on username and password had no custom messages
+- Produced raw Zod output "String must contain at least N character(s)" visible to users as a confusing "string error"
+- Fixed by adding custom messages to all min/max calls in `registerSchema` in `auth.routes.ts`
+
 ### Bug 4: Prediction market reserved betting
 - New `backend/src/utils/balance.util.ts` with `getReservedBalance()` / `getAvailableBalance()`
 - `/bet` route: no longer deducts balance — reserves amount, checks available balance (balance - sum of active prediction bets)
