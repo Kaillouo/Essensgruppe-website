@@ -5,6 +5,12 @@
 
 ---
 
+## 2026-02-26 — Daily Login Reward (feature/daily-coins)
+- Added `lastDailyClaim DateTime?` field to User model in Prisma schema + `prisma db push`
+- Added `DAILY_COINS` to TransactionType enum for transaction tracking
+- Backend: POST `/api/users/daily-claim` checks 24h cooldown, awards 1000 coins if claimable, records claim time
+- Frontend: new `DailyCoinsClaim.tsx` component with auto-claim on load option; integrated into LandingPage (hero) and GamesPage (header); displays countdown timer when already claimed
+
 ## 2026-02-25 — Security Audit (security/audit branch)
 - Added rate limiting to `forgot-password` and `reset-password` endpoints (5 req/15min per IP)
 - Added JWT_SECRET production startup guard in `server.ts` — crashes if `JWT_SECRET` unset in production
