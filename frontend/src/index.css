@@ -54,6 +54,21 @@ html {
   scroll-behavior: smooth;
 }
 
+/* iOS Safari: dynamic viewport height utility */
+.h-dvh-nav {
+  height: calc(100vh - 64px);
+  height: calc(100dvh - 64px);
+}
+
+/* iOS Safari: bottom safe area for fixed/absolute elements */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.bottom-safe-4 {
+  bottom: max(16px, calc(16px + env(safe-area-inset-bottom, 0px)));
+}
+
 /* Loading spinner animation */
 @keyframes spin {
   to {

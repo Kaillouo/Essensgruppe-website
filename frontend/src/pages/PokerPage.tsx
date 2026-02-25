@@ -730,7 +730,7 @@ export const PokerPage = () => {
       {/* Header */}
       <div
         className="flex items-center justify-between px-5 py-3 shrink-0 z-10 border-b border-white/[0.04]"
-        style={{ background: 'rgba(5,3,10,0.6)', backdropFilter: 'blur(20px)' }}
+        style={{ background: 'rgba(5,3,10,0.6)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
       >
         <Link to="/games" className="flex items-center gap-1.5 text-white/35 hover:text-white/75 text-xs font-medium transition-colors tracking-wide">
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -946,8 +946,8 @@ export const PokerPage = () => {
 
       {/* ── Action bar ── */}
       <div
-        className="shrink-0 px-5 py-3.5 border-t border-white/[0.05] flex items-center justify-center gap-3 z-10"
-        style={{ background: 'rgba(5,3,10,0.75)', backdropFilter: 'blur(20px)' }}
+        className="shrink-0 px-5 py-3.5 pb-safe border-t border-white/[0.05] flex items-center justify-center gap-3 z-10"
+        style={{ background: 'rgba(5,3,10,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
       >
         {/* Queue badge */}
         {queuePosition !== null ? (

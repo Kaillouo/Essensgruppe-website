@@ -100,7 +100,7 @@ function BubbleContent({ post, r, theme }: { post: Post; r: number; theme: Theme
       style={{
         position: 'absolute', inset: 0, borderRadius: '50%',
         background: theme.bg, border: `2px solid ${theme.border}`,
-        boxShadow: `0 0 18px ${theme.glow}`, backdropFilter: 'blur(14px)',
+        boxShadow: `0 0 18px ${theme.glow}`, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'center', padding: Math.round(r * 0.18), gap: 4,
         overflow: 'hidden', userSelect: 'none', pointerEvents: 'none',
@@ -398,11 +398,11 @@ export const ForumPage = () => {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', background: '#060b18', overflow: 'hidden' }}>
+    <div className="h-dvh-nav" style={{ display: 'flex', flexDirection: 'column', background: '#060b18', overflow: 'hidden' }}>
 
       {/* Header */}
       <div style={{
-        background: 'rgba(6,11,24,0.92)', backdropFilter: 'blur(16px)',
+        background: 'rgba(6,11,24,0.92)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
         borderBottom: '1px solid rgba(255,255,255,0.07)',
         padding: '10px 20px', display: 'flex', alignItems: 'center',
         gap: 12, flexShrink: 0, flexWrap: 'wrap', zIndex: 10,
@@ -467,7 +467,7 @@ export const ForumPage = () => {
         )}
 
         {/* Zoom buttons */}
-        <div style={{ position: 'absolute', right: 16, bottom: 16, display: 'flex', flexDirection: 'column', gap: 6, zIndex: 30 }}>
+        <div className="bottom-safe-4" style={{ position: 'absolute', right: 16, display: 'flex', flexDirection: 'column', gap: 6, zIndex: 30 }}>
           {[
             { label: '+', title: 'Zoom in',  action: () => zoomBy(1.25) },
             { label: '−', title: 'Zoom out', action: () => zoomBy(0.8)  },
@@ -475,7 +475,7 @@ export const ForumPage = () => {
           ].map(btn => (
             <button key={btn.label} onClick={btn.action} title={btn.title} style={{
               width: 36, height: 36, borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)',
-              background: 'rgba(6,11,24,0.85)', backdropFilter: 'blur(10px)',
+              background: 'rgba(6,11,24,0.85)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
               color: 'rgba(255,255,255,0.7)', fontSize: btn.label === '⊡' ? 14 : 18,
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'background 0.15s',
@@ -603,7 +603,7 @@ const CreatePostModal = ({ onClose, onCreated }: { onClose: () => void; onCreate
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}
       onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
         transition={{ type: 'spring', stiffness: 260, damping: 24 }} onClick={e => e.stopPropagation()}
