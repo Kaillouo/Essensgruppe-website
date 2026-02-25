@@ -49,6 +49,7 @@ interface HandResult {
   allHoleCards: { seatIndex: number; holeCards: [Card, Card] }[];
   pot: number;
   showdown: boolean;
+  allInvestments?: { seatIndex: number; invested: number }[];
 }
 
 interface EmoteBubble { seatIndex: number; emoji: string; id: number; }
@@ -318,6 +319,7 @@ function Seat({
   myCards, revealedCards,
   emote, chat,
   onSit, canSit,
+  handResult, myUserId,
 }: {
   seat: PublicSeat | null;
   seatIndex: number;
@@ -332,6 +334,8 @@ function Seat({
   chat?: ChatBubble;
   onSit: (i: number) => void;
   canSit: boolean;
+  handResult?: HandResult | null;
+  myUserId?: string;
 }) {
   const isBottom = seatIndex >= 3 && seatIndex <= 7;
   const holeCards = isLocal ? myCards : (revealedCards ?? null);
@@ -503,74 +507,22 @@ function Seat({
         {seat.currentBet > 0 && !seat.folded && (
           <div className="text-white/50 text-[10px]">bet: {seat.currentBet}</div>
         )}
+        {/* Per-seat result badge */}
+        {handResult && (() => {
+          const isWinner = handResult.winners.some((w) => w.seatIndex === seatIndex);
+          const winShare = isWinner ? Math.floor(handResult.pot / handResult.winners.length) : 0;
+          const invested = handResult.allInvestments?.find((inv) => inv.seatIndex === seatIndex)?.invested ?? 0;
+          const isMe = seat.userId === myUserId;
+          if (isWinner && handResult.pot > 0) {
+            return <div className="text-green-400 text-[11px] font-bold mt-0.5">+{winShare.toLocaleString()}</div>;
+          }
+          if (!isWinner && isMe && invested > 0) {
+            return <div className="text-red-400 text-[11px] font-bold mt-0.5">-{invested.toLocaleString()}</div>;
+          }
+          return null;
+        })()}
       </div>
     </motion.div>
-  );
-}
-
-// ── Winner banner (non-blocking, inside table) ────────────────────────────────
-
-function WinnerBanner({ handResult, mySeatIndex }: { handResult: HandResult; mySeatIndex: number }) {
-  const isWinner = mySeatIndex !== -1 && handResult.winners.some((w) => w.seatIndex === mySeatIndex);
-  const winAmount = isWinner ? Math.floor(handResult.pot / handResult.winners.length) : 0;
-  const chipColors = ['#fbbf24', '#f59e0b', '#ef4444', '#3b82f6', '#10b981', '#8b5cf6'];
-
-  return (
-    <div className="relative">
-      {/* Chip burst */}
-      {chipColors.map((color, i) => {
-        const angle = (i * 60 * Math.PI) / 180;
-        const tx = Math.cos(angle) * 80;
-        const ty = Math.sin(angle) * 80;
-        return (
-          <motion.div
-            key={i}
-            className="absolute w-4 h-4 rounded-full pointer-events-none"
-            style={{ top: '50%', left: '50%', marginLeft: -8, marginTop: -8, background: color, border: '2px solid rgba(255,255,255,0.3)' }}
-            initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
-            animate={{ x: tx, y: ty, opacity: 0, scale: 0.4 }}
-            transition={{ duration: 1.2, ease: 'easeOut', delay: 0.15 }}
-          />
-        );
-      })}
-
-      {/* Banner card */}
-      <div
-        className="relative rounded-xl px-6 py-4 text-center"
-        style={{
-          minWidth: 260,
-          background: 'linear-gradient(135deg, rgba(15,10,25,0.96) 0%, rgba(25,15,40,0.96) 100%)',
-          border: '1px solid rgba(250,204,21,0.2)',
-          boxShadow: '0 0 30px rgba(250,204,21,0.1), 0 20px 50px rgba(0,0,0,0.55)',
-          backdropFilter: 'blur(20px)',
-        }}
-      >
-        {/* Shimmer top */}
-        <div
-          className="absolute top-0 left-0 right-0 h-[1px] rounded-t-xl"
-          style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(250,204,21,0.45) 50%, transparent 100%)' }}
-        />
-        <div className="text-2xl mb-2">🏆</div>
-        {handResult.winners.map((w, i) => (
-          <div key={i} className={i > 0 ? 'mt-2 pt-2 border-t border-white/[0.06]' : ''}>
-            <p className="text-white font-bold text-base tracking-wide">{w.username} wins!</p>
-            {w.handName && handResult.showdown && (
-              <p className="text-yellow-400/80 font-medium text-xs mt-0.5" style={{ fontFamily: "'Georgia', serif", fontStyle: 'italic' }}>
-                {w.handName}
-              </p>
-            )}
-          </div>
-        ))}
-        <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-center gap-3">
-          <span className="text-yellow-500/55 text-xs font-medium tabular-nums">
-            Pot: {handResult.pot.toLocaleString()} chips
-          </span>
-          {isWinner && (
-            <span className="text-green-400 text-xs font-bold tabular-nums">+{winAmount.toLocaleString()}</span>
-          )}
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -914,30 +866,41 @@ export const PokerPage = () => {
                   chat={chats.find((c) => c.seatIndex === i)}
                   onSit={sit}
                   canSit={canSit}
+                  handResult={handResult}
+                  myUserId={user?.id}
                 />
               </div>
             ))}
           </div>
 
-          {/* ── Winner banner (non-blocking) ── */}
+          {/* ── Inline result banner (top of table) ── */}
           <AnimatePresence>
             {handResult && (
               <motion.div
-                key="winner-banner"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute pointer-events-none"
-                style={{ top: 0, left: 0, right: 0, bottom: 0, zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                key="result-banner"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="absolute top-3 left-1/2 -translate-x-1/2 z-30 pointer-events-none text-center"
+                style={{
+                  background: 'rgba(10,6,20,0.92)',
+                  border: '1px solid rgba(250,204,21,0.25)',
+                  borderRadius: 12,
+                  padding: '8px 20px',
+                  backdropFilter: 'blur(16px)',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
+                }}
               >
-                <motion.div
-                  initial={{ scale: 0.8, y: -12 }}
-                  animate={{ scale: 1, y: 0 }}
-                  exit={{ scale: 0.85, y: 12 }}
-                  transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
-                >
-                  <WinnerBanner handResult={handResult} mySeatIndex={mySeatIndex} />
-                </motion.div>
+                <span className="text-yellow-400 font-bold text-sm">
+                  {handResult.winners.map((w, i) => (
+                    <span key={i}>{i > 0 ? ' & ' : ''}{w.username}</span>
+                  ))}
+                  {' gewinnt'}
+                  {handResult.winners[0]?.handName && handResult.showdown ? ` · ${handResult.winners[0].handName}` : ''}
+                  {handResult.pot > 0 ? ` · +${handResult.pot.toLocaleString()}` : ''}
+                </span>
               </motion.div>
             )}
           </AnimatePresence>

@@ -24,6 +24,7 @@ interface Seat {
   allIn: boolean;
   currentBet: number;
   acted: boolean;
+  investedThisHand: number;
 }
 
 interface Table {
@@ -164,6 +165,7 @@ function dequeueNextPlayer(freedSeatIndex: number) {
     allIn: false,
     currentBet: 0,
     acted: false,
+    investedThisHand: 0,
   };
   // Fetch balance async
   prisma.user.findUnique({ where: { id: entry.userId }, select: { balance: true } })
@@ -277,11 +279,13 @@ function resolveNoShowdown() {
     prisma.transaction.create({ data: { userId: winner.userId, amount: table.pot, type: 'GAME_WIN', game: 'poker' } }).catch(console.error);
   }
 
+  const allSeatsForResult = table.seats.filter((s): s is Seat => s !== null);
   ioRef.emit('poker:hand_result', {
     winners: [{ seatIndex: winner.seatIndex, username: winner.username }],
     allHoleCards: [],
     pot: table.pot,
     showdown: false,
+    allInvestments: allSeatsForResult.map((s) => ({ seatIndex: s.seatIndex, invested: s.investedThisHand })),
   });
 
   setTimeout(resetForNextHand, 4000);
@@ -324,6 +328,7 @@ function resolveShowdown() {
     })),
     pot: table.pot,
     showdown: true,
+    allInvestments: active.map((s) => ({ seatIndex: s.seatIndex, invested: s.investedThisHand })),
   });
 
   broadcastState();
@@ -388,6 +393,7 @@ function processAction(
       const callAmt = Math.min(table.currentBet - seat.currentBet, seat.chips);
       seat.chips -= callAmt;
       seat.currentBet += callAmt;
+      seat.investedThisHand += callAmt;
       table.pot += callAmt;
       if (seat.chips === 0) seat.allIn = true;
       seat.acted = true;
@@ -403,6 +409,7 @@ function processAction(
       const toPay = totalBet - seat.currentBet;
       if (toPay <= 0 || totalBet <= table.currentBet) return;
       seat.chips -= toPay;
+      seat.investedThisHand += toPay;
       table.pot += toPay;
       table.minRaise = totalBet + (totalBet - table.currentBet);
       table.currentBet = totalBet;
@@ -484,6 +491,7 @@ function startNewHand() {
       seat.allIn = false;
       seat.currentBet = 0;
       seat.acted = false;
+      seat.investedThisHand = 0;
     }
   }
 
@@ -509,12 +517,14 @@ function startNewHand() {
   const sbPost = Math.min(1, sb.chips);
   sb.chips -= sbPost;
   sb.currentBet = sbPost;
+  sb.investedThisHand += sbPost;
   table.pot += sbPost;
   if (sb.chips === 0) sb.allIn = true;
 
   const bbPost = Math.min(2, bb.chips);
   bb.chips -= bbPost;
   bb.currentBet = bbPost;
+  bb.investedThisHand += bbPost;
   table.pot += bbPost;
   if (bb.chips === 0) bb.allIn = true;
 
@@ -540,6 +550,7 @@ function startSoloHand(seat: Seat) {
   seat.allIn = false;
   seat.currentBet = 0;
   seat.acted = false;
+  seat.investedThisHand = 0;
 
   table.deck = shuffle(makeDeck());
   table.communityCards = [];
@@ -598,6 +609,7 @@ function resolveSolo() {
     pot: 0,
     showdown: true,
     soloMode: true,
+    allInvestments: [{ seatIndex: seat.seatIndex, invested: 0 }],
   });
 
   broadcastState();
@@ -656,6 +668,7 @@ async function seatPlayer(
     allIn: false,
     currentBet: 0,
     acted: false,
+    investedThisHand: 0,
   };
   broadcastState();
   tryScheduleStart();
