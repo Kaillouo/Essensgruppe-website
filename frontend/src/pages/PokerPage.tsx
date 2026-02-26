@@ -168,7 +168,7 @@ function PotDisplay({ pot }: { pot: number }) {
         <span className="font-black tabular-nums tracking-tight" style={{ color: textColor, fontSize: huge ? 16 : big ? 14 : 13 }}>
           {pot.toLocaleString()}
         </span>
-        <span className="text-white/30 text-[9px] font-medium uppercase tracking-widest">pot</span>
+        <span className="text-white/30 text-[9px] font-medium uppercase tracking-widest">Pot</span>
       </div>
     </motion.div>
   );
@@ -357,7 +357,7 @@ function Seat({
             className="w-[52px] h-[52px] rounded-full border border-green-400/30 hover:border-green-400/70 transition-all flex items-center justify-center backdrop-blur-sm group"
             style={{ background: 'radial-gradient(circle, rgba(74,222,128,0.08) 0%, rgba(74,222,128,0.02) 70%)' }}
           >
-            <span className="text-green-400/50 group-hover:text-green-300 text-[10px] font-bold tracking-wider uppercase transition-colors">Sit</span>
+            <span className="text-green-400/50 group-hover:text-green-300 text-[10px] font-bold tracking-wider uppercase transition-colors">Setzen</span>
           </motion.button>
         ) : (
           <div
@@ -499,13 +499,13 @@ function Seat({
       {/* Name + chips */}
       <div className="text-center">
         <div className={`text-xs font-semibold leading-none ${seat.folded ? 'text-white/30' : isLocal ? 'text-blue-300' : 'text-white'}`}>
-          {seat.username}{isLocal && <span className="text-blue-500"> (You)</span>}
+          {seat.username}{isLocal && <span className="text-blue-500"> (Du)</span>}
         </div>
         <div className="text-yellow-400 text-[11px] font-bold mt-0.5">
-          {seat.chips.toLocaleString()} <span className="text-yellow-600 font-normal">chips</span>
+          {seat.chips.toLocaleString()} <span className="text-yellow-600 font-normal">Chips</span>
         </div>
         {seat.currentBet > 0 && !seat.folded && (
-          <div className="text-white/50 text-[10px]">bet: {seat.currentBet}</div>
+          <div className="text-white/50 text-[10px]">Einsatz: {seat.currentBet}</div>
         )}
         {/* Per-seat result badge */}
         {handResult && (() => {
@@ -663,7 +663,7 @@ export const PokerPage = () => {
   };
 
   const phaseLabel: Record<GamePhase, string> = {
-    WAITING: 'Waiting for players…',
+    WAITING: 'Warten auf Spieler…',
     PREFLOP: 'Pre-Flop',
     FLOP: 'Flop',
     TURN: 'Turn',
@@ -688,7 +688,7 @@ export const PokerPage = () => {
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Back
+          Zurück
         </Link>
 
         <div className="flex items-center gap-3">
@@ -704,7 +704,7 @@ export const PokerPage = () => {
           )}
           {(tableState?.queueCount ?? 0) > 0 && (
             <span className="text-[10px] px-2 py-1 rounded-md font-semibold tracking-wide bg-amber-500/8 text-amber-400/80 border border-amber-500/15">
-              {tableState!.queueCount} queued
+              {tableState!.queueCount} in der Warteschlange
             </span>
           )}
         </div>
@@ -724,7 +724,7 @@ export const PokerPage = () => {
       {tableState?.watchers && tableState.watchers.length > 0 && (
         <div className="shrink-0 flex items-center justify-center gap-2.5 px-5 py-1 z-10">
           <span className="text-white/15 text-[10px] font-medium tracking-wider uppercase">
-            {tableState.watchers.length} watching
+            {tableState.watchers.length} schauen zu
           </span>
           <div className="flex -space-x-1.5">
             {tableState.watchers.slice(0, 8).map((w) => (
@@ -920,14 +920,14 @@ export const PokerPage = () => {
               style={{ background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.12)' }}
             >
               <span className="text-amber-300/80 font-bold text-xs tabular-nums">#{queuePosition}</span>
-              <span className="text-white/30 text-xs">in queue</span>
+              <span className="text-white/30 text-xs">in der Warteschlange</span>
             </div>
             <button
               onClick={leaveQueue}
               className="px-3 py-2 rounded-lg text-red-400/60 hover:text-red-300 text-xs font-medium transition-colors"
               style={{ background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.1)' }}
             >
-              Leave
+              Verlassen
             </button>
           </div>
         ) : isMyTurn ? (
@@ -1016,7 +1016,7 @@ export const PokerPage = () => {
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-green-400/40 animate-pulse" />
             <p className="text-white/30 text-xs tracking-wide">
-              Choose a seat to join the table
+              Wähle einen Platz am Tisch
             </p>
           </div>
         ) : tableState?.soloMode && mySeat && tableState?.phase !== 'WAITING' && tableState?.phase !== 'SHOWDOWN' ? (
@@ -1029,17 +1029,17 @@ export const PokerPage = () => {
           </button>
         ) : tableState?.soloMode && mySeat ? (
           <p className="text-white/40 text-xs tracking-wide italic">
-            Practice mode — no chips change
+            Trainingsmodus — keine Chip-Änderung
           </p>
         ) : tableState?.phase === 'WAITING' && mySeat ? (
           <p className="text-white/30 text-xs tracking-wide">
             {(tableState.seats.filter(s => s !== null).length ?? 0) < 2
-              ? 'Hand starting soon…'
-              : 'Hand starting soon…'}
+              ? 'Hand beginnt bald…'
+              : 'Hand beginnt bald…'}
           </p>
         ) : (
           <p className="text-white/20 text-xs tracking-wide italic">
-            {tableState?.seats[tableState?.actionSeatIndex ?? -1]?.username ?? '…'}'s turn
+            {tableState?.seats[tableState?.actionSeatIndex ?? -1]?.username ?? '…'} ist dran
           </p>
         )}
       </div>
@@ -1082,7 +1082,7 @@ export const PokerPage = () => {
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value.slice(0, 50))}
                     onKeyDown={(e) => e.key === 'Enter' && sendChat()}
-                    placeholder="Say something…"
+                    placeholder="Sag etwas…"
                     maxLength={50}
                     className="border rounded-lg px-3 py-1.5 text-white text-xs w-44 outline-none placeholder-white/15 transition-colors"
                     style={{
@@ -1140,7 +1140,7 @@ export const PokerPage = () => {
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              Leave
+              Verlassen
             </motion.button>
 
             {/* Emote / chat button */}
