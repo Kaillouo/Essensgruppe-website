@@ -26,16 +26,16 @@ export const AboutPage = () => {
 
           <div className="card mb-6">
             <div className="prose max-w-none text-white/70">
-              <h3 className="text-xl font-bold text-white mb-3">Our Mission</h3>
+              <h3 className="text-xl font-bold text-white mb-3">Unsere Mission</h3>
               <p className="mb-4">
-                To create a unified digital space where our class can collaborate, communicate, and celebrate
-                our journey to Abitur 2027. We believe in building strong connections and making our final
-                school years memorable and enjoyable.
+                Wir wollen einen einheitlichen digitalen Raum schaffen, in dem unsere Klasse zusammenarbeiten,
+                kommunizieren und unsere Reise zum Abitur 2027 feiern kann. Wir glauben an starke Verbindungen
+                und möchten unsere letzten Schuljahre unvergesslich und genießbar machen.
               </p>
 
-              <h3 className="text-xl font-bold text-white mb-3 mt-6">Contact</h3>
+              <h3 className="text-xl font-bold text-white mb-3 mt-6">Kontakt</h3>
               <p className="mb-2">
-                For questions, suggestions, or issues, reach out to us directly:
+                Bei Fragen, Vorschlägen oder Problemen kannst du uns direkt erreichen:
               </p>
               <a
                 href="mailto:chef@essensgruppe.de"
@@ -47,7 +47,7 @@ export const AboutPage = () => {
           </div>
 
           <div className="card text-center">
-            <p className="text-white/50 mb-4">Follow our journey</p>
+            <p className="text-white/50 mb-4">Folge unserer Reise</p>
             <div className="flex justify-center space-x-4">
               <a
                 href="https://instagram.com/thg_abi27"
