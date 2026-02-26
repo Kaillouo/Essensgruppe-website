@@ -4,12 +4,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { DailyCoinsClaim } from '../components/DailyCoinsClaim';
 
 const SECTIONS = [
-  { label: 'Forum', desc: 'Threads, discussions, and class chat', to: '/forum', locked: true, roleRequired: null as string[] | null },
-  { label: 'ABI 27', desc: 'Events, planning, and photo galleries', to: '/events', locked: false, roleRequired: null as string[] | null },
-  { label: 'Links', desc: 'Useful links for school and class', to: '/links', locked: false, roleRequired: null as string[] | null },
-  { label: 'Games', desc: 'Coins, poker, slots and more', to: '/games', locked: true, roleRequired: null as string[] | null },
-  { label: 'About Us', desc: 'Who we are', to: '/about', locked: false, roleRequired: null as string[] | null },
-  { label: 'MC', desc: 'Minecraft server and BlueMap', to: '/mc', locked: true, roleRequired: ['ESSENSGRUPPE_MITGLIED', 'ADMIN'] as string[] | null },
+  { label: 'Forum', desc: 'Threads, Diskussionen und Klassenchat', to: '/forum', locked: true, roleRequired: null as string[] | null },
+  { label: 'ABI 27', desc: 'Events, Planung und Fotogalerien', to: '/events', locked: false, roleRequired: null as string[] | null },
+  { label: 'Links', desc: 'Nützliche Links für Schule und Klasse', to: '/links', locked: false, roleRequired: null as string[] | null },
+  { label: 'Games', desc: 'Coins, Poker, Slots und mehr', to: '/games', locked: true, roleRequired: null as string[] | null },
+  { label: 'About Us', desc: 'Wer wir sind', to: '/about', locked: false, roleRequired: null as string[] | null },
+  { label: 'MC', desc: 'Minecraft-Server und BlueMap', to: '/mc', locked: true, roleRequired: ['ESSENSGRUPPE_MITGLIED', 'ADMIN'] as string[] | null },
 ];
 
 export const LandingPage = () => {
@@ -39,7 +39,7 @@ export const LandingPage = () => {
               transform: 'translate(-50%, -50%)',
               border: 'none',
             }}
-            title="Background video"
+            title="Hintergrundvideo"
           />
         </div>
         {/* Dark overlay */}
@@ -60,7 +60,7 @@ export const LandingPage = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-xl md:text-2xl text-primary-100 mb-8"
           >
-            Abitur 2027 Community Portal
+            Abitur 2027 Gemeinschaftsportal
           </motion.p>
 
           {!isAuthenticated ? (
@@ -131,7 +131,7 @@ export const LandingPage = () => {
             viewport={{ once: true }}
             className="text-4xl font-bold text-white mb-8"
           >
-            Are you really ready to join.
+            Bist du wirklich bereit beizutreten?
           </motion.h2>
           {!isAuthenticated && (
             <motion.div
@@ -144,7 +144,7 @@ export const LandingPage = () => {
                 to="/register"
                 className="inline-block bg-white text-primary-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-primary-50 transition-all transform hover:scale-105 shadow-xl"
               >
-                Request to Join
+                Beitreten
               </Link>
             </motion.div>
           )}
