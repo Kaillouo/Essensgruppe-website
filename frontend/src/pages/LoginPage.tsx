@@ -20,30 +20,30 @@ export const LoginPage = () => {
       await login({ identifier, password });
       navigate('/forum');
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError(err.message || 'Anmeldung fehlgeschlagen');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-white px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0e1a] px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white/[0.04] border border-white/[0.06] rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-            <p className="text-gray-600">Login to access Essensgruppe</p>
+            <h1 className="text-3xl font-bold text-white mb-2">Willkommen zurück</h1>
+            <p className="text-white/50">Melde dich an, um auf Essensgruppe zuzugreifen</p>
           </div>
 
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-red-50 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm"
+              className="bg-red-500/10 text-red-400 border border-red-500/20 px-4 py-3 rounded-lg mb-6 text-sm"
             >
               {error}
             </motion.div>
@@ -51,7 +51,7 @@ export const LoginPage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="identifier" className="block text-sm font-medium text-white/70 mb-2">
                 Benutzername oder E-Mail
               </label>
               <input
@@ -67,10 +67,10 @@ export const LoginPage = () => {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="password" className="block text-sm font-medium text-white/70">
                   Passwort
                 </label>
-                <Link to="/forgot-password" className="text-xs text-primary-600 hover:text-primary-700 font-medium">
+                <Link to="/forgot-password" className="text-xs text-primary-400 hover:text-primary-300 font-medium">
                   Passwort vergessen?
                 </Link>
               </div>
@@ -105,17 +105,17 @@ export const LoginPage = () => {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-600">
+            <p className="text-white/50">
               Noch kein Account?{' '}
-              <Link to="/register" className="text-primary-600 font-medium hover:text-primary-700">
+              <Link to="/register" className="text-primary-400 font-medium hover:text-primary-300">
                 Jetzt registrieren
               </Link>
             </p>
           </div>
 
           <div className="mt-4 text-center">
-            <Link to="/" className="text-gray-500 text-sm hover:text-gray-700">
-              ← Back to home
+            <Link to="/" className="text-white/30 text-sm hover:text-white/60">
+              ← Zurück zur Startseite
             </Link>
           </div>
         </div>
