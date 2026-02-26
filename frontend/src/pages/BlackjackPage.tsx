@@ -465,8 +465,8 @@ export const BlackjackPage = () => {
   }
 
   async function deal() {
-    if (effectiveBet < 10) return showError('Minimum bet is 10 chips');
-    if (effectiveBet > balance) return showError('Insufficient balance');
+    if (effectiveBet < 10) return showError('Mindesteinsatz ist 10 Chips');
+    if (effectiveBet > balance) return showError('Nicht genug Guthaben');
     setLoading(true);
     try {
       const raw = await ApiService.blackjackDeal(effectiveBet) as any;
@@ -476,7 +476,7 @@ export const BlackjackPage = () => {
       updateUser({ ...user!, balance: state.balance });
       if (state.status !== 'PLAYING') applyResult(state);
     } catch (e: any) {
-      showError(e.message ?? 'Deal failed');
+      showError(e.message ?? 'Austeilen fehlgeschlagen');
     } finally {
       setLoading(false);
     }
@@ -491,7 +491,7 @@ export const BlackjackPage = () => {
       setGameState(state);
       if (state.status !== 'PLAYING') applyResult(state);
     } catch (e: any) {
-      showError(e.message ?? 'Failed');
+      showError(e.message ?? 'Fehler');
     } finally {
       setLoading(false);
     }
@@ -506,7 +506,7 @@ export const BlackjackPage = () => {
       setGameState(state);
       applyResult(state);
     } catch (e: any) {
-      showError(e.message ?? 'Failed');
+      showError(e.message ?? 'Fehler');
     } finally {
       setLoading(false);
     }
@@ -521,7 +521,7 @@ export const BlackjackPage = () => {
       setGameState(state);
       applyResult(state);
     } catch (e: any) {
-      showError(e.message ?? 'Failed');
+      showError(e.message ?? 'Fehler');
     } finally {
       setLoading(false);
     }
@@ -561,7 +561,7 @@ export const BlackjackPage = () => {
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back
+            Zurück
           </Link>
           <div className="flex items-center gap-2">
             <span
@@ -687,11 +687,11 @@ export const BlackjackPage = () => {
                       boxShadow: '0 0 20px rgba(251,191,36,0.1)',
                     }}
                   >
-                    <span className="text-yellow-400/60 text-[10px] font-bold tracking-widest uppercase">Bet</span>
+                    <span className="text-yellow-400/60 text-[10px] font-bold tracking-widest uppercase">Einsatz</span>
                     <span className="text-yellow-300 font-black text-sm tabular-nums">
                       {gameState!.bet.toLocaleString()}
                       {gameState!.doubled && (
-                        <span className="text-yellow-500/70 font-normal text-xs ml-1">(doubled)</span>
+                        <span className="text-yellow-500/70 font-normal text-xs ml-1">(verdoppelt)</span>
                       )}
                     </span>
                   </motion.div>
@@ -724,7 +724,7 @@ export const BlackjackPage = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-white/30 text-[10px] font-bold tracking-[0.3em] uppercase">You</span>
+                  <span className="text-white/30 text-[10px] font-bold tracking-[0.3em] uppercase">Du</span>
                   {gameState && <ValueBadge hand={gameState.playerHand} />}
                 </div>
               </div>
@@ -748,7 +748,7 @@ export const BlackjackPage = () => {
                 {/* Bet display + chips */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-white/30 text-xs font-medium tracking-wide uppercase">Bet</span>
+                    <span className="text-white/30 text-xs font-medium tracking-wide uppercase">Einsatz</span>
                     <motion.div
                       key={betAmount}
                       initial={{ scale: 0.85 }}
@@ -794,8 +794,8 @@ export const BlackjackPage = () => {
             {/* Deal button */}
             {!isPlaying && (
               <ActionBtn
-                label={loading ? 'Dealing…' : 'Deal'}
-                sublabel={canDeal ? 'Space / Enter' : 'Set a bet first'}
+                label={loading ? 'Austeilen…' : 'Austeilen'}
+                sublabel={canDeal ? 'Leertaste / Enter' : 'Zuerst Einsatz setzen'}
                 onClick={deal}
                 disabled={!canDeal}
                 loading={loading}
@@ -810,11 +810,11 @@ export const BlackjackPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center justify-center gap-3"
               >
-                <ActionBtn label="Hit"    sublabel="H" onClick={hit}       disabled={loading} color="green"   />
-                <ActionBtn label="Stand"  sublabel="S" onClick={stand}     disabled={loading} color="red"     />
+                <ActionBtn label="Karte"      sublabel="H" onClick={hit}       disabled={loading} color="green"   />
+                <ActionBtn label="Halten"     sublabel="S" onClick={stand}     disabled={loading} color="red"     />
                 <ActionBtn
-                  label="Double"
-                  sublabel={canDouble ? `${gameState!.originalBet.toLocaleString()} more · D` : 'Need chips'}
+                  label="Verdoppeln"
+                  sublabel={canDouble ? `${gameState!.originalBet.toLocaleString()} mehr · D` : 'Zu wenig Chips'}
                   onClick={doubleDown}
                   disabled={!canDouble || loading}
                   color="blue"
@@ -829,7 +829,7 @@ export const BlackjackPage = () => {
       {/* ── Hand history ── */}
       {handHistory.length > 0 && (
         <div className="shrink-0 flex items-center justify-center gap-1.5 px-5 pb-4 z-10 flex-wrap">
-          <span className="text-white/15 text-[10px] font-medium tracking-widest uppercase mr-1">History</span>
+          <span className="text-white/15 text-[10px] font-medium tracking-widest uppercase mr-1">Verlauf</span>
           <AnimatePresence initial={false}>
             {handHistory.map((s, i) => (
               <HistoryPill key={`${s}-${i}`} status={s} />
@@ -862,8 +862,8 @@ export const BlackjackPage = () => {
       <div className="shrink-0 flex items-center justify-center gap-6 px-5 py-2 border-t border-white/[0.03] z-10">
         {[
           ['Blackjack', '3:2'],
-          ['Win', '1:1'],
-          ['Dealer stands', '17+'],
+          ['Gewinn', '1:1'],
+          ['Dealer hält', '17+'],
         ].map(([label, rule]) => (
           <div key={label} className="flex items-center gap-1.5">
             <span className="text-white/15 text-[9px] font-medium tracking-wide uppercase">{label}</span>
