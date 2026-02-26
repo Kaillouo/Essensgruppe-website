@@ -8,14 +8,14 @@ import { Event, EventPhoto } from '../types';
 
 function timeAgo(dateStr: string): string {
   const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
-  if (diff < 60) return 'just now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
+  if (diff < 60) return 'gerade eben';
+  if (diff < 3600) return `vor ${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `vor ${Math.floor(diff / 3600)}h`;
+  return `vor ${Math.floor(diff / 86400)}d`;
 }
 
 function formatDate(dateStr: string | null): string {
-  if (!dateStr) return 'TBD';
+  if (!dateStr) return 'Noch offen';
   return new Date(dateStr).toLocaleDateString('de-DE', {
     day: '2-digit',
     month: 'long',
@@ -24,7 +24,7 @@ function formatDate(dateStr: string | null): string {
 }
 
 function formatBudget(budget: number | null): string {
-  if (budget === null) return 'TBD';
+  if (budget === null) return 'Noch offen';
   return `${budget.toLocaleString('de-DE')} €`;
 }
 
@@ -62,7 +62,7 @@ function PhotoCarousel({ eventId, photos, currentUserId, isAdmin, canUpload, onP
       onPhotosChange(eventId, updated);
       setIndex(updated.length - 1);
     } catch (err: any) {
-      alert(err.message || 'Upload failed');
+      alert(err.message || 'Hochladen fehlgeschlagen');
     } finally {
       setUploading(false);
     }
@@ -75,7 +75,7 @@ function PhotoCarousel({ eventId, photos, currentUserId, isAdmin, canUpload, onP
       onPhotosChange(eventId, updated);
       setIndex(i => Math.min(i, Math.max(0, updated.length - 1)));
     } catch (err: any) {
-      alert(err.message || 'Delete failed');
+      alert(err.message || 'Löschen fehlgeschlagen');
     } finally {
       setConfirmDeleteId(null);
     }
@@ -94,7 +94,7 @@ function PhotoCarousel({ eventId, photos, currentUserId, isAdmin, canUpload, onP
           disabled={uploading}
           className="text-xs px-2 py-1 rounded bg-white/[0.06] text-white/50 hover:bg-white/10 disabled:opacity-50"
         >
-          {uploading ? 'Uploading...' : '📷 Add Photo'}
+          {uploading ? 'Wird hochgeladen...' : '📷 Foto hinzufügen'}
         </button>
       </div>
     );
@@ -148,22 +148,22 @@ function PhotoCarousel({ eventId, photos, currentUserId, isAdmin, canUpload, onP
               <button
                 onClick={() => setConfirmDeleteId(currentPhoto.id)}
                 className="w-6 h-6 rounded-full bg-red-600/80 text-white text-xs flex items-center justify-center hover:bg-red-700"
-                title="Delete photo"
+                title="Foto löschen"
               >
                 ×
               </button>
             )}
             {confirmDeleteId === currentPhoto.id && (
               <div className="flex items-center gap-1 bg-black/60 rounded-full px-2 py-0.5">
-                <span className="text-white text-xs">Delete?</span>
-                <button onClick={() => handleDelete(currentPhoto.id)} className="text-red-300 hover:text-red-200 text-xs font-bold">Yes</button>
-                <button onClick={() => setConfirmDeleteId(null)} className="text-gray-300 hover:text-white text-xs">No</button>
+                <span className="text-white text-xs">Löschen?</span>
+                <button onClick={() => handleDelete(currentPhoto.id)} className="text-red-300 hover:text-red-200 text-xs font-bold">Ja</button>
+                <button onClick={() => setConfirmDeleteId(null)} className="text-gray-300 hover:text-white text-xs">Nein</button>
               </div>
             )}
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              title="Add photo"
+              title="Foto hinzufügen"
               className="w-6 h-6 rounded-full bg-black/40 text-white text-xs flex items-center justify-center hover:bg-black/60 disabled:opacity-50"
             >
               {uploading ? '…' : '+'}
@@ -222,7 +222,7 @@ function PhotoCarousel({ eventId, photos, currentUserId, isAdmin, canUpload, onP
             <motion.img
               key={currentPhoto.id}
               src={currentPhoto.imageUrl}
-              alt="Event photo"
+              alt="Event-Foto"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -258,7 +258,7 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !description.trim()) {
-      setError('Title and description are required.');
+      setError('Titel und Beschreibung sind Pflichtfelder.');
       return;
     }
     setLoading(true);
@@ -276,7 +276,7 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
       onCreated(created);
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to submit event.');
+      setError(err.message || 'Fehler beim Erstellen des Events.');
     } finally {
       setLoading(false);
     }
@@ -292,38 +292,38 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
         className="rounded-2xl shadow-2xl w-full max-w-lg p-6"
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white">Propose an Event</h2>
+          <h2 className="text-xl font-bold text-white">Event vorschlagen</h2>
           <button onClick={onClose} className="text-white/40 hover:text-white/70 text-2xl leading-none">×</button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-white/55 mb-1">Title *</label>
+            <label className="block text-sm font-medium text-white/55 mb-1">Titel *</label>
             <input
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
               maxLength={200}
-              placeholder="Event title..."
+              placeholder="Event-Titel..."
               className="w-full border border-white/10 bg-white/[0.04] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500/50 placeholder-white/20"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-white/55 mb-1">Description *</label>
+            <label className="block text-sm font-medium text-white/55 mb-1">Beschreibung *</label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
               maxLength={5000}
               rows={4}
-              placeholder="What's the event about? Why should we do it?"
+              placeholder="Worum geht es? Warum sollten wir das machen?"
               className="w-full border border-white/10 bg-white/[0.04] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500/50 resize-none placeholder-white/20"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-white/55 mb-1">Date (optional)</label>
+              <label className="block text-sm font-medium text-white/55 mb-1">Datum (optional)</label>
               <input
                 type="date"
                 value={date}
@@ -346,13 +346,13 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-white/55 mb-1">Location (optional)</label>
+            <label className="block text-sm font-medium text-white/55 mb-1">Ort (optional)</label>
             <input
               type="text"
               value={location}
               onChange={e => setLocation(e.target.value)}
               maxLength={200}
-              placeholder="Where would this take place?"
+              placeholder="Wo soll das stattfinden?"
               className="w-full border border-white/10 bg-white/[0.04] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500/50 placeholder-white/20"
             />
           </div>
@@ -371,10 +371,10 @@ function CreateModal({ onClose, onCreated }: CreateModalProps) {
 
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-white/10 rounded-lg text-white/60 hover:bg-white/[0.04]">
-              Cancel
+              Abbrechen
             </button>
             <button type="submit" disabled={loading} className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50">
-              {loading ? 'Submitting...' : 'Submit Proposal'}
+              {loading ? 'Wird eingereicht...' : 'Vorschlag einreichen'}
             </button>
           </div>
         </form>
@@ -408,9 +408,9 @@ function StatusModal({ event, onClose, onUpdated }: StatusModalProps) {
   };
 
   const statusOptions: { label: string; value: Event['status']; color: string }[] = [
-    { label: 'Proposed', value: 'PROPOSED', color: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' },
-    { label: 'In Planning', value: 'IN_PLANNING', color: 'bg-blue-100 text-blue-800 hover:bg-blue-200' },
-    { label: 'Completed', value: 'COMPLETED', color: 'bg-green-100 text-green-800 hover:bg-green-200' },
+    { label: 'Vorgeschlagen', value: 'PROPOSED', color: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' },
+    { label: 'In Planung', value: 'IN_PLANNING', color: 'bg-blue-100 text-blue-800 hover:bg-blue-200' },
+    { label: 'Abgeschlossen', value: 'COMPLETED', color: 'bg-green-100 text-green-800 hover:bg-green-200' },
   ];
 
   return (
@@ -421,7 +421,7 @@ function StatusModal({ event, onClose, onUpdated }: StatusModalProps) {
         exit={{ opacity: 0, scale: 0.95 }}
         className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6"
       >
-        <h2 className="text-lg font-bold text-gray-900 mb-2">Move Event</h2>
+        <h2 className="text-lg font-bold text-gray-900 mb-2">Event verschieben</h2>
         <p className="text-sm text-gray-500 mb-4">"{event.title}"</p>
         <div className="space-y-2">
           {statusOptions.map(opt => (
@@ -431,12 +431,12 @@ function StatusModal({ event, onClose, onUpdated }: StatusModalProps) {
               onClick={() => handleStatus(opt.value)}
               className={`w-full px-4 py-2.5 rounded-lg font-medium text-sm transition-colors ${opt.color} disabled:opacity-40`}
             >
-              {event.status === opt.value ? `✓ Currently: ${opt.label}` : opt.label}
+              {event.status === opt.value ? `✓ Aktuell: ${opt.label}` : opt.label}
             </button>
           ))}
         </div>
         <button onClick={onClose} className="mt-4 w-full px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">
-          Cancel
+          Abbrechen
         </button>
       </motion.div>
     </div>
@@ -466,9 +466,9 @@ function EventCard({ event, isAdmin, isAuthenticated, currentUserId, onVote, onD
   };
 
   const statusLabels: Record<Event['status'], string> = {
-    PROPOSED: 'Proposed',
-    IN_PLANNING: 'In Planning',
-    COMPLETED: 'Completed',
+    PROPOSED: 'Vorgeschlagen',
+    IN_PLANNING: 'In Planung',
+    COMPLETED: 'Abgeschlossen',
   };
 
   return (
@@ -499,7 +499,7 @@ function EventCard({ event, isAdmin, isAuthenticated, currentUserId, onVote, onD
           <div className="flex items-center gap-4 mt-3 text-xs text-white/35 flex-wrap">
             {event.location && <span>📍 {event.location}</span>}
             {event.budget !== null && <span>💰 {formatBudget(event.budget)}</span>}
-            <span>by {event.user.username} · {timeAgo(event.createdAt)}</span>
+            <span>von {event.user.username} · {timeAgo(event.createdAt)}</span>
           </div>
         </div>
 
@@ -513,7 +513,7 @@ function EventCard({ event, isAdmin, isAuthenticated, currentUserId, onVote, onD
                   className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                     event.userVote === 1 ? 'bg-green-500 text-white' : 'text-white/30 hover:bg-green-500/10 hover:text-green-400'
                   }`}
-                  title="Upvote"
+                  title="Dafür stimmen"
                 >
                   ▲
                 </button>
@@ -525,7 +525,7 @@ function EventCard({ event, isAdmin, isAuthenticated, currentUserId, onVote, onD
                   className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                     event.userVote === -1 ? 'bg-red-500 text-white' : 'text-white/30 hover:bg-red-500/10 hover:text-red-400'
                   }`}
-                  title="Downvote"
+                  title="Dagegen stimmen"
                 >
                   ▼
                 </button>
@@ -557,7 +557,7 @@ function EventCard({ event, isAdmin, isAuthenticated, currentUserId, onVote, onD
               onClick={() => onStatusChange(event)}
               className="text-xs px-2 py-1 rounded bg-white/[0.06] text-white/50 hover:bg-white/10"
             >
-              Move Status
+              Status ändern
             </button>
           )}
           {!confirmDelete ? (
@@ -565,13 +565,13 @@ function EventCard({ event, isAdmin, isAuthenticated, currentUserId, onVote, onD
               onClick={() => setConfirmDelete(true)}
               className="text-xs px-2 py-1 rounded bg-red-500/10 text-red-400 hover:bg-red-500/20"
             >
-              Delete
+              Löschen
             </button>
           ) : (
             <div className="flex items-center gap-1">
-              <span className="text-xs text-gray-500">Sure?</span>
-              <button onClick={() => onDelete(event.id)} className="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700">Yes</button>
-              <button onClick={() => setConfirmDelete(false)} className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200">No</button>
+              <span className="text-xs text-gray-500">Sicher?</span>
+              <button onClick={() => onDelete(event.id)} className="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700">Ja</button>
+              <button onClick={() => setConfirmDelete(false)} className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200">Nein</button>
             </div>
           )}
         </div>
@@ -777,19 +777,19 @@ export const EventsPage = () => {
   const completed = events.filter(e => e.status === 'COMPLETED');
 
   const tabs = [
-    { key: 'PROPOSED' as const, label: 'Proposed', icon: '💡', count: proposed.length },
-    { key: 'IN_PLANNING' as const, label: 'In Planning', icon: '🗓️', count: inPlanning.length },
-    { key: 'COMPLETED' as const, label: 'Completed', icon: '✅', count: completed.length },
+    { key: 'PROPOSED' as const, label: 'Vorgeschlagen', icon: '💡', count: proposed.length },
+    { key: 'IN_PLANNING' as const, label: 'In Planung', icon: '🗓️', count: inPlanning.length },
+    { key: 'COMPLETED' as const, label: 'Abgeschlossen', icon: '✅', count: completed.length },
   ];
 
   const tabEvents = { PROPOSED: proposed, IN_PLANNING: inPlanning, COMPLETED: completed };
   const tabEmptyText = {
-    PROPOSED: 'No proposals yet. Be the first to suggest something!',
-    IN_PLANNING: 'No events currently in planning.',
-    COMPLETED: 'No completed events yet.',
+    PROPOSED: 'Noch keine Vorschläge. Sei der Erste!',
+    IN_PLANNING: 'Aktuell keine Events in Planung.',
+    COMPLETED: 'Noch keine abgeschlossenen Events.',
   };
   const tabIcons = { PROPOSED: '💡', IN_PLANNING: '🗓️', COMPLETED: '✅' };
-  const tabTitles = { PROPOSED: 'Proposed Events', IN_PLANNING: 'In Planning', COMPLETED: 'Completed' };
+  const tabTitles = { PROPOSED: 'Vorgeschlagene Events', IN_PLANNING: 'In Planung', COMPLETED: 'Abgeschlossen' };
 
   return (
     <div className="min-h-screen bg-[#0a0e1a]">
@@ -805,7 +805,7 @@ export const EventsPage = () => {
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 text-center text-white px-4">
           <h1 className="text-4xl font-bold drop-shadow-lg">ABI 27 Events</h1>
-          <p className="text-gray-200 mt-1 text-sm">Plan, vote, and celebrate together</p>
+          <p className="text-gray-200 mt-1 text-sm">Planen, abstimmen und gemeinsam feiern</p>
         </div>
       </div>
 
@@ -819,14 +819,14 @@ export const EventsPage = () => {
                 onClick={() => setShowCreate(true)}
                 className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium text-sm"
               >
-                + Propose Event
+                + Event vorschlagen
               </button>
             </div>
           )}
 
           {/* Social links strip */}
           <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-4 mb-6 flex items-center gap-4 flex-wrap">
-            <span className="text-white font-medium text-sm">Follow the journey:</span>
+            <span className="text-white font-medium text-sm">Folge der Reise:</span>
             <a href="https://gofund.me/6c2bc4e83" target="_blank" rel="noopener noreferrer"
               className="text-white/90 hover:text-white text-sm underline underline-offset-2">GoFundMe</a>
             <a href="https://instagram.com/thg_abi27" target="_blank" rel="noopener noreferrer"
@@ -860,7 +860,7 @@ export const EventsPage = () => {
 
           {/* Content */}
           {loading ? (
-            <div className="text-center py-16 text-gray-400">Loading events...</div>
+            <div className="text-center py-16 text-gray-400">Events werden geladen...</div>
           ) : (
             <AnimatePresence mode="wait">
               <motion.div
