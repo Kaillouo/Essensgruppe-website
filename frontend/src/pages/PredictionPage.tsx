@@ -30,7 +30,7 @@ const RulesInfo = () => {
       <button
         onClick={() => setOpen((p) => !p)}
         className="w-6 h-6 rounded-full border border-gray-600 text-gray-500 hover:text-gray-300 hover:border-gray-400 text-xs font-bold transition-colors flex items-center justify-center"
-        title="How it works"
+        title="Wie es funktioniert"
       >
         i
       </button>
@@ -45,14 +45,14 @@ const RulesInfo = () => {
               transition={{ duration: 0.12 }}
               className="absolute left-8 top-0 z-50 w-72 bg-[#1a2235] border border-white/10 rounded-2xl p-4 shadow-2xl text-sm"
             >
-              <p className="text-white font-semibold mb-2">How Prediction Market works</p>
+              <p className="text-white font-semibold mb-2">Wie der Prediction Market funktioniert</p>
               <ul className="text-gray-400 space-y-1.5 text-xs leading-relaxed">
-                <li>• Anyone can create a Yes/No prediction and set a resolution date.</li>
-                <li>• <span className="text-amber-400 font-medium">Creators cannot bet</span> on their own prediction — this prevents manipulation.</li>
-                <li>• Other members bet coins on Yes or No. One bet per person.</li>
-                <li>• The creator resolves it by choosing the real outcome.</li>
-                <li>• <span className="text-green-400 font-medium">Winners split the losers' entire pool</span> proportionally to their bet size.</li>
-                <li>• If nobody bet on the winning side, everyone is refunded.</li>
+                <li>• Jeder kann eine Ja/Nein-Frage erstellen und ein Ablaufdatum festlegen.</li>
+                <li>• <span className="text-amber-400 font-medium">Ersteller können nicht</span> auf ihre eigene Vorhersage wetten — verhindert Manipulation.</li>
+                <li>• Andere Mitglieder setzen Coins auf Ja oder Nein. Eine Wette pro Person.</li>
+                <li>• Der Ersteller löst die Frage auf, indem er das tatsächliche Ergebnis auswählt.</li>
+                <li>• <span className="text-green-400 font-medium">Gewinner teilen den gesamten Verliererpool</span> proportional zur Wettgröße.</li>
+                <li>• Hat niemand auf die Gewinnerseite gesetzt, werden alle Einsätze zurückerstattet.</li>
               </ul>
             </motion.div>
           </>
@@ -132,7 +132,7 @@ export const PredictionPage = () => {
       const data = await ApiService.getPredictions() as Prediction[];
       setPredictions(data);
     } catch {
-      setError('Failed to load predictions');
+      setError('Vorhersagen konnten nicht geladen werden');
     } finally {
       setLoading(false);
     }
@@ -148,7 +148,7 @@ export const PredictionPage = () => {
   // ── create ──────────────────────────────────────────────────────────────────
   const handleCreate = async () => {
     if (!createTitle.trim() || !createDate) {
-      setCreateError('Fill in all fields');
+      setCreateError('Bitte alle Felder ausfüllen');
       return;
     }
     setCreateLoading(true);
@@ -166,7 +166,7 @@ export const PredictionPage = () => {
       setCreateVisibility('ALL');
       setTab('open');
     } catch (err: any) {
-      setCreateError(err.message || 'Failed to create');
+      setCreateError(err.message || 'Erstellen fehlgeschlagen');
     } finally {
       setCreateLoading(false);
     }
@@ -176,12 +176,12 @@ export const PredictionPage = () => {
   const handleBet = async () => {
     const amount = parseInt(betAmount, 10);
     if (!betTarget || isNaN(amount) || amount < 1) {
-      setBetError('Enter a valid amount');
+      setBetError('Bitte gültigen Betrag eingeben');
       return;
     }
     const available = (user?.balance ?? 0) - (user?.reserved ?? 0);
     if (amount > available) {
-      setBetError(`Insufficient available balance (available: ${available})`);
+      setBetError(`Nicht genug Guthaben (verfügbar: ${available})`);
       return;
     }
     setBetLoading(true);
@@ -193,7 +193,7 @@ export const PredictionPage = () => {
       setBetAmount('');
       await refreshUser();
     } catch (err: any) {
-      setBetError(err.message || 'Failed to place bet');
+      setBetError(err.message || 'Wette konnte nicht platziert werden');
     } finally {
       setBetLoading(false);
     }
@@ -210,7 +210,7 @@ export const PredictionPage = () => {
       setResolveTarget(null);
       await refreshUser();
     } catch (err: any) {
-      setResolveError(err.message || 'Failed to resolve');
+      setResolveError(err.message || 'Auflösung fehlgeschlagen');
     } finally {
       setResolveLoading(false);
     }
@@ -222,7 +222,7 @@ export const PredictionPage = () => {
       await ApiService.deletePrediction(pred.id);
       setPredictions((prev) => prev.filter((p) => p.id !== pred.id));
     } catch (err: any) {
-      alert(err.message || 'Failed to delete');
+      alert(err.message || 'Löschen fehlgeschlagen');
     } finally {
       setDeleteTarget(null);
     }
@@ -290,7 +290,7 @@ export const PredictionPage = () => {
                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                 />
               )}
-              <span className="relative z-10 capitalize">{t}</span>
+              <span className="relative z-10">{t === 'open' ? 'Offen' : 'Geschlossen'}</span>
               <span className="relative z-10 ml-1.5 text-xs opacity-60">
                 ({predictions.filter((p) => (t === 'open' ? p.status === 'OPEN' : p.status === 'CLOSED')).length})
               </span>
@@ -309,14 +309,14 @@ export const PredictionPage = () => {
           <div className="text-center py-20 text-gray-600">
             <p className="text-5xl mb-4">🔮</p>
             <p className="text-lg font-medium text-gray-500">
-              {tab === 'open' ? 'No open predictions yet' : 'No resolved predictions yet'}
+              {tab === 'open' ? 'Noch keine offenen Vorhersagen' : 'Noch keine aufgelösten Vorhersagen'}
             </p>
             {tab === 'open' && (
               <button
                 onClick={() => setShowCreate(true)}
                 className="mt-4 px-5 py-2.5 bg-primary-600 hover:bg-primary-700 rounded-xl text-sm font-semibold transition-colors"
               >
-                Create the first one
+                Erste Vorhersage erstellen
               </button>
             )}
           </div>
@@ -360,17 +360,17 @@ export const PredictionPage = () => {
                         </span>
                       ) : (
                         <span className="flex-shrink-0 text-xs px-2.5 py-0.5 rounded-full bg-primary-900/40 text-primary-300 border border-primary-700/30">
-                          OPEN
+                          OFFEN
                         </span>
                       )}
                     </div>
 
                     {/* Meta */}
                     <p className="text-xs text-gray-500">
-                      By <span className="text-gray-400">{pred.creator.username}</span>
-                      {isCreator && <span className="ml-1 text-amber-400">(you)</span>}
+                      Von <span className="text-gray-400">{pred.creator.username}</span>
+                      {isCreator && <span className="ml-1 text-amber-400">(du)</span>}
                       {' · '}
-                      {isClosed ? 'Resolved' : 'Closes'} {fmtDate(pred.closeDate)}
+                      {isClosed ? 'Aufgelöst' : 'Schließt'} {fmtDate(pred.closeDate)}
                     </p>
 
                     {/* Bet bar */}
@@ -379,13 +379,13 @@ export const PredictionPage = () => {
                     {/* Bet totals */}
                     <div className="flex justify-between text-xs">
                       <span className="text-green-400">
-                        🪙 {pred.totalYes.toLocaleString()} ({pred.yesCount} {pred.yesCount === 1 ? 'bet' : 'bets'})
+                        🪙 {pred.totalYes.toLocaleString()} ({pred.yesCount} {pred.yesCount === 1 ? 'Wette' : 'Wetten'})
                       </span>
                       <span className="text-gray-500 font-medium">
-                        Total: {total.toLocaleString()}
+                        Gesamt: {total.toLocaleString()}
                       </span>
                       <span className="text-red-400">
-                        🪙 {pred.totalNo.toLocaleString()} ({pred.noCount} {pred.noCount === 1 ? 'bet' : 'bets'})
+                        🪙 {pred.totalNo.toLocaleString()} ({pred.noCount} {pred.noCount === 1 ? 'Wette' : 'Wetten'})
                       </span>
                     </div>
 
@@ -396,12 +396,12 @@ export const PredictionPage = () => {
                           ? 'bg-green-900/20 border-green-700/30 text-green-400'
                           : 'bg-red-900/20 border-red-700/30 text-red-400'
                       }`}>
-                        Your bet: 🪙 {pred.userBet!.amount.toLocaleString()} on{' '}
+                        Deine Wette: 🪙 {pred.userBet!.amount.toLocaleString()} auf{' '}
                         <span className="font-semibold">{pred.userBet!.side ? 'YES' : 'NO'}</span>
                         {isClosed && pred.outcome !== null && (
                           pred.outcome === pred.userBet!.side
-                            ? <span className="ml-1 text-green-300 font-bold">✓ Won</span>
-                            : <span className="ml-1 text-red-300">✗ Lost</span>
+                            ? <span className="ml-1 text-green-300 font-bold">✓ Gewonnen</span>
+                            : <span className="ml-1 text-red-300">✗ Verloren</span>
                         )}
                       </div>
                     )}
@@ -418,7 +418,7 @@ export const PredictionPage = () => {
                           }}
                           className="flex-1 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-semibold transition-colors"
                         >
-                          Place Bet
+                          Wette platzieren
                         </button>
                       )}
                       {!isClosed && isCreator && (
@@ -430,14 +430,14 @@ export const PredictionPage = () => {
                           }}
                           className="flex-1 py-2 bg-amber-900/30 hover:bg-amber-900/50 border border-amber-700/40 text-amber-300 rounded-xl text-sm font-semibold transition-colors"
                         >
-                          Resolve →
+                          Auflösen →
                         </button>
                       )}
                       {!isClosed && isCreator && pred.yesCount === 0 && pred.noCount === 0 && (
                         <button
                           onClick={() => setDeleteTarget(pred)}
                           className="px-3 py-2 text-gray-600 hover:text-red-400 transition-colors text-sm"
-                          title="Delete prediction"
+                          title="Vorhersage löschen"
                         >
                           🗑
                         </button>
@@ -458,7 +458,7 @@ export const PredictionPage = () => {
         transition={{ delay: 0.3, type: 'spring', stiffness: 320, damping: 26 }}
         onClick={() => { setShowCreate(true); setCreateError(''); }}
         className="fixed bottom-6 left-6 z-30 w-12 h-12 bg-primary-600 hover:bg-primary-700 rounded-full shadow-xl shadow-primary-900/50 flex items-center justify-center text-white text-2xl font-light transition-colors duration-150"
-        title="New Prediction"
+        title="Neue Vorhersage"
       >
         +
       </motion.button>
@@ -481,14 +481,14 @@ export const PredictionPage = () => {
               className="bg-[#111827] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-lg font-bold text-white mb-1">New Prediction</h2>
-              <p className="text-xs text-gray-500 mb-5">Ask a Yes/No question and let others bet on the outcome.</p>
+              <h2 className="text-lg font-bold text-white mb-1">Neue Vorhersage</h2>
+              <p className="text-xs text-gray-500 mb-5">Stelle eine Ja/Nein-Frage und lass andere auf das Ergebnis wetten.</p>
 
-              <label className="block text-xs text-gray-400 mb-1.5 font-medium">Question</label>
+              <label className="block text-xs text-gray-400 mb-1.5 font-medium">Frage</label>
               <input
                 value={createTitle}
                 onChange={(e) => setCreateTitle(e.target.value.slice(0, 300))}
-                placeholder="Will we go to the Abi trip in May?"
+                placeholder="Fahren wir im Mai zur Abi-Fahrt?"
                 className="w-full bg-[#0a0e1a] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary-600/50 mb-4"
                 autoFocus
                 onKeyDown={(e) => { if (e.key === 'Enter') handleCreate(); }}
@@ -498,7 +498,7 @@ export const PredictionPage = () => {
                 <span>{createTitle.length}/300</span>
               </div>
 
-              <label className="block text-xs text-gray-400 mb-1.5 font-medium">Resolution date</label>
+              <label className="block text-xs text-gray-400 mb-1.5 font-medium">Auflösungsdatum</label>
               <input
                 type="datetime-local"
                 value={createDate}
@@ -520,14 +520,14 @@ export const PredictionPage = () => {
 
               <div className="flex gap-3 justify-end">
                 <button onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors">
-                  Cancel
+                  Abbrechen
                 </button>
                 <button
                   onClick={handleCreate}
                   disabled={createLoading}
                   className="px-5 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-700 rounded-xl text-sm font-semibold transition-colors"
                 >
-                  {createLoading ? 'Creating…' : 'Create'}
+                  {createLoading ? 'Wird erstellt…' : 'Erstellen'}
                 </button>
               </div>
             </motion.div>
@@ -553,9 +553,9 @@ export const PredictionPage = () => {
               className="bg-[#111827] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-base font-bold text-white mb-1">Place Bet</h2>
+              <h2 className="text-base font-bold text-white mb-1">Wette platzieren</h2>
               <p className="text-xs text-gray-500 mb-1 leading-relaxed">"{betTarget.title}"</p>
-              <p className="text-xs text-orange-400/80 mb-4">Coins are <strong>reserved</strong> now and only deducted if you lose when the prediction resolves.</p>
+              <p className="text-xs text-orange-400/80 mb-4">Coins werden jetzt <strong>reserviert</strong> und nur abgezogen, wenn du verlierst.</p>
 
               {/* Yes / No toggle */}
               <div className="flex gap-2 mb-5">
@@ -582,14 +582,14 @@ export const PredictionPage = () => {
               </div>
 
               {/* Amount */}
-              <label className="block text-xs text-gray-400 mb-1.5 font-medium">Amount (coins)</label>
+              <label className="block text-xs text-gray-400 mb-1.5 font-medium">Einsatz (Coins)</label>
               <input
                 type="number"
                 min="1"
                 max={(user?.balance ?? 0) - (user?.reserved ?? 0)}
                 value={betAmount}
                 onChange={(e) => setBetAmount(e.target.value)}
-                placeholder={`Available: ${((user?.balance ?? 0) - (user?.reserved ?? 0)).toLocaleString()}`}
+                placeholder={`Verfügbar: ${((user?.balance ?? 0) - (user?.reserved ?? 0)).toLocaleString()}`}
                 className="w-full bg-[#0a0e1a] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary-600/50 mb-2"
                 autoFocus
                 onKeyDown={(e) => { if (e.key === 'Enter') handleBet(); }}
@@ -598,12 +598,12 @@ export const PredictionPage = () => {
               {/* Potential win preview */}
               {betAmount && !isNaN(parseInt(betAmount)) && parseInt(betAmount) > 0 && (
                 <p className="text-xs text-gray-500 mb-4">
-                  If <span className={betSide ? 'text-green-400' : 'text-red-400'}>{betSide ? 'YES' : 'NO'}</span> wins,
-                  you keep your <span className="text-white">{parseInt(betAmount)}</span> + earn{' '}
+                  Falls <span className={betSide ? 'text-green-400' : 'text-red-400'}>{betSide ? 'YES' : 'NO'}</span> gewinnt,
+                  behältst du deine <span className="text-white">{parseInt(betAmount)}</span> + gewinnst{' '}
                   <span className="text-yellow-400 font-semibold">
                     🪙 ~{(potentialWin(betTarget, betSide, parseInt(betAmount)) - parseInt(betAmount)).toLocaleString()} extra
                   </span>
-                  <span className="text-gray-600"> (estimate)</span>
+                  <span className="text-gray-600"> (Schätzung)</span>
                 </p>
               )}
 
@@ -611,7 +611,7 @@ export const PredictionPage = () => {
 
               <div className="flex gap-3 justify-end">
                 <button onClick={() => setBetTarget(null)} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors">
-                  Cancel
+                  Abbrechen
                 </button>
                 <button
                   onClick={handleBet}
@@ -620,7 +620,7 @@ export const PredictionPage = () => {
                     betSide ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
                   }`}
                 >
-                  {betLoading ? 'Placing…' : `Bet ${betSide ? 'YES' : 'NO'}`}
+                  {betLoading ? 'Wird platziert…' : `Wette auf ${betSide ? 'YES' : 'NO'}`}
                 </button>
               </div>
             </motion.div>
@@ -646,10 +646,10 @@ export const PredictionPage = () => {
               className="bg-[#111827] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-base font-bold text-white mb-1">Resolve Prediction</h2>
+              <h2 className="text-base font-bold text-white mb-1">Vorhersage auflösen</h2>
               <p className="text-xs text-gray-500 mb-5 leading-relaxed">"{resolveTarget.title}"</p>
 
-              <p className="text-xs text-gray-400 font-medium mb-3">What was the outcome?</p>
+              <p className="text-xs text-gray-400 font-medium mb-3">Was war das Ergebnis?</p>
               <div className="flex gap-2 mb-4">
                 <button
                   onClick={() => setResolveOutcome(true)}
@@ -675,17 +675,17 @@ export const PredictionPage = () => {
 
               {/* Payout preview */}
               <div className="bg-[#0a0e1a] border border-white/5 rounded-xl p-3 mb-4 text-xs text-gray-400 space-y-1">
-                <p className="font-medium text-gray-300 mb-1.5">Payout preview</p>
+                <p className="font-medium text-gray-300 mb-1.5">Auszahlungsvorschau</p>
                 {(() => {
                   const winBets = (resolveOutcome ? resolveTarget.totalYes : resolveTarget.totalNo);
                   const loseBets = (resolveOutcome ? resolveTarget.totalNo : resolveTarget.totalYes);
                   const winCount = resolveOutcome ? resolveTarget.yesCount : resolveTarget.noCount;
-                  if (winCount === 0) return <p className="text-amber-400">Nobody bet {resolveOutcome ? 'YES' : 'NO'} — all bets will be refunded.</p>;
+                  if (winCount === 0) return <p className="text-amber-400">Niemand hat auf {resolveOutcome ? 'YES' : 'NO'} gesetzt — alle Einsätze werden zurückerstattet.</p>;
                   return (
                     <>
-                      <p>Winners pool: 🪙 {winBets.toLocaleString()}</p>
-                      <p>Losers pool distributed: 🪙 {loseBets.toLocaleString()}</p>
-                      <p className="text-green-400 font-medium">Winners split 🪙 {(winBets + loseBets).toLocaleString()} total</p>
+                      <p>Gewinner-Pool: 🪙 {winBets.toLocaleString()}</p>
+                      <p>Verlierer-Pool ausgezahlt: 🪙 {loseBets.toLocaleString()}</p>
+                      <p className="text-green-400 font-medium">Gewinner teilen 🪙 {(winBets + loseBets).toLocaleString()} gesamt</p>
                     </>
                   );
                 })()}
@@ -695,14 +695,14 @@ export const PredictionPage = () => {
 
               <div className="flex gap-3 justify-end">
                 <button onClick={() => setResolveTarget(null)} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors">
-                  Cancel
+                  Abbrechen
                 </button>
                 <button
                   onClick={handleResolve}
                   disabled={resolveLoading}
                   className="px-5 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-700 rounded-xl text-sm font-semibold transition-colors"
                 >
-                  {resolveLoading ? 'Resolving…' : 'Confirm & Pay Out'}
+                  {resolveLoading ? 'Wird aufgelöst…' : 'Bestätigen & Auszahlen'}
                 </button>
               </div>
             </motion.div>
@@ -728,17 +728,17 @@ export const PredictionPage = () => {
               className="bg-[#111827] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-base font-bold text-white mb-2">Delete Prediction?</h2>
+              <h2 className="text-base font-bold text-white mb-2">Vorhersage löschen?</h2>
               <p className="text-sm text-gray-400 mb-5">"{deleteTarget.title}"</p>
               <div className="flex gap-3 justify-end">
                 <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors">
-                  Cancel
+                  Abbrechen
                 </button>
                 <button
                   onClick={() => handleDelete(deleteTarget)}
                   className="px-5 py-2 bg-red-600 hover:bg-red-700 rounded-xl text-sm font-semibold transition-colors"
                 >
-                  Delete
+                  Löschen
                 </button>
               </div>
             </motion.div>
