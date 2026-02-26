@@ -42,7 +42,7 @@ export const ProfilePage = () => {
     try {
       const updated: any = await ApiService.uploadAvatar(blob);
       updateUser(updated);
-      setMessage({ type: 'success', text: 'Profile picture updated!' });
+      setMessage({ type: 'success', text: 'Profilbild aktualisiert!' });
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
     } finally {
@@ -65,7 +65,7 @@ export const ProfilePage = () => {
     try {
       const updated: any = await ApiService.updateProfile(formData);
       updateUser(updated);
-      setMessage({ type: 'success', text: 'Profile updated successfully' });
+      setMessage({ type: 'success', text: 'Profil erfolgreich aktualisiert' });
       setIsEditing(false);
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
@@ -76,7 +76,7 @@ export const ProfilePage = () => {
     e.preventDefault();
     setMessage({ type: '', text: '' });
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setMessage({ type: 'error', text: 'New passwords do not match' });
+      setMessage({ type: 'error', text: 'Neue Passwörter stimmen nicht überein' });
       return;
     }
     try {
@@ -84,7 +84,7 @@ export const ProfilePage = () => {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
       });
-      setMessage({ type: 'success', text: 'Password changed successfully' });
+      setMessage({ type: 'success', text: 'Passwort erfolgreich geändert' });
       setIsChangingPassword(false);
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error: any) {
@@ -93,7 +93,7 @@ export const ProfilePage = () => {
   };
 
   const handleDeleteAccount = async () => {
-    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+    if (window.confirm('Bist du sicher, dass du deinen Account löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.')) {
       try {
         await ApiService.deleteAccount();
         logout();
@@ -119,7 +119,7 @@ export const ProfilePage = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-3xl font-bold text-white mb-8"
         >
-          My Profile
+          Mein Profil
         </motion.h1>
 
         {/* Message */}
@@ -156,7 +156,7 @@ export const ProfilePage = () => {
                 onClick={handleAvatarClick}
                 disabled={avatarUploading}
                 className="relative w-20 h-20 rounded-full overflow-hidden group focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-transparent"
-                title="Click to change profile picture"
+                title="Klicke um Profilbild zu ändern"
               >
                 {user?.avatarUrl ? (
                   <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
@@ -183,37 +183,37 @@ export const ProfilePage = () => {
               <div className="ml-4">
                 <h2 className="text-2xl font-bold text-white">{user?.username}</h2>
                 <p className="text-white/50">{user?.role}</p>
-                <p className="text-xs text-white/30 mt-0.5">Click Profilspicture to change</p>
+                <p className="text-xs text-white/30 mt-0.5">Klicke auf das Profilbild um es zu ändern</p>
               </div>
             </div>
 
             {!isEditing ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-white/50">Email</label>
+                  <label className="block text-sm font-medium text-white/50">E-Mail</label>
                   <p className="text-white/80">{user?.email}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/50">Member Since</label>
+                  <label className="block text-sm font-medium text-white/50">Mitglied seit</label>
                   <p className="text-white/80">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</p>
                 </div>
                 <button onClick={() => setIsEditing(true)} className="btn btn-outline w-full">
-                  Edit Profile
+                  Profil bearbeiten
                 </button>
               </div>
             ) : (
               <form onSubmit={handleUpdateProfile} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-white/60 mb-2">Username</label>
+                  <label className="block text-sm font-medium text-white/60 mb-2">Benutzername</label>
                   <input type="text" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} className="input" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/60 mb-2">Email</label>
+                  <label className="block text-sm font-medium text-white/60 mb-2">E-Mail</label>
                   <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input" required />
                 </div>
                 <div className="flex gap-2">
-                  <button type="submit" className="btn btn-primary flex-1">Save</button>
-                  <button type="button" onClick={() => setIsEditing(false)} className="btn btn-secondary flex-1">Cancel</button>
+                  <button type="submit" className="btn btn-primary flex-1">Speichern</button>
+                  <button type="button" onClick={() => setIsEditing(false)} className="btn btn-secondary flex-1">Abbrechen</button>
                 </div>
               </form>
             )}
@@ -226,22 +226,22 @@ export const ProfilePage = () => {
             transition={{ delay: 0.1 }}
             className="card"
           >
-            <h3 className="text-xl font-bold text-white mb-4">Statistics</h3>
+            <h3 className="text-xl font-bold text-white mb-4">Statistiken</h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center py-3 border-b border-white/[0.06]">
-                <span className="text-white/50">Gambling Balance</span>
-                <span className="text-2xl font-bold text-yellow-400">{user?.balance} coins</span>
+                <span className="text-white/50">Spielguthaben</span>
+                <span className="text-2xl font-bold text-yellow-400">{user?.balance} Coins</span>
               </div>
               <div className="flex justify-between items-center py-3 border-b border-white/[0.06]">
-                <span className="text-white/50">Forum Posts</span>
+                <span className="text-white/50">Forumsbeiträge</span>
                 <span className="text-xl font-bold text-white">{stats?.posts || 0}</span>
               </div>
               <div className="flex justify-between items-center py-3 border-b border-white/[0.06]">
-                <span className="text-white/50">Comments</span>
+                <span className="text-white/50">Kommentare</span>
                 <span className="text-xl font-bold text-white">{stats?.comments || 0}</span>
               </div>
               <div className="flex justify-between items-center py-3">
-                <span className="text-white/50">Votes Given</span>
+                <span className="text-white/50">Abgegebene Votes</span>
                 <span className="text-xl font-bold text-white">{stats?.votes || 0}</span>
               </div>
             </div>
@@ -255,7 +255,7 @@ export const ProfilePage = () => {
           transition={{ delay: 0.2 }}
           className="card mt-6"
         >
-          <h3 className="text-xl font-bold text-white mb-4">Recent Transactions</h3>
+          <h3 className="text-xl font-bold text-white mb-4">Letzte Transaktionen</h3>
           {transactions.length > 0 ? (
             <div className="space-y-2">
               {transactions.map((tx: any) => (
@@ -271,7 +271,7 @@ export const ProfilePage = () => {
               ))}
             </div>
           ) : (
-            <p className="text-white/40">No transactions yet</p>
+            <p className="text-white/40">Noch keine Transaktionen</p>
           )}
         </motion.div>
 
@@ -282,28 +282,28 @@ export const ProfilePage = () => {
           transition={{ delay: 0.3 }}
           className="card mt-6"
         >
-          <h3 className="text-xl font-bold text-white mb-4">Change Password</h3>
+          <h3 className="text-xl font-bold text-white mb-4">Passwort ändern</h3>
           {!isChangingPassword ? (
             <button onClick={() => setIsChangingPassword(true)} className="btn btn-outline">
-              Change Password
+              Passwort ändern
             </button>
           ) : (
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-2">Current Password</label>
+                <label className="block text-sm font-medium text-white/60 mb-2">Aktuelles Passwort</label>
                 <input type="password" value={passwordData.currentPassword} onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} className="input" required />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-2">New Password</label>
+                <label className="block text-sm font-medium text-white/60 mb-2">Neues Passwort</label>
                 <input type="password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} className="input" required minLength={6} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-2">Confirm New Password</label>
+                <label className="block text-sm font-medium text-white/60 mb-2">Passwort bestätigen</label>
                 <input type="password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} className="input" required />
               </div>
               <div className="flex gap-2">
-                <button type="submit" className="btn btn-primary flex-1">Update Password</button>
-                <button type="button" onClick={() => setIsChangingPassword(false)} className="btn btn-secondary flex-1">Cancel</button>
+                <button type="submit" className="btn btn-primary flex-1">Passwort aktualisieren</button>
+                <button type="button" onClick={() => setIsChangingPassword(false)} className="btn btn-secondary flex-1">Abbrechen</button>
               </div>
             </form>
           )}
@@ -316,10 +316,10 @@ export const ProfilePage = () => {
           transition={{ delay: 0.4 }}
           className="card mt-6 border-red-500/20"
         >
-          <h3 className="text-xl font-bold text-red-400 mb-4">Danger Zone</h3>
-          <p className="text-white/40 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
+          <h3 className="text-xl font-bold text-red-400 mb-4">Gefahrenzone</h3>
+          <p className="text-white/40 mb-4">Wenn du deinen Account löschst, gibt es kein Zurück. Bitte sei dir sicher.</p>
           <button onClick={handleDeleteAccount} className="btn bg-red-600 text-white hover:bg-red-700">
-            Delete Account
+            Account löschen
           </button>
         </motion.div>
       </div>
