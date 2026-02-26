@@ -423,15 +423,17 @@ export const ForumPage = () => {
           )}
         </form>
         <div style={{ display: 'flex', gap: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 3 }}>
-          {(['hot', 'new', 'top'] as SortMode[]).map(mode => (
+          {(['hot', 'new', 'top'] as SortMode[]).map(mode => {
+            const labels: Record<SortMode, string> = { hot: 'Beliebt', new: 'Neu', top: 'Top' };
+            return (
             <button key={mode} onClick={() => setSort(mode)} style={{
               padding: '5px 13px', borderRadius: 6, border: 'none',
               background: sort === mode ? 'rgba(99,102,241,0.4)' : 'transparent',
               color: sort === mode ? '#a5b4fc' : 'rgba(255,255,255,0.45)',
               fontSize: 12, fontWeight: sort === mode ? 600 : 400,
-              cursor: 'pointer', transition: 'all 0.15s', textTransform: 'capitalize',
-            }}>{mode}</button>
-          ))}
+              cursor: 'pointer', transition: 'all 0.15s',
+            }}>{labels[mode]}</button>);
+          })}
         </div>
         <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowCreateModal(true)}
           style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', border: 'none', borderRadius: 8, color: '#fff', padding: '7px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, boxShadow: '0 0 18px rgba(99,102,241,0.45)' }}>
@@ -473,9 +475,9 @@ export const ForumPage = () => {
         {/* Zoom buttons */}
         <div className="bottom-safe-4" style={{ position: 'absolute', right: 16, display: 'flex', flexDirection: 'column', gap: 6, zIndex: 30 }}>
           {[
-            { label: '+', title: 'Zoom in',  action: () => zoomBy(1.25) },
-            { label: '−', title: 'Zoom out', action: () => zoomBy(0.8)  },
-            { label: '⊡', title: 'Fit all',  action: fitToScreen         },
+            { label: '+', title: 'Vergrößern',  action: () => zoomBy(1.25) },
+            { label: '−', title: 'Verkleinern', action: () => zoomBy(0.8)  },
+            { label: '⊡', title: 'Alles zeigen',  action: fitToScreen         },
           ].map(btn => (
             <button key={btn.label} onClick={btn.action} title={btn.title} style={{
               width: 36, height: 36, borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)',
