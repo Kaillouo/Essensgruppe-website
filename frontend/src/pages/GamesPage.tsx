@@ -26,7 +26,7 @@ const singlePlayerGames: GameCardDef[] = [
     id: 'slots',
     name: 'Slots',
     icon: '🎰',
-    description: 'Spin the reels and match symbols to win big.',
+    description: 'Drehe die Walzen und treffe Symbole, um groß zu gewinnen.',
     route: '/games/slots',
     gradient: 'from-purple-900/50 to-purple-800/20',
     accent: 'text-purple-300',
@@ -37,7 +37,7 @@ const singlePlayerGames: GameCardDef[] = [
     id: 'blackjack',
     name: 'Blackjack',
     icon: '🃏',
-    description: 'Beat the dealer to 21 without going bust.',
+    description: 'Schlage den Dealer mit 21, ohne zu überziehen.',
     route: '/games/blackjack',
     gradient: 'from-emerald-900/50 to-emerald-800/20',
     accent: 'text-emerald-300',
@@ -48,7 +48,7 @@ const singlePlayerGames: GameCardDef[] = [
     id: 'mines',
     name: 'Mines',
     icon: '💣',
-    description: "Reveal tiles, avoid mines, and cash out before it's too late.",
+    description: 'Decke Felder auf, meide Minen und kassiere, bevor es zu spät ist.',
     route: '/games/mines',
     gradient: 'from-red-900/50 to-red-800/20',
     accent: 'text-red-300',
@@ -62,25 +62,25 @@ const multiplayerGames: GameCardDef[] = [
     id: 'poker',
     name: 'Poker',
     icon: '♠️',
-    description: "Texas Hold'em at a live table. Sit down with other online players and fight for the pot.",
+    description: "Texas Hold'em am Live-Tisch. Setz dich mit anderen Spielern und kämpfe um den Pot.",
     route: '/games/poker',
     gradient: 'from-sky-900/50 to-sky-800/20',
     accent: 'text-sky-300',
     border: 'border-sky-700/40',
     glowColor: 'hover:shadow-sky-900/60',
-    requiresPlayers: 'Live multiplayer table',
+    requiresPlayers: 'Live-Mehrspielertisch',
   },
   {
     id: 'prediction',
     name: 'Prediction Market',
     icon: '🔮',
-    description: "Post a Yes/No prediction. Players pick a side — winners split the losers' entire pot.",
+    description: "Stelle eine Ja/Nein-Frage. Spieler wählen eine Seite — Gewinner teilen den gesamten Verliererpool.",
     route: '/games/prediction',
     gradient: 'from-amber-900/50 to-amber-800/20',
     accent: 'text-amber-300',
     border: 'border-amber-700/40',
     glowColor: 'hover:shadow-amber-900/60',
-    requiresPlayers: 'Open to all online players',
+    requiresPlayers: 'Für alle online Spieler offen',
   },
 ];
 
@@ -134,7 +134,7 @@ export const GamesPage = () => {
         >
           <div>
             <h1 className="text-3xl font-bold text-white">Games</h1>
-            <p className="text-gray-500 mt-1 text-sm">Bet your coins and climb the leaderboard</p>
+            <p className="text-gray-500 mt-1 text-sm">Setze deine Coins und erklimme die Bestenliste</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-[#111827] border border-yellow-800/40 rounded-xl px-4 py-2.5">
@@ -170,7 +170,7 @@ export const GamesPage = () => {
                 />
               )}
               <span className="relative z-10 flex items-center gap-2">
-                {tab === 'singleplayer' ? <><span>🎮</span> Single Player</> : <><span>👥</span> Multiplayer</>}
+                {tab === 'singleplayer' ? <><span>🎮</span> Einzelspieler</> : <><span>👥</span> Multiplayer</>}
               </span>
             </button>
           ))}
@@ -187,8 +187,8 @@ export const GamesPage = () => {
             className="text-gray-500 text-sm mb-6"
           >
             {activeTab === 'singleplayer'
-              ? 'Play on your own against the house. Available any time, no waiting.'
-              : 'Compete against other online members. Live games that require real players.'}
+              ? 'Spiele allein gegen die Bank. Jederzeit verfügbar, kein Warten.'
+              : 'Tritt gegen andere Online-Mitglieder an. Live-Spiele mit echten Spielern.'}
           </motion.p>
         </AnimatePresence>
 
@@ -247,11 +247,11 @@ export const GamesPage = () => {
                   className="absolute bottom-14 right-0 w-56 bg-[#111827] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
                 >
                   <div className="px-4 py-3 border-b border-white/5">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Online Now</p>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Gerade online</p>
                   </div>
                   <div className="max-h-52 overflow-y-auto">
                     {onlineUsers.length === 0 ? (
-                      <p className="text-gray-600 text-xs text-center py-5">Nobody else online</p>
+                      <p className="text-gray-600 text-xs text-center py-5">Niemand anderes online</p>
                     ) : (
                       onlineUsers.map((u) => (
                         <div
@@ -266,7 +266,7 @@ export const GamesPage = () => {
                             onClick={() => { setMessageTarget(u); setBubbleOpen(false); }}
                             disabled={cooldown > 0}
                             className="text-xs text-primary-400 hover:text-primary-300 opacity-0 group-hover:opacity-100 transition-opacity disabled:text-gray-600 disabled:cursor-not-allowed ml-2 flex-shrink-0"
-                            title={cooldown > 0 ? `Cooldown: ${cooldown}s` : 'Send message'}
+                            title={cooldown > 0 ? `Cooldown: ${cooldown}s` : 'Nachricht senden'}
                           >
                             {cooldown > 0 ? `${cooldown}s` : '✉'}
                           </button>
@@ -311,13 +311,13 @@ export const GamesPage = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-sm font-semibold text-gray-300 mb-0.5">
-                Message <span className="text-white">{messageTarget.username}</span>
+                Nachricht an <span className="text-white">{messageTarget.username}</span>
               </h3>
-              <p className="text-xs text-gray-600 mb-4">Instant ping — not saved anywhere.</p>
+              <p className="text-xs text-gray-600 mb-4">Sofortnachricht — wird nirgends gespeichert.</p>
               <textarea
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value.slice(0, 120))}
-                placeholder="Come play poker!"
+                placeholder="Komm Poker spielen!"
                 rows={2}
                 className="w-full bg-[#0a0e1a] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-none focus:outline-none focus:border-primary-600/50 mb-3"
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
@@ -330,14 +330,14 @@ export const GamesPage = () => {
                     onClick={() => setMessageTarget(null)}
                     className="px-4 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors"
                   >
-                    Cancel
+                    Abbrechen
                   </button>
                   <button
                     onClick={sendMessage}
                     disabled={!messageText.trim() || cooldown > 0}
                     className="px-4 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-xl text-sm font-semibold transition-colors"
                   >
-                    Send
+                    Senden
                   </button>
                 </div>
               </div>
