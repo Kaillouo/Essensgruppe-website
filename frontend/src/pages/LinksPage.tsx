@@ -235,7 +235,7 @@ export const LinksPage = () => {
               <div className="bg-gray-800 border border-dashed border-gray-700 rounded-xl p-6 opacity-70">
                 <div className="text-3xl mb-3">🤖</div>
                 <h3 className="font-bold text-gray-300 mb-1">Essensgruppe AI</h3>
-                <p className="text-sm text-gray-500">Chatbot mit Sitzungsgedächtnis – coming soon.</p>
+                <p className="text-sm text-gray-500">Chatbot mit Sitzungsgedächtnis – demnächst.</p>
                 <span className="inline-block mt-3 text-xs px-2.5 py-1 rounded-full bg-gray-700 text-gray-400">In Entwicklung</span>
               </div>
               <div className="bg-gray-800 border border-dashed border-gray-700 rounded-xl p-6 opacity-70">
