@@ -102,3 +102,17 @@
 ### Fix 6: Navbar dark accent
 - Navbar bg-white shadow-md => bg-[#0d1420] border-b border-white/[0.06]
 - All link/text/dropdown/mobile-menu colors updated to dark theme variants
+
+## 2026-02-26 — Daily Coins Claim Bug Fix (main)
+- **Root cause 1:** `POST /api/users/daily-claim` did not return `lastDailyClaim` in its response → `updateUser` set it to `undefined` → countdown timer never appeared, button re-enabled immediately after claiming
+- **Root cause 2:** `POST /api/auth/login` response omitted `lastDailyClaim` → on fresh login (no page refresh) component had no claim history, always treated user as claimable
+- **Root cause 3:** Prisma client was outdated (schema had `lastDailyClaim` + `DAILY_COINS` but client not regenerated) → TS errors masked by missing types
+- Fixed `user.routes.ts` line 100: response now includes `lastDailyClaim: now.toISOString()`; fixed `auth.routes.ts` login: response includes `lastDailyClaim`; added field to `AuthResponse` type; ran `prisma generate`
+
+## 2026-02-26 — i18n: Alle Auth/Landing/Profile-Seiten auf Deutsch übersetzt (main)
+- LoginPage, RegisterPage: Fallback-Fehlermeldungen + Beschriftungen auf Deutsch; fehlende Strings ergänzt
+- LandingPage: SECTIONS-Beschreibungen, CTA-Headline und Button auf Deutsch; "Abitur 2027 Community Portal" → "Gemeinschaftsportal"
+- AboutPage: "Our Mission", Missionstext, "Contact"-Sektion übersetzt
+- ProfilePage: alle UI-Labels, Buttons, Fehlermeldungen, Abschnittstittel (Statistiken, Transaktionen, Passwort ändern, Gefahrenzone) vollständig auf Deutsch
+- LinksPage: letzter englischer String "coming soon" → "demnächst" behoben; war ansonsten schon vollständig auf Deutsch
+- ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage, PrivacyPage: bereits vollständig auf Deutsch — keine Änderungen nötig
