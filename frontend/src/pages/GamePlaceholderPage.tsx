@@ -5,32 +5,32 @@ const gameInfo: Record<string, { name: string; icon: string; category: string; d
   slots: {
     name: 'Slots',
     icon: '🎰',
-    category: 'Single Player',
-    description: 'Spinning reels with symbols. Match to win.',
+    category: 'Einzelspieler',
+    description: 'Walzen drehen, Symbole kombinieren, gewinnen.',
   },
   blackjack: {
     name: 'Blackjack',
     icon: '🃏',
-    category: 'Single Player',
-    description: 'Beat the dealer to 21.',
+    category: 'Einzelspieler',
+    description: 'Den Dealer mit 21 schlagen.',
   },
   mines: {
     name: 'Mines',
     icon: '💣',
-    category: 'Single Player',
-    description: 'Reveal tiles, avoid mines, cash out.',
+    category: 'Einzelspieler',
+    description: 'Felder aufdecken, Minen meiden, kassieren.',
   },
   poker: {
     name: 'Poker',
     icon: '♠️',
     category: 'Multiplayer',
-    description: "Texas Hold'em with live players.",
+    description: "Texas Hold'em mit echten Spielern.",
   },
   prediction: {
     name: 'Prediction Market',
     icon: '🔮',
     category: 'Multiplayer',
-    description: 'Bet on Yes/No outcomes with other players.',
+    description: 'Auf Ja/Nein-Ergebnisse mit anderen Spielern wetten.',
   },
 };
 
@@ -60,9 +60,9 @@ export const GamePlaceholderPage = () => {
         <p className="text-gray-400 mb-8">{info?.description}</p>
 
         <div className="bg-[#111827] border border-white/10 rounded-2xl p-6 mb-8">
-          <p className="text-yellow-400 font-semibold mb-1">Coming Soon</p>
+          <p className="text-yellow-400 font-semibold mb-1">Demnächst verfügbar</p>
           <p className="text-gray-500 text-sm">
-            This game is currently in development. Check back soon!
+            Dieses Spiel ist noch in Entwicklung. Schau bald wieder vorbei!
           </p>
         </div>
 
@@ -70,7 +70,7 @@ export const GamePlaceholderPage = () => {
           onClick={() => navigate('/games')}
           className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 rounded-xl text-sm font-semibold transition-colors duration-150"
         >
-          ← Back to Games
+          ← Zurück zu Games
         </button>
       </motion.div>
     </div>

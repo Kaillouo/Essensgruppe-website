@@ -107,7 +107,7 @@ export const AdminPage = () => {
   };
 
   const handleDeny = async (userId: string, username: string) => {
-    if (window.confirm(`Deny and remove request from "${username}"?`)) {
+    if (window.confirm(`Anfrage von "${username}" ablehnen und entfernen?`)) {
       try {
         await ApiService.denyUser(userId);
         loadPending();
@@ -118,7 +118,7 @@ export const AdminPage = () => {
   };
 
   const handleBan = async (userId: string) => {
-    if (window.confirm('Ban this user? They will not be able to log in.')) {
+    if (window.confirm('Diesen Nutzer sperren? Er kann sich nicht mehr einloggen.')) {
       try {
         await ApiService.banUser(userId);
         loadUsers();
@@ -138,7 +138,7 @@ export const AdminPage = () => {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (window.confirm('Permanently delete this user and all their data?')) {
+    if (window.confirm('Diesen Nutzer und alle Daten dauerhaft löschen?')) {
       try {
         await ApiService.deleteUser(userId);
         loadUsers();
@@ -327,23 +327,23 @@ export const AdminPage = () => {
         {activeTab === 'analytics' && analytics && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card">
-              <h3 className="text-sm font-medium text-white/50 mb-2">Active Members</h3>
+              <h3 className="text-sm font-medium text-white/50 mb-2">Aktive Mitglieder</h3>
               <p className="text-3xl font-bold text-white">{analytics.totalUsers}</p>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="card">
-              <h3 className="text-sm font-medium text-white/50 mb-2">Pending Requests</h3>
+              <h3 className="text-sm font-medium text-white/50 mb-2">Ausstehende Anfragen</h3>
               <p className="text-3xl font-bold text-yellow-400">{analytics.pendingUsers}</p>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card">
-              <h3 className="text-sm font-medium text-white/50 mb-2">Total Posts</h3>
+              <h3 className="text-sm font-medium text-white/50 mb-2">Posts gesamt</h3>
               <p className="text-3xl font-bold text-white">{analytics.totalPosts}</p>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card">
-              <h3 className="text-sm font-medium text-white/50 mb-2">Total Events</h3>
+              <h3 className="text-sm font-medium text-white/50 mb-2">Events gesamt</h3>
               <p className="text-3xl font-bold text-white">{analytics.totalEvents}</p>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card md:col-span-2 lg:col-span-4">
-              <h3 className="text-lg font-bold text-white mb-4">Recent Members</h3>
+              <h3 className="text-lg font-bold text-white mb-4">Neue Mitglieder</h3>
               <div className="space-y-2">
                 {analytics.recentUsers?.map((user: any, index: number) => (
                   <div key={index} className="flex justify-between items-center py-2 border-b border-white/[0.06] last:border-0">
@@ -359,7 +359,7 @@ export const AdminPage = () => {
         {/* Users Tab */}
         {activeTab === 'users' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card">
-            <h3 className="text-lg font-bold text-white mb-4">All Members</h3>
+            <h3 className="text-lg font-bold text-white mb-4">Alle Mitglieder</h3>
             {isLoading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-400 mx-auto"></div>
@@ -369,12 +369,12 @@ export const AdminPage = () => {
                 <table className="w-full">
                   <thead className="bg-white/[0.04] border-b border-white/[0.06]">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Username</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Role</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Nutzername</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Rolle</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Status</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Balance</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Guthaben</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Posts</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Actions</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Aktionen</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.06]">
@@ -407,31 +407,31 @@ export const AdminPage = () => {
                           <button
                             onClick={() => openBalanceModal(user)}
                             className="font-medium text-yellow-400 hover:text-yellow-300 underline"
-                            title="Click to edit balance"
+                            title="Klicken zum Bearbeiten"
                           >
-                            {user.balance} coins
+                            {user.balance} Coins
                           </button>
                         </td>
                         <td className="px-4 py-3 text-sm text-white/50">{user._count?.posts || 0}</td>
                         <td className="px-4 py-3 text-sm">
                           <div className="flex gap-2">
                             <button onClick={() => openRenameModal(user)} className="text-indigo-400 hover:text-indigo-300 font-medium">
-                              Rename
+                              Umbenennen
                             </button>
                             <button onClick={() => openPasswordModal(user)} className="text-blue-400 hover:text-blue-300 font-medium">
-                              Password
+                              Passwort
                             </button>
                             {user.status === 'BANNED' ? (
                               <button onClick={() => handleUnban(user.id)} className="text-green-400 hover:text-green-300 font-medium">
-                                Unban
+                                Entsperren
                               </button>
                             ) : (
                               <button onClick={() => handleBan(user.id)} className="text-orange-400 hover:text-orange-300 font-medium">
-                                Ban
+                                Sperren
                               </button>
                             )}
                             <button onClick={() => handleDeleteUser(user.id)} className="text-red-400 hover:text-red-300 font-medium">
-                              Delete
+                              Löschen
                             </button>
                           </div>
                         </td>
@@ -515,9 +515,9 @@ export const AdminPage = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-[#111827] border border-white/[0.08] rounded-2xl shadow-2xl p-6 w-full max-w-sm"
           >
-            <h3 className="text-lg font-bold text-white mb-1">Edit Balance</h3>
+            <h3 className="text-lg font-bold text-white mb-1">Guthaben bearbeiten</h3>
             <p className="text-sm text-white/50 mb-4">
-              {balanceModal.username} — current: <span className="font-semibold text-yellow-400">{balanceModal.currentBalance} coins</span>
+              {balanceModal.username} — aktuell: <span className="font-semibold text-yellow-400">{balanceModal.currentBalance} Coins</span>
             </p>
 
             <div className="flex gap-2 mb-4">
@@ -525,13 +525,13 @@ export const AdminPage = () => {
                 onClick={() => { setBalanceMode('set'); setBalanceInput(String(balanceModal.currentBalance)); }}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${balanceMode === 'set' ? 'bg-primary-600 text-white border-primary-600' : 'border-white/10 text-white/50'}`}
               >
-                Set to
+                Auf Wert setzen
               </button>
               <button
                 onClick={() => { setBalanceMode('adjust'); setBalanceInput('0'); }}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${balanceMode === 'adjust' ? 'bg-primary-600 text-white border-primary-600' : 'border-white/10 text-white/50'}`}
               >
-                Add / Remove
+                Hinzufügen / Abziehen
               </button>
             </div>
 
@@ -540,12 +540,12 @@ export const AdminPage = () => {
               value={balanceInput}
               onChange={(e) => setBalanceInput(e.target.value)}
               className="input mb-4"
-              placeholder={balanceMode === 'set' ? 'New balance' : 'Amount (+/-)'}
+              placeholder={balanceMode === 'set' ? 'Neues Guthaben' : 'Betrag (+/-)'}
             />
 
             <div className="flex gap-3">
-              <button onClick={() => setBalanceModal(null)} className="flex-1 btn btn-outline py-2">Cancel</button>
-              <button onClick={handleBalanceSave} className="flex-1 btn btn-primary py-2">Save</button>
+              <button onClick={() => setBalanceModal(null)} className="flex-1 btn btn-outline py-2">Abbrechen</button>
+              <button onClick={handleBalanceSave} className="flex-1 btn btn-primary py-2">Speichern</button>
             </div>
           </motion.div>
         </div>
@@ -558,20 +558,20 @@ export const AdminPage = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-[#111827] border border-white/[0.08] rounded-2xl shadow-2xl p-6 w-full max-w-sm"
           >
-            <h3 className="text-lg font-bold text-white mb-1">Reset Password</h3>
+            <h3 className="text-lg font-bold text-white mb-1">Passwort zurücksetzen</h3>
             <p className="text-sm text-white/50 mb-4">
-              User: <span className="font-semibold text-white">{passwordModal.username}</span>
+              Nutzer: <span className="font-semibold text-white">{passwordModal.username}</span>
             </p>
 
             {shownPassword ? (
               <div>
-                <p className="text-sm text-white/60 mb-2">New password set to:</p>
+                <p className="text-sm text-white/60 mb-2">Neues Passwort gesetzt auf:</p>
                 <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 text-center">
                   <p className="text-lg font-mono font-bold text-green-400 select-all">{shownPassword}</p>
                 </div>
-                <p className="text-xs text-white/30 mt-2">Copy this and give it to the user.</p>
+                <p className="text-xs text-white/30 mt-2">Dieses Passwort kopieren und dem Nutzer geben.</p>
                 <button onClick={() => setPasswordModal(null)} className="w-full btn btn-primary py-2 mt-4">
-                  Done
+                  Fertig
                 </button>
               </div>
             ) : (
@@ -581,12 +581,12 @@ export const AdminPage = () => {
                   value={newPasswordInput}
                   onChange={(e) => setNewPasswordInput(e.target.value)}
                   className="input mb-4"
-                  placeholder="New password (min 6 chars)"
+                  placeholder="Neues Passwort (min. 6 Zeichen)"
                 />
                 <div className="flex gap-3">
-                  <button onClick={() => setPasswordModal(null)} className="flex-1 btn btn-outline py-2">Cancel</button>
+                  <button onClick={() => setPasswordModal(null)} className="flex-1 btn btn-outline py-2">Abbrechen</button>
                   <button onClick={handlePasswordReset} disabled={newPasswordInput.length < 6} className="flex-1 btn btn-primary py-2 disabled:opacity-50">
-                    Set Password
+                    Passwort setzen
                   </button>
                 </div>
               </div>
