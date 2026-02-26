@@ -10,10 +10,10 @@ const DISCORD_URL = 'https://discord.gg/X5nzxXZU';
 
 function timeAgo(dateStr: string): string {
   const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
-  if (diff < 60) return 'just now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
+  if (diff < 60) return 'gerade eben';
+  if (diff < 3600) return `vor ${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `vor ${Math.floor(diff / 3600)}h`;
+  return `vor ${Math.floor(diff / 86400)}d`;
 }
 
 // ─── Copy Button ─────────────────────────────────────────────────────────────
@@ -78,7 +78,7 @@ function CreateAnnModal({ onClose, onCreated }: CreateAnnModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
-      setError('Title and content are required.');
+      setError('Titel und Inhalt sind erforderlich.');
       return;
     }
     setLoading(true);
@@ -88,7 +88,7 @@ function CreateAnnModal({ onClose, onCreated }: CreateAnnModalProps) {
       onCreated(ann);
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to post announcement.');
+      setError(err.message || 'Ankündigung konnte nicht gepostet werden.');
     } finally {
       setLoading(false);
     }
@@ -103,37 +103,37 @@ function CreateAnnModal({ onClose, onCreated }: CreateAnnModalProps) {
         className="bg-gray-900 border border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-6"
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-white">New Announcement</h2>
+          <h2 className="text-lg font-bold text-white">Neue Ankündigung</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl leading-none">×</button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Title</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Titel</label>
             <input
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
               maxLength={200}
-              placeholder="Announcement title..."
+              placeholder="Ankündigungstitel..."
               className="w-full border border-gray-600 bg-gray-800 text-white placeholder-gray-500 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Content</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Inhalt</label>
             <textarea
               value={content}
               onChange={e => setContent(e.target.value)}
               maxLength={5000}
               rows={4}
-              placeholder="What's the announcement?"
+              placeholder="Was gibt es Neues?"
               className="w-full border border-gray-600 bg-gray-800 text-white placeholder-gray-500 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
             />
           </div>
           {error && <p className="text-red-400 text-sm">{error}</p>}
           <div className="flex gap-3 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800">Abbrechen</button>
             <button type="submit" disabled={loading} className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50">
-              {loading ? 'Posting...' : 'Post'}
+              {loading ? 'Wird gepostet...' : 'Posten'}
             </button>
           </div>
         </form>
@@ -145,20 +145,20 @@ function CreateAnnModal({ onClose, onCreated }: CreateAnnModalProps) {
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 const RULES = [
-  'No xray',
-  'No hack',
-  'No crashing on purpose',
-  'Griefing allowed',
-  'Report others for orders',
-  'Join the dc',
+  'Kein Xray',
+  'Kein Hacking',
+  'Nicht absichtlich crashen',
+  'Griefing erlaubt',
+  'Regelverstöße melden',
+  'Discord beitreten',
 ];
 
 const HOW_TO_JOIN = [
-  { step: '1', text: 'Download Minecraft Java Edition (required).' },
-  { step: '2', text: 'Open Minecraft → Multiplayer → Add Server.' },
-  { step: '3', text: `Enter the server IP: ${SERVER_IP}` },
-  { step: '4', text: 'Click "Join Server" — you\'re in!' },
-  { step: '5', text: 'Ask an admin if you get stuck or need a whitelist spot.' },
+  { step: '1', text: 'Minecraft Java Edition herunterladen (erforderlich).' },
+  { step: '2', text: 'Minecraft öffnen → Multiplayer → Server hinzufügen.' },
+  { step: '3', text: `Server-IP eingeben: ${SERVER_IP}` },
+  { step: '4', text: 'Auf „Server beitreten" klicken — du bist dabei!' },
+  { step: '5', text: 'Admin fragen, wenn du nicht weiterkommst oder einen Whitelist-Platz brauchst.' },
 ];
 
 export const MinecraftPage = () => {
@@ -239,7 +239,7 @@ export const MinecraftPage = () => {
               {serverOnline === null ? (
                 <>
                   <span className="w-2.5 h-2.5 rounded-full bg-gray-400 animate-pulse" />
-                  <span className="text-sm text-white/50">Checking...</span>
+                  <span className="text-sm text-white/50">Wird geprüft...</span>
                 </>
               ) : serverOnline ? (
                 <>
@@ -270,28 +270,28 @@ export const MinecraftPage = () => {
                 loading="lazy"
               />
             </GlassCard>
-            <p className="text-xs text-white/30 mt-2 text-center">Powered by BlueMap · Updates every few minutes</p>
+            <p className="text-xs text-white/30 mt-2 text-center">Powered by BlueMap · Aktualisiert alle paar Minuten</p>
           </motion.section>
 
           {/* Announcements */}
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xl font-bold text-white/80">Announcements</h2>
+              <h2 className="text-xl font-bold text-white/80">Ankündigungen</h2>
               {isAdmin && (
                 <button
                   onClick={() => setShowCreateAnn(true)}
                   className="px-4 py-2 bg-primary-600/80 backdrop-blur-sm text-white rounded-lg hover:bg-primary-600 text-sm font-medium border border-primary-500/30"
                 >
-                  + Post
+                  + Posten
                 </button>
               )}
             </div>
 
             {annLoading ? (
-              <p className="text-white/40 text-sm">Loading...</p>
+              <p className="text-white/40 text-sm">Wird geladen...</p>
             ) : announcements.length === 0 ? (
               <GlassCard className="p-6 text-center text-white/30 text-sm">
-                No announcements yet.
+                Noch keine Ankündigungen.
               </GlassCard>
             ) : (
               <div className="space-y-3">
@@ -308,18 +308,18 @@ export const MinecraftPage = () => {
                           <div className="flex-1">
                             <h3 className="font-semibold text-white/90">{ann.title}</h3>
                             <p className="text-sm text-white/60 mt-1 whitespace-pre-wrap">{ann.content}</p>
-                            <p className="text-xs text-white/30 mt-2">by {ann.user.username} · {timeAgo(ann.createdAt)}</p>
+                            <p className="text-xs text-white/30 mt-2">von {ann.user.username} · {timeAgo(ann.createdAt)}</p>
                           </div>
                           {isAdmin && (
                             <div>
                               {deleteConfirm === ann.id ? (
                                 <div className="flex items-center gap-1">
-                                  <span className="text-xs text-white/40">Sure?</span>
-                                  <button onClick={() => handleDeleteAnn(ann.id)} className="text-xs px-2 py-1 bg-red-600/80 text-white rounded hover:bg-red-600">Yes</button>
-                                  <button onClick={() => setDeleteConfirm(null)} className="text-xs px-2 py-1 bg-white/10 text-white/60 rounded hover:bg-white/20">No</button>
+                                  <span className="text-xs text-white/40">Sicher?</span>
+                                  <button onClick={() => handleDeleteAnn(ann.id)} className="text-xs px-2 py-1 bg-red-600/80 text-white rounded hover:bg-red-600">Ja</button>
+                                  <button onClick={() => setDeleteConfirm(null)} className="text-xs px-2 py-1 bg-white/10 text-white/60 rounded hover:bg-white/20">Nein</button>
                                 </div>
                               ) : (
-                                <button onClick={() => setDeleteConfirm(ann.id)} className="text-xs px-2 py-1 bg-red-900/40 text-red-300 rounded hover:bg-red-900/60">Delete</button>
+                                <button onClick={() => setDeleteConfirm(ann.id)} className="text-xs px-2 py-1 bg-red-900/40 text-red-300 rounded hover:bg-red-900/60">Löschen</button>
                               )}
                             </div>
                           )}
@@ -335,7 +335,7 @@ export const MinecraftPage = () => {
           {/* How to Join + Rules side by side */}
           <div className="grid md:grid-cols-2 gap-6">
             <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-              <h2 className="text-xl font-bold text-white/80 mb-3">How to Join</h2>
+              <h2 className="text-xl font-bold text-white/80 mb-3">So beitreten</h2>
               <GlassCard className="p-5 space-y-3">
                 {HOW_TO_JOIN.map(item => (
                   <div key={item.step} className="flex items-start gap-3">
@@ -349,7 +349,7 @@ export const MinecraftPage = () => {
             </motion.section>
 
             <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-              <h2 className="text-xl font-bold text-white/80 mb-3">Server Rules</h2>
+              <h2 className="text-xl font-bold text-white/80 mb-3">Server-Regeln</h2>
               <GlassCard className="p-5 space-y-2.5">
                 {RULES.map((rule, i) => (
                   <div key={i} className="flex items-start gap-2.5">
@@ -367,7 +367,7 @@ export const MinecraftPage = () => {
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026c.462-.62.874-1.275 1.226-1.963.021-.04.001-.088-.041-.104a13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028z"/>
                     </svg>
-                    Join Discord
+                    Discord beitreten
                   </a>
                 </div>
               </GlassCard>
@@ -376,11 +376,11 @@ export const MinecraftPage = () => {
 
           {/* Leaderboard placeholder */}
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <h2 className="text-xl font-bold text-white/80 mb-3">Leaderboard</h2>
+            <h2 className="text-xl font-bold text-white/80 mb-3">Bestenliste</h2>
             <GlassCard className="p-8 text-center">
               <div className="text-4xl mb-2">🏅</div>
-              <p className="font-medium text-white/50">Leaderboard coming soon</p>
-              <p className="text-sm text-white/30 mt-1">Data source TBD — playtime & achievements will appear here.</p>
+              <p className="font-medium text-white/50">Bestenliste kommt bald</p>
+              <p className="text-sm text-white/30 mt-1">Datenquelle noch offen — Spielzeit & Erfolge erscheinen hier.</p>
             </GlassCard>
           </motion.section>
         </div>
