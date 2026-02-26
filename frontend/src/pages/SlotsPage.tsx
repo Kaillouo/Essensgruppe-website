@@ -89,7 +89,7 @@ function getWinInfo(winType: string): {
   label: string; isWin: boolean; isBig: boolean; isBonus: boolean;
 } {
   if (winType === 'loss') {
-    return { label: 'No Win', isWin: false, isBig: false, isBonus: false };
+    return { label: 'Kein Gewinn', isWin: false, isBig: false, isBonus: false };
   }
   if (winType === 'cherry_consolation') {
     return { label: '🍒 Cherry Bonus', isWin: true, isBig: false, isBonus: true };
@@ -384,7 +384,7 @@ export const SlotsPage = () => {
       cycleRefs.current = [null, null, null];
       setReelSpinning([false, false, false]);
       setSpinning(false);
-      setError(err?.message || 'Spin failed');
+      setError(err?.message || 'Drehen fehlgeschlagen');
     }
   }, [spinning, balance, bet, user]);
 
@@ -422,7 +422,7 @@ export const SlotsPage = () => {
           onClick={() => navigate('/games')}
           className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-300 transition-colors"
         >
-          ← Back
+          ← Zurück
         </button>
 
         <button
@@ -434,7 +434,7 @@ export const SlotsPage = () => {
             border: `1px solid ${showPayTable ? T.accentColor : 'rgba(255,255,255,0.08)'}`,
           }}
         >
-          Pay Table
+          Gewinntabelle
         </button>
       </div>
 
@@ -448,7 +448,7 @@ export const SlotsPage = () => {
         }}
       >
         <span>🪙</span>
-        <span>{balance.toLocaleString()} coins</span>
+        <span>{balance.toLocaleString()} Coins</span>
       </div>
 
       {/* ── Machine Cabinet ── */}
@@ -622,14 +622,14 @@ export const SlotsPage = () => {
                     className="text-xs tracking-widest uppercase"
                     style={{ color: T.accentLight }}
                   >
-                    Spinning...
+                    Dreht...
                   </motion.div>
                 ) : (
                   <motion.div
                     key="idle"
                     className="text-xs text-gray-700 tracking-wider uppercase"
                   >
-                    Press SPIN or [Space]
+                    SPIN drücken oder [Leertaste]
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -642,7 +642,7 @@ export const SlotsPage = () => {
           {/* Bet chips */}
           <div>
             <div className="text-xs uppercase tracking-wider mb-2" style={{ color: T.textMuted }}>
-              Bet
+              Einsatz
             </div>
             <div className="flex flex-wrap gap-2 mb-3">
               {BET_CHIPS.map(chip => (
@@ -729,7 +729,7 @@ export const SlotsPage = () => {
                 animate={{ opacity: [1, 0.5, 1] }}
                 transition={{ duration: 0.6, repeat: Infinity }}
               >
-                ⟳ Spinning
+                ⟳ Dreht...
               </motion.span>
             ) : (
               '🎰 SPIN'
@@ -738,7 +738,7 @@ export const SlotsPage = () => {
 
           {balance < bet && !spinning && (
             <p className="text-center text-xs text-red-500">
-              Insufficient balance — adjust your bet
+              Nicht genug Guthaben — Einsatz anpassen
             </p>
           )}
         </div>
@@ -761,7 +761,7 @@ export const SlotsPage = () => {
                   : '0 0 20px rgba(220,38,38,0.5)',
               }}
             >
-              {lastResult.net >= 0 ? `+${lastResult.net}` : lastResult.net} coins
+              {lastResult.net >= 0 ? `+${lastResult.net}` : lastResult.net} Coins
             </motion.div>
           )}
         </AnimatePresence>
@@ -787,10 +787,10 @@ export const SlotsPage = () => {
               style={{ borderColor: `${T.accentColor}20` }}
             >
               <h3 className="font-bold text-sm" style={{ color: T.accentLight }}>
-                Pay Table
+                Gewinntabelle
               </h3>
               <span className="text-xs" style={{ color: T.textMuted }}>
-                Win frequency ≈ 54% · House edge ≈ 1.6%
+                Gewinnhäufigkeit ≈ 54% · Haus-Vorteil ≈ 1,6%
               </span>
             </div>
 
@@ -830,8 +830,8 @@ export const SlotsPage = () => {
               className="px-5 py-3 text-xs text-center"
               style={{ color: T.textMuted, borderTop: `1px solid ${T.accentColor}10` }}
             >
-              Pairs are left-side (reels 1+2). Cherry bonus triggers on reel 1 only.
-              You can swap in custom reel images anytime.
+              Paare gelten links (Walzen 1+2). Cherry-Bonus tritt nur auf Walze 1 auf.
+              Eigene Walzenbilder können jederzeit eingetauscht werden.
             </div>
           </motion.div>
         )}
