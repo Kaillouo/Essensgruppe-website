@@ -116,3 +116,12 @@
 - ProfilePage: alle UI-Labels, Buttons, Fehlermeldungen, Abschnittstittel (Statistiken, Transaktionen, Passwort ändern, Gefahrenzone) vollständig auf Deutsch
 - LinksPage: letzter englischer String "coming soon" → "demnächst" behoben; war ansonsten schon vollständig auf Deutsch
 - ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage, PrivacyPage: bereits vollständig auf Deutsch — keine Änderungen nötig
+
+## 2026-02-26 — i18n: Alle Spiele- und Admin-Seiten auf Deutsch übersetzt (main)
+- ForumPage, ThreadPage, EventsPage, PredictionPage, GamesPage: in vorheriger Session übersetzt (commits 90e61a4–8d524c9)
+- BlackjackPage: Hit/Stand/Double/Deal/Bust-Terminologie übersetzt; Fehler- und Statusmeldungen auf Deutsch
+- SlotsPage: Zurück-Link, Gewinntabelle, Einsatz-Label, SPIN-Statusmeldungen, Fußnotentext übersetzt
+- PokerPage: Sitzen/Verlassen/Zurück/Warteschlange, Chat-Placeholder, Trainingsmodus, Turn-Anzeige übersetzt
+- MinecraftPage: timeAgo, HOW_TO_JOIN-Schritte, RULES-Array, Ankündigungen-Modal, alle Heading/Status-Texte übersetzt
+- AdminPage: Tabellenkopfzeilen, Modale (Guthaben, Passwort), Bestätigungsdialoge, Aktions-Buttons auf Deutsch
+- GamePlaceholderPage: Spielbeschreibungen, "Coming Soon"-Banner, Zurück-Button übersetzt
