@@ -19,12 +19,12 @@ export const RegisterPage = () => {
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError('Passwörter stimmen nicht überein');
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError('Passwort muss mindestens 6 Zeichen lang sein');
       return;
     }
 
@@ -38,7 +38,7 @@ export const RegisterPage = () => {
       });
       setSubmitted(true);
     } catch (err: any) {
-      setError(err.message || 'Request failed');
+      setError(err.message || 'Anfrage fehlgeschlagen');
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +65,7 @@ export const RegisterPage = () => {
             Der Link ist 24 Stunden gültig. Schau auch im Spam-Ordner nach.
           </p>
           <Link to="/login" className="btn btn-primary w-full py-3 text-center block">
-            Go to Login
+            Zur Anmeldung gehen
           </Link>
         </motion.div>
       </div>
@@ -98,7 +98,7 @@ export const RegisterPage = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Username
+                Benutzername
               </label>
               <input
                 id="username"
@@ -107,12 +107,12 @@ export const RegisterPage = () => {
                 value={formData.username}
                 onChange={handleChange}
                 className="input"
-                placeholder="your_username"
+                placeholder="dein_benutzername"
                 required
                 minLength={3}
                 maxLength={20}
                 pattern="[a-zA-Z0-9_]+"
-                title="Username can only contain letters, numbers, and underscores"
+                title="Benutzername darf nur Buchstaben, Zahlen und Unterstriche enthalten"
               />
             </div>
 
@@ -195,7 +195,7 @@ export const RegisterPage = () => {
 
           <div className="mt-4 text-center">
             <Link to="/" className="text-gray-500 text-sm hover:text-gray-700">
-              ← Back to home
+              ← Zurück zur Startseite
             </Link>
           </div>
         </div>
