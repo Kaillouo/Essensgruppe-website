@@ -105,13 +105,13 @@ export const ThreadPage = () => {
 
   const timeAgo = (date: string) => {
     const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-    if (seconds < 60) return 'just now';
+    if (seconds < 60) return 'gerade eben';
     const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
+    if (minutes < 60) return `vor ${minutes}m`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
+    if (hours < 24) return `vor ${hours}h`;
     const days = Math.floor(hours / 24);
-    if (days < 30) return `${days}d ago`;
+    if (days < 30) return `vor ${days}d`;
     return new Date(date).toLocaleDateString('de-DE');
   };
 
@@ -130,7 +130,7 @@ export const ThreadPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
         <p className="text-red-600 mb-4">{error}</p>
-        <Link to="/forum" className="btn btn-primary">Back to Forum</Link>
+        <Link to="/forum" className="btn btn-primary">Zurück zum Forum</Link>
       </div>
     );
   }
@@ -148,7 +148,7 @@ export const ThreadPage = () => {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Forum
+          Zurück zum Forum
         </Link>
 
         {error && (
@@ -208,8 +208,8 @@ export const ThreadPage = () => {
                     className="input min-h-[150px] resize-y"
                   />
                   <div className="flex gap-2">
-                    <button onClick={handleEditPost} className="btn btn-primary text-sm">Save</button>
-                    <button onClick={() => setIsEditing(false)} className="btn btn-outline text-sm">Cancel</button>
+                    <button onClick={handleEditPost} className="btn btn-primary text-sm">Speichern</button>
+                    <button onClick={() => setIsEditing(false)} className="btn btn-outline text-sm">Abbrechen</button>
                   </div>
                 </div>
               ) : (
@@ -224,7 +224,7 @@ export const ThreadPage = () => {
                     </div>
                     <span>{timeAgo(post.createdAt)}</span>
                     {post.updatedAt !== post.createdAt && (
-                      <span className="italic">(edited)</span>
+                      <span className="italic">(bearbeitet)</span>
                     )}
                   </div>
                   <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">{post.content}</div>
@@ -246,7 +246,7 @@ export const ThreadPage = () => {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
-                          Edit
+                          Bearbeiten
                         </button>
                       )}
                       <button
@@ -256,7 +256,7 @@ export const ThreadPage = () => {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
-                        Delete
+                        Löschen
                       </button>
                     </div>
                   )}
@@ -283,11 +283,11 @@ export const ThreadPage = () => {
                 className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full"
                 onClick={(e) => e.stopPropagation()}
               >
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Post?</h3>
-                <p className="text-gray-600 text-sm mb-4">This will permanently delete this post and all its comments.</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Post löschen?</h3>
+                <p className="text-gray-600 text-sm mb-4">Dieser Post und alle Kommentare werden unwiderruflich gelöscht.</p>
                 <div className="flex gap-3 justify-end">
-                  <button onClick={() => setShowDeleteConfirm(false)} className="btn btn-outline text-sm">Cancel</button>
-                  <button onClick={handleDeletePost} className="btn bg-red-600 text-white hover:bg-red-700 text-sm">Delete</button>
+                  <button onClick={() => setShowDeleteConfirm(false)} className="btn btn-outline text-sm">Abbrechen</button>
+                  <button onClick={handleDeletePost} className="btn bg-red-600 text-white hover:bg-red-700 text-sm">Löschen</button>
                 </div>
               </motion.div>
             </motion.div>
@@ -297,7 +297,7 @@ export const ThreadPage = () => {
         {/* Comments Section */}
         <div className="mt-6">
           <h2 className="text-lg font-bold text-gray-900 mb-4">
-            {post.commentCount} {post.commentCount === 1 ? 'Comment' : 'Comments'}
+            {post.commentCount} {post.commentCount === 1 ? 'Kommentar' : 'Kommentare'}
           </h2>
 
           {/* Add Comment */}
@@ -306,7 +306,7 @@ export const ThreadPage = () => {
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               className="input w-full min-h-[100px] resize-y mb-2"
-              placeholder="Write a comment..."
+              placeholder="Kommentar schreiben..."
             />
             <div className="flex justify-end">
               <button
@@ -314,7 +314,7 @@ export const ThreadPage = () => {
                 disabled={isSubmittingComment || !commentText.trim()}
                 className="btn btn-primary text-sm disabled:opacity-50"
               >
-                {isSubmittingComment ? 'Posting...' : 'Comment'}
+                {isSubmittingComment ? 'Wird gepostet...' : 'Kommentieren'}
               </button>
             </div>
           </form>
@@ -482,14 +482,14 @@ const CommentNode = ({
                 onClick={() => setShowReply(!showReply)}
                 className="text-xs text-gray-500 hover:text-primary-600 font-medium"
               >
-                Reply
+                Antworten
               </button>
               {(isOwner || isAdmin) && (
                 <button
                   onClick={handleDelete}
                   className="text-xs text-gray-500 hover:text-red-600 font-medium"
                 >
-                  Delete
+                  Löschen
                 </button>
               )}
             </div>
@@ -501,7 +501,7 @@ const CommentNode = ({
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                   className="input w-full min-h-[80px] resize-y text-sm mb-2"
-                  placeholder={`Reply to ${comment.user.username}...`}
+                  placeholder={`Antwort an ${comment.user.username}...`}
                   autoFocus
                 />
                 <div className="flex gap-2 justify-end">
@@ -510,14 +510,14 @@ const CommentNode = ({
                     onClick={() => { setShowReply(false); setReplyText(''); }}
                     className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1"
                   >
-                    Cancel
+                    Abbrechen
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting || !replyText.trim()}
                     className="btn btn-primary text-xs py-1 px-3 disabled:opacity-50"
                   >
-                    {isSubmitting ? 'Replying...' : 'Reply'}
+                    {isSubmitting ? 'Wird gesendet...' : 'Antworten'}
                   </button>
                 </div>
               </form>
