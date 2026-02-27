@@ -203,6 +203,7 @@ router.post('/login', loginLimiter, async (req, res) => {
         role: user.role,
         balance: user.balance,
         avatarUrl: user.avatarUrl,
+        lastDailyClaim: user.lastDailyClaim?.toISOString() ?? null,
       },
     };
 

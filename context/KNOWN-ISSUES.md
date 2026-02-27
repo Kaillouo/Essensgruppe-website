@@ -16,3 +16,6 @@
 
 - **nginx client_max_body_size** — Set to 10m. Default 1MB caused 413 errors for photo uploads.
 - **PM2 dev mode** — Currently running `npm run dev` via PM2 on OCI, not production builds. Should switch to `npm run build` + `npm start` for production.
+- **PM2 dual daemon** — OCI has had PM2 running under both `root` and `ubuntu` users. The `ubuntu` PM2 had old processes from `/home/ubuntu/web/EssensgruppeWeb/` that kept respawning. Always check `sudo -u ubuntu pm2 list` if ports are unexpectedly occupied. Current setup: PM2 runs under root from `/home/ubuntu/web/Essensgruppe.de/`.
+- **trust proxy** — Backend needs `app.set('trust proxy', 1)` because it's behind nginx. Without it, express-rate-limit throws `ERR_ERL_UNEXPECTED_X_FORWARDED_FOR`.
+- **Frontend VITE_API_URL** — Must be `/api` (relative), NOT `http://localhost:3000/api`. The browser can't reach localhost on the server; requests go through Vite's proxy.

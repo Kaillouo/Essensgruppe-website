@@ -1,16 +1,14 @@
 # Next Steps
 
-**Last Updated:** 2026-02-24
+**Last Updated:** 2026-02-27
 
 <!-- User: write your priorities here between sessions. Claude reads this at session start. -->
 
 ## Current Priorities
 
-1. **Merge email-verification branch to main** — all email/password reset work is done
-2. **Mobile optimization** — test all pages on mobile, fix responsive issues
-3. **Production deploy prep** — build scripts, PM2 ecosystem file, env management
-4. **Forum bubble/graph view** — Obsidian-style force-directed graph (see features/forum-bubbles.md)
-5. **Frontend theme overhaul** — new design system (see features/frontend-theme.md)
+1. **Mobile optimization** — test all pages on mobile, fix responsive issues
+2. **Forum bubble/graph view** — Obsidian-style force-directed graph (see features/forum-bubbles.md)
+3. **Fix .git sync errors** — new folder was uploaded via SFTP, .git may have issues; consider re-initializing git or cloning fresh
 
 ## Backlog
 

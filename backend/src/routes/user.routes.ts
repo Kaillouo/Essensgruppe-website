@@ -97,7 +97,7 @@ router.post('/daily-claim', async (req: AuthRequest, res) => {
       })
     ]);
 
-    res.json({ claimed: true, newBalance: updatedUser.balance });
+    res.json({ claimed: true, newBalance: updatedUser.balance, lastDailyClaim: now.toISOString() });
   } catch (error) {
     console.error('Daily claim error:', error);
     res.status(500).json({ error: 'Failed to claim daily coins' });

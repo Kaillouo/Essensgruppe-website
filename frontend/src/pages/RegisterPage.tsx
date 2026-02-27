@@ -50,18 +50,18 @@ export const RegisterPage = () => {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-white px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0a0f] to-[#1a1a2e] px-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center"
+          className="w-full max-w-md bg-white/[0.06] backdrop-blur-sm border border-white/10 rounded-2xl shadow-xl p-8 text-center"
         >
           <div className="text-5xl mb-4">📧</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-3">Bestätigungs-E-Mail gesendet!</h1>
-          <p className="text-gray-600 mb-6">
-            Wir haben eine Bestätigungs-E-Mail an <strong>{formData.email}</strong> geschickt. Klicke auf den Link in der E-Mail, um deinen Account zu aktivieren.
+          <h1 className="text-2xl font-bold text-white mb-3">Bestätigungs-E-Mail gesendet!</h1>
+          <p className="text-white/60 mb-6">
+            Wir haben eine Bestätigungs-E-Mail an <strong className="text-white">{formData.email}</strong> geschickt. Klicke auf den Link in der E-Mail, um deinen Account zu aktivieren.
           </p>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-white/40 mb-6">
             Der Link ist 24 Stunden gültig. Schau auch im Spam-Ordner nach.
           </p>
           <Link to="/login" className="btn btn-primary w-full py-3 text-center block">
@@ -73,16 +73,16 @@ export const RegisterPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-white px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0a0f] to-[#1a1a2e] px-4 py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white/[0.06] backdrop-blur-sm border border-white/10 rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Registrieren</h1>
-            <p className="text-gray-600">Erstelle deinen Account — du bekommst eine Bestätigungs-E-Mail</p>
+            <h1 className="text-3xl font-bold text-white mb-2">Registrieren</h1>
+            <p className="text-white/60">Erstelle deinen Account — du bekommst eine Bestätigungs-E-Mail</p>
           </div>
 
           {error && (
@@ -97,7 +97,7 @@ export const RegisterPage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="username" className="block text-sm font-medium text-white/70 mb-2">
                 Benutzername
               </label>
               <input
@@ -117,7 +117,7 @@ export const RegisterPage = () => {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-white/70 mb-2">
                 E-Mail
               </label>
               <input
@@ -133,7 +133,7 @@ export const RegisterPage = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-white/70 mb-2">
                 Passwort
               </label>
               <input
@@ -150,7 +150,7 @@ export const RegisterPage = () => {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-white/70 mb-2">
                 Passwort bestätigen
               </label>
               <input
@@ -185,16 +185,16 @@ export const RegisterPage = () => {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-600">
+            <p className="text-white/60">
               Schon registriert?{' '}
-              <Link to="/login" className="text-primary-600 font-medium hover:text-primary-700">
+              <Link to="/login" className="text-primary-400 font-medium hover:text-primary-300">
                 Einloggen
               </Link>
             </p>
           </div>
 
           <div className="mt-4 text-center">
-            <Link to="/" className="text-gray-500 text-sm hover:text-gray-700">
+            <Link to="/" className="text-white/40 text-sm hover:text-white/60">
               ← Zurück zur Startseite
             </Link>
           </div>

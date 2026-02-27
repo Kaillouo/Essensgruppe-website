@@ -31,6 +31,7 @@ export interface AuthResponse {
     role: string;
     balance: number;
     avatarUrl: string | null;
+    lastDailyClaim?: string | null;
   };
 }
 

@@ -10,6 +10,7 @@ export interface User {
   reserved?: number; // sum of active prediction bet reservations
   avatarUrl: string | null;
   createdAt?: string;
+  lastDailyClaim?: string;
 }
 
 // Auth types

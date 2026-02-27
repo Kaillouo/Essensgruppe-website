@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { apiService } from '../services/api.service';
+import { ApiService } from '../services/api.service';
+import { User } from '../types';
 
 interface DailyClaimResponse {
   claimed: boolean;
   newBalance?: number;
   nextClaimIn?: number;
+  lastDailyClaim?: string;
 }
 
 export const DailyCoinsClaim = ({
@@ -16,20 +18,18 @@ export const DailyCoinsClaim = ({
   onClaimed?: (newBalance: number) => void;
   autoClaim?: boolean;
 }) => {
-  const { user, refreshUser } = useAuth();
+  const { user, updateUser } = useAuth();
   const [canClaim, setCanClaim] = useState(true);
   const [nextClaimMs, setNextClaimMs] = useState(0);
   const [loading, setLoading] = useState(false);
   const [claimed, setClaimed] = useState(false);
 
-  // Calculate time remaining
   const getTimeRemaining = (ms: number) => {
     const hours = Math.floor(ms / (1000 * 60 * 60));
     const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m`;
   };
 
-  // Check if user has lastDailyClaim set
   useEffect(() => {
     if (user?.lastDailyClaim) {
       const lastClaim = new Date(user.lastDailyClaim).getTime();
@@ -48,7 +48,6 @@ export const DailyCoinsClaim = ({
     }
   }, [user?.lastDailyClaim]);
 
-  // Update countdown timer
   useEffect(() => {
     if (!canClaim && nextClaimMs > 0) {
       const interval = setInterval(() => {
@@ -72,22 +71,16 @@ export const DailyCoinsClaim = ({
 
     setLoading(true);
     try {
-      const response = await apiService.request<DailyClaimResponse>(
+      const response = await ApiService.request<DailyClaimResponse>(
         '/users/daily-claim',
-        {
-          method: 'POST',
-          body: JSON.stringify({}),
-        },
+        { method: 'POST', body: JSON.stringify({}) },
         true
       );
 
-      if (response.claimed) {
+      if (response.claimed && user) {
         setClaimed(true);
-        await refreshUser();
+        updateUser({ ...user, balance: response.newBalance ?? user.balance, lastDailyClaim: response.lastDailyClaim } as User);
         onClaimed?.(response.newBalance ?? 0);
-
-        // Show success message - could be extended to use a toast service
-        console.log('✓ Du hast 1000 Münzen erhalten!');
       } else if (response.nextClaimIn) {
         setCanClaim(false);
         setNextClaimMs(response.nextClaimIn);
@@ -99,7 +92,6 @@ export const DailyCoinsClaim = ({
     }
   };
 
-  // Auto-claim on first load if enabled and can claim
   useEffect(() => {
     if (autoClaim && canClaim && !loading && !claimed) {
       handleClaim();

@@ -4,6 +4,8 @@ Multi-purpose website for a school class (Abitur 2027). Combines forum, event pl
 
 **Spelling:** The correct name is **Essensgruppe** (with **s** after the **n**). Domain: `essensgruppe.de`. Check this everywhere.
 
+**Language:** The entire UI and all user-facing text must be in **German**. Exceptions: technical terms that are universally understood in English (e.g. "Login", "Logout", "Forum", "Games", "Poker", "Blackjack", "Slots", "Admin", "Links", "Profile", "E-Mail"). When in doubt, use German. Backend error messages shown to users should also be German. Code comments and variable names stay in English.
+
 **Stack:** React/TypeScript (Vite) + Express/TypeScript + Prisma + PostgreSQL + Socket.io
 
 ---
@@ -39,7 +41,7 @@ cd frontend && npm run dev    # Terminal 2
 5. On OCI: git pull origin main && npm run build && pm2 restart all
 ```
 
-**OCI server path:** `/home/ubuntu/web/EssensgruppeWeb`
+**OCI server path:** `/home/ubuntu/web/Essensgruppe.de`
 
 ---
 
@@ -52,6 +54,43 @@ cd frontend && npm run dev    # Terminal 2
 | `ADMIN` | Full access | Seed only (admin/Admin1234!) |
 
 **Registration:** username + email + password → verification email (Resend SMTP) → click link → account active with ABI27 role
+
+---
+
+## Active Agent Branches
+
+You are a specialized agent assigned to ONE specific branch. Check which branch you are on with `git branch --show-current` and follow ONLY your assignment below. Do NOT touch files outside your scope.
+
+**Merge order:** bugs → security → visibility (merge in this order to avoid conflicts)
+
+### `fix/known-bugs` — Bug Fix Agent
+- **Job:** Fix known bugs from the user's bug list. One bug at a time, test each fix.
+- **Scope:** Any file, but ONLY to fix the specific bug. No refactoring, no new features.
+- **Avoid:** Don't restructure code, don't change Prisma schema, don't add features.
+
+### `security/audit` — Security Audit Agent
+- **Job:** Audit and harden the application security.
+- **Tasks:**
+  1. Ensure all role checks (ADMIN, ESSENSGRUPPE_MITGLIED, ABI27) are enforced server-side in Express middleware, not just hidden in frontend
+  2. Check for missing auth middleware on API routes
+  3. Check for XSS, SQL injection, OWASP vulnerabilities
+  4. Add rate limiting where missing (login, registration, password reset)
+  5. Ensure JWT secrets and API keys are not exposed to frontend
+  6. Disable source maps in production Vite build
+- **Scope:** Middleware, route guards, server.ts, vite config, backend security.
+- **Avoid:** Don't change Prisma schema, don't modify frontend page layouts, don't add right-click/console blocking (that's security theater).
+
+### `feature/post-visibility` — Visibility Feature Agent
+- **Job:** Add visibility toggle so Essensgruppe members can make posts/events visible to all OR Essensgruppe-only.
+- **Tasks:**
+  1. Add `visibility` field to `Post` and `Event` Prisma models (values: `ALL` default, `ESSENSGRUPPE_ONLY`)
+  2. Users with `ESSENSGRUPPE_MITGLIED` or `ADMIN` role see a toggle when creating posts/events. `ABI27`-only users always create as `ALL`.
+  3. Backend: filter queries so `ESSENSGRUPPE_ONLY` items only return for users with `ESSENSGRUPPE_MITGLIED` or `ADMIN` role
+  4. Use `prisma db push` after schema changes (not migrate dev)
+- **Scope:** Prisma schema, post/event routes, frontend create/list pages for posts and events.
+- **Avoid:** Don't touch auth middleware, don't modify gambling/poker code.
+
+**If you are not on any of these branches**, you are the overseer — do not implement, just plan.
 
 ---
 
