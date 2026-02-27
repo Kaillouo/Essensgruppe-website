@@ -7,15 +7,15 @@ export const Footer = () => {
           <div>
             <h3 className="text-lg font-bold mb-4">Essensgruppe</h3>
             <p className="text-gray-400 text-sm">
-              Community portal for Abitur 2027 class. Connect, share, and celebrate our journey together.
+              Community-Portal für den Abitur-Jahrgang 2027. Verbindet euch, teilt Momente und feiert eure Reise gemeinsam.
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-bold mb-4">Quick Links</h3>
+            <h3 className="text-lg font-bold mb-4">Schnellzugriff</h3>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><a href="/about" className="hover:text-white transition-colors">About Us</a></li>
+              <li><a href="/about" className="hover:text-white transition-colors">Über uns</a></li>
               <li><a href="/forum" className="hover:text-white transition-colors">Forum</a></li>
               <li><a href="/events" className="hover:text-white transition-colors">Events</a></li>
               <li><a href="/games" className="hover:text-white transition-colors">Games</a></li>
@@ -25,7 +25,7 @@ export const Footer = () => {
 
           {/* Social */}
           <div>
-            <h3 className="text-lg font-bold mb-4">Follow Us</h3>
+            <h3 className="text-lg font-bold mb-4">Folge uns</h3>
             <div className="flex space-x-4">
               {/* Email */}
               <a

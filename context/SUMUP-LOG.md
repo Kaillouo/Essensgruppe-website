@@ -117,6 +117,26 @@
 - LinksPage: letzter englischer String "coming soon" → "demnächst" behoben; war ansonsten schon vollständig auf Deutsch
 - ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage, PrivacyPage: bereits vollständig auf Deutsch — keine Änderungen nötig
 
+## 2026-02-27 — German Translation final pass (feature/german-translation branch)
+- Footer.tsx: "Community portal..." → German description; "Quick Links" → "Schnellzugriff"; "About Us" → "Über uns"; "Follow Us" → "Folge uns"
+- ProfilePage, LinksPage, MinecraftPage, AboutPage: already fully in German — no changes needed
+- AdminPage: left unchanged per user request
+
+## 2026-02-27 — German Translation (feature/german-translation branch, EssensgruppeWeb)
+- ProfilePage: alle Labels, Buttons, Fehlermeldungen und Abschnittstittel auf Deutsch (Mein Profile, Statistiken, Gefahrenzone, Passwort ändern, Konto löschen, etc.)
+- MinecraftPage: timeAgo-Funktion, RULES-Array, HOW_TO_JOIN-Schritte, Ankündigungen-Modal, alle Headings und Statusmeldungen übersetzt
+- AboutPage: "Our Mission" → "Unsere Mission", Missionstext, "Contact" → "Kontakt" übersetzt
+- LinksPage: letzter englischer String "coming soon" → "demnächst verfügbar" behoben
+- Footer: "Quick Links" → "Schnellzugriff", "Follow Us" → "Folgt uns", "About Us" → "Über uns", "Games" → "Spiele", Beschreibungstext übersetzt
+- AdminPage: nicht übersetzt (auf Wunsch unverändert gelassen)
+
+## 2026-02-27 — Fresh OCI Deploy from New Folder
+- Uploaded new project folder `/home/ubuntu/web/Essensgruppe.de/` via SFTP, replacing old `EssensgruppeWeb`
+- Database wiped and re-seeded (admin/chef@essensgruppe.de/Admin1234!, new role system: ABI27/ESSENSGRUPPE_MITGLIED/ADMIN)
+- Fixed: `trust proxy` for express-rate-limit behind nginx, frontend `VITE_API_URL=/api` (was localhost), backend env URLs → `https://essensgruppe.de`
+- Fixed: RegisterPage white-on-white text → dark theme; killed old ubuntu PM2 daemon that kept respawning
+- PM2 running under root from new folder, both servers live at essensgruppe.de
+
 ## 2026-02-26 — i18n: Alle Spiele- und Admin-Seiten auf Deutsch übersetzt (main)
 - ForumPage, ThreadPage, EventsPage, PredictionPage, GamesPage: in vorheriger Session übersetzt (commits 90e61a4–8d524c9)
 - BlackjackPage: Hit/Stand/Double/Deal/Bust-Terminologie übersetzt; Fehler- und Statusmeldungen auf Deutsch

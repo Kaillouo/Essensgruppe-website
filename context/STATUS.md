@@ -1,6 +1,6 @@
 # Project Status
 
-**Last Updated:** 2026-02-26
+**Last Updated:** 2026-02-27
 
 ## Features
 
@@ -25,11 +25,12 @@
 | Role System | DONE | ABI27, ESSENSGRUPPE_MITGLIED, ADMIN |
 | Security Audit | DONE | Rate limits, JWT guard, source maps — see context/features/securities.md |
 | Post/Event/Prediction Visibility | DONE | ESSENSGRUPPE_ONLY toggle for members; ABI27 filtered server-side |
-| Daily Login Reward | DONE | 1000 coins/day with 24h cooldown, auto-claim on landing page |
+| Daily Login Reward | DONE | 1000 coins/day with 24h cooldown, auto-claim on landing page; countdown fix 2026-02-26 |
 | Forum Graph/Bubble View | PLANNED | See context/features/forum-bubbles.md |
 | Frontend Theme Overhaul | DONE | Dark theme applied globally (fix/round2) |
+| German Translation (UI) | DONE | All pages fully in German; Footer description/nav translated; AdminPage left as-is |
 | Mobile Optimization | TODO | |
-| Production Deploy (OCI) | PARTIAL | Server running but needs build optimization |
+| Production Deploy (OCI) | DONE | Live at essensgruppe.de, PM2 managed, fresh DB |
 
 ## Needs User Input
 
@@ -40,4 +41,4 @@
 
 ## Current Branch
 
-`feature/daily-coins` — daily login reward system (1000 coins/24h) implemented, ready to merge
+`main` — deployed to OCI from new Essensgruppe.de folder (2026-02-27)
