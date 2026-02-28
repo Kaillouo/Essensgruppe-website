@@ -231,6 +231,20 @@ export class ApiService {
     return this.request(`/posts/${id}`, {}, true);
   }
 
+  static async uploadPostPhoto(file: File) {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('photo', file);
+    const response = await fetch(`${API_URL}/posts/photo-upload`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Foto-Upload fehlgeschlagen');
+    return data as { imageUrl: string };
+  }
+
   static async createPost(data: { title: string; content: string; imageUrl?: string; visibility?: string }) {
     return this.request('/posts', {
       method: 'POST',

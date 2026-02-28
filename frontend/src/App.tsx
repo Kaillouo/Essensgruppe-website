@@ -97,7 +97,14 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
-          <Route path="/events" element={<EventsPage />} />
+          <Route
+            path="/events"
+            element={
+              <ProtectedRoute>
+                <EventsPage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/links" element={<LinksPage />} />
           <Route
             path="/mc"

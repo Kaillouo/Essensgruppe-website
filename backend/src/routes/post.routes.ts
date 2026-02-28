@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { z } from 'zod';
 import prisma from '../utils/prisma.util';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { uploadPostPhoto } from '../middleware/upload.middleware';
 import { AuthRequest } from '../types';
 
 const router = Router();
@@ -16,7 +17,7 @@ router.use(authenticateToken as any);
 const createPostSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200),
   content: z.string().min(1, 'Content is required').max(10000),
-  imageUrl: z.string().url().optional().nullable(),
+  imageUrl: z.string().min(1).optional().nullable(),
 });
 
 const updatePostSchema = z.object({
@@ -173,6 +174,19 @@ router.post('/', async (req: AuthRequest, res: Response) => {
     console.error('Create post error:', error);
     res.status(500).json({ error: 'Failed to create post' });
   }
+});
+
+// POST /api/posts/photo-upload — upload a photo for a forum post
+router.post('/photo-upload', (req: any, res: Response, next: any) => {
+  uploadPostPhoto(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message || 'Upload fehlgeschlagen' });
+    next();
+  });
+}, async (req: AuthRequest, res: Response) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Kein Foto ausgewählt' });
+  }
+  res.json({ imageUrl: `/uploads/posts/${req.file.filename}` });
 });
 
 // GET /api/posts/:id — get single post with comments

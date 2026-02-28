@@ -32,6 +32,12 @@ export const uploadEventPhoto = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
 }).single('photo');
 
+export const uploadPostPhoto = multer({
+  storage: makeStorage('posts'),
+  fileFilter: imageFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+}).single('photo');
+
 export const uploadAvatar = multer({
   storage: makeStorage('avatars'),
   fileFilter: imageFilter,

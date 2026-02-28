@@ -5,6 +5,12 @@
 
 ---
 
+## 2026-02-28 — Forum Photo Upload + EventsPage Auth Guard
+- Added `uploadPostPhoto` multer handler (`upload.middleware.ts`), saves to `uploads/posts/`
+- Added `POST /api/posts/photo-upload` route in `post.routes.ts` returning `{ imageUrl }`
+- Added `ApiService.uploadPostPhoto(file)` in `api.service.ts`; updated `CreatePostModal` with photo picker + preview
+- Protected `/events` route in `App.tsx` with `ProtectedRoute` (any authenticated user)
+
 ## 2026-02-26 — Daily Login Reward (feature/daily-coins)
 - Added `lastDailyClaim DateTime?` field to User model in Prisma schema + `prisma db push`
 - Added `DAILY_COINS` to TransactionType enum for transaction tracking
@@ -129,6 +135,32 @@
 - LinksPage: letzter englischer String "coming soon" → "demnächst verfügbar" behoben
 - Footer: "Quick Links" → "Schnellzugriff", "Follow Us" → "Folgt uns", "About Us" → "Über uns", "Games" → "Spiele", Beschreibungstext übersetzt
 - AdminPage: nicht übersetzt (auf Wunsch unverändert gelassen)
+
+## 2026-02-28 — Bug Fix Session (feature/german-translation branch)
+
+### Fix 1: Daily coin countdown stale after background tab
+- `DailyCoinsClaim.tsx`: replaced relative-ms countdown with absolute deadline (`nextClaimAt = lastClaim + 24h`)
+- Tick effect now computes `remaining = nextClaimAt - Date.now()` — accurate regardless of browser timer throttling in background tabs
+- Interval no longer restarts every second (removed `nextClaimMs` from effect deps; only `canClaim`/`nextClaimAt` in deps)
+
+### Fix 2: Prediction market payout type bug
+- `prediction.routes.ts`: changed `payoutOps` type from broken `Parameters<typeof prisma.$transaction>[0]` (resolved to function type) to `any[]`
+- Payout logic itself was correct; type annotation was the issue
+
+### Fix 3: Prediction market — reserved coins / debt system redesign
+- Games (slots, blackjack, poker) now check raw `user.balance` instead of `balance - reserved` — players can spend full balance freely
+- Prediction bet placement still checks `balance - reserved` — can't stack more prediction bets than actual balance
+- On prediction resolve, losers' full bet amount is deducted (balance can go negative = debt); debt blocks gameplay naturally
+- Removed `getReservedBalance` import from slots, blackjack, poker; kept only in prediction.routes.ts for bet placement check
+
+### Fix 4: Event status change broken for admins
+- `event.routes.ts`: `PATCH /:id/status` used `requireAdmin` alone — `req.user` was never set because `authenticateToken` was missing; always returned 401
+- Added `authenticateToken` before `requireAdmin` in the middleware chain
+- `EventsPage.tsx`: `StatusModal` was white (`bg-white`) on a dark app — rethemed to dark glassmorphism; added error display (previously swallowed errors silently)
+
+## 2026-02-28 — Admin Panel: E-Mail-Spalte in Mitglieder-Tabelle (feature/german-translation)
+- `AdminPage.tsx`: neue `E-Mail`-Spalte zwischen "Nutzername" und "Rolle" im Mitglieder-Tab hinzugefügt
+- Kein Backend-Change nötig — `email` war bereits im `/api/admin/users`-Response enthalten
 
 ## 2026-02-27 — Fresh OCI Deploy from New Folder
 - Uploaded new project folder `/home/ubuntu/web/Essensgruppe.de/` via SFTP, replacing old `EssensgruppeWeb`

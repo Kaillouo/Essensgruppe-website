@@ -594,16 +594,40 @@ const CreatePostModal = ({ onClose, onCreated }: { onClose: () => void; onCreate
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [visibility, setVisibility] = useState<'ALL' | 'ESSENSGRUPPE_ONLY'>('ALL');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const canSetVisibility = user?.role === 'ESSENSGRUPPE_MITGLIED' || user?.role === 'ADMIN';
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setPhotoFile(file);
+    if (file) {
+      setPhotoPreview(URL.createObjectURL(file));
+    } else {
+      setPhotoPreview(null);
+    }
+  };
+
+  const removePhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) return;
     setIsSubmitting(true); setError('');
     try {
-      onCreated((await ApiService.createPost({ title: title.trim(), content: content.trim(), visibility })) as Post);
+      let imageUrl: string | undefined;
+      if (photoFile) {
+        const result = await ApiService.uploadPostPhoto(photoFile);
+        imageUrl = result.imageUrl;
+      }
+      onCreated((await ApiService.createPost({ title: title.trim(), content: content.trim(), visibility, imageUrl })) as Post);
     } catch (err: any) { setError(err.message); }
     finally { setIsSubmitting(false); }
   };
@@ -632,6 +656,22 @@ const CreatePostModal = ({ onClose, onCreated }: { onClose: () => void; onCreate
             <label style={{ display: 'block', color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: 600, marginBottom: 6, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Inhalt</label>
             <textarea value={content} onChange={e => setContent(e.target.value)} placeholder="Was beschäftigt dich?" maxLength={10000} required rows={6} style={{ ...inp, resize: 'vertical', minHeight: 140 }} />
             <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, margin: '4px 0 0', textAlign: 'right' }}>{content.length}/10000</p>
+          </div>
+          {/* Photo upload */}
+          <div>
+            <label style={{ display: 'block', color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: 600, marginBottom: 6, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Foto (optional)</label>
+            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handlePhotoChange} style={{ display: 'none' }} />
+            {photoPreview ? (
+              <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)' }}>
+                <img src={photoPreview} alt="Vorschau" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }} />
+                <button type="button" onClick={removePhoto} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.7)', border: 'none', borderRadius: 6, color: '#fff', width: 28, height: 28, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => fileInputRef.current?.click()}
+                style={{ width: '100%', padding: '14px', border: '1.5px dashed rgba(255,255,255,0.18)', borderRadius: 10, background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <span style={{ fontSize: 18 }}>📷</span> Foto auswählen
+              </button>
+            )}
           </div>
           {canSetVisibility && (
             <div>
