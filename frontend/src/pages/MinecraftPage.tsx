@@ -5,7 +5,7 @@ import { ApiService } from '../services/api.service';
 import { Announcement } from '../types';
 
 const SERVER_IP = 'Mc.essensgruppe.com';
-const BLUEMAP_URL = 'https://essensgruppe.de/bluemap';
+const BLUEMAP_URL = 'https://essensgruppe.de/bluemap/';
 const DISCORD_URL = 'https://discord.gg/X5nzxXZU';
 
 function timeAgo(dateStr: string): string {
