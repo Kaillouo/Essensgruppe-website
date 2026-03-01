@@ -457,7 +457,7 @@ export const PredictionPage = () => {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.3, type: 'spring', stiffness: 320, damping: 26 }}
         onClick={() => { setShowCreate(true); setCreateError(''); }}
-        className="fixed bottom-6 left-6 z-30 w-12 h-12 bg-primary-600 hover:bg-primary-700 rounded-full shadow-xl shadow-primary-900/50 flex items-center justify-center text-white text-2xl font-light transition-colors duration-150"
+        className="fixed bottom-20 md:bottom-6 left-6 z-30 w-12 h-12 bg-primary-600 hover:bg-primary-700 rounded-full shadow-xl shadow-primary-900/50 flex items-center justify-center text-white text-2xl font-light transition-colors duration-150"
         title="Neue Vorhersage"
       >
         +

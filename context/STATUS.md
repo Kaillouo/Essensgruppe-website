@@ -1,6 +1,6 @@
 # Project Status
 
-**Last Updated:** 2026-03-01 (Guest Mode fully complete)
+**Last Updated:** 2026-03-01 (Mobile bottom nav + prediction FAB fix)
 
 ## Features
 
@@ -33,7 +33,7 @@
 | German Translation (UI) | DONE | All pages fully in German; Footer description/nav translated; AdminPage left as-is |
 | Guest Mode (Games) | DONE | /games/guest hub + blackjack/slots/mines + poker; 1000 session coins; /games → 3-card chooser for auth users; guest poker uses /guest-poker Socket.IO namespace (6-seat, 1/2 blinds, 60s AFK kick, separate from logged-in tables) |
 | PWA (installable app + offline) | DONE | SW + Workbox caching; OfflineBanner + OfflineOverlay; see context/features/pwa.md |
-| Mobile Optimization | TODO | |
+| Mobile Optimization | PARTIAL | Fixed bottom nav bar (Forum/Links/Abi27/Games/MC); footer hidden on mobile; prediction FAB cleared from nav bar; hamburger menu + chat button remain in top navbar |
 | Production Deploy (OCI) | DONE | Live at essensgruppe.de, PM2 managed, fresh DB |
 
 ## Needs User Input

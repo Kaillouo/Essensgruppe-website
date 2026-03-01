@@ -71,6 +71,13 @@
 - New hook `useOnlineStatus.ts`, new components `OfflineBanner.tsx` (yellow strip below Navbar when offline) and `OfflineOverlay.tsx` (full-screen block for all game pages offline)
 - `App.tsx` wired: OfflineBanner after Navbar (showLayout guard), all game routes (auth + guest: Poker/Slots/Blackjack/Mines) wrapped with OfflineOverlay; added `context/features/pwa.md`
 
+## 2026-03-01 — Mobile Bottom Navigation Bar
+- Replaced desktop-only footer with a fixed Instagram-style bottom nav on mobile (<768px)
+- New `MobileBottomNav.tsx`: 5 tabs in order — Forum, Links, Abi 27, Games, MC (MC only for ESSENSGRUPPE_MITGLIED/ADMIN); active tab highlights in primary-400; safe-area padding for iPhone home indicator
+- `Footer.tsx`: added `hidden md:block` so footer only shows on desktop
+- `App.tsx`: renders `MobileBottomNav` alongside footer (same `showLayout` guard); `<main>` gets `pb-14 md:pb-0` to prevent content hidden behind bar
+- `PredictionPage.tsx`: FAB button moved from `bottom-6` to `bottom-20 md:bottom-6` so it clears the mobile bottom nav
+
 ## 2026-02-28 — Mines Game
 - Backend: `mines.routes.ts` with 3 endpoints (`/start`, `/reveal`, `/cashout`); in-memory `activeGames` Map per user; Fisher-Yates mine placement; 5% house edge multiplier formula; mine positions never sent to client until game over; settlement via `prisma.$transaction`
 - Frontend: `MinesPage.tsx` full-screen page; custom `MineCountPicker` fold-down accordion (6-col grid of 1–24 buttons); responsive layout — desktop: controls left + big grid right; mobile: small grid top + compact controls bottom
