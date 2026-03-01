@@ -7,6 +7,7 @@ import { useSocket } from './contexts/SocketContext';
 import { GuestProvider } from './contexts/GuestContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ChatBubble } from './components/ChatBubble';
 import { ChatPanel } from './components/ChatPanel';
@@ -107,7 +108,7 @@ function AppContent() {
       {showLayout && <Navbar />}
       {showLayout && <OfflineBanner />}
 
-      <main className={showLayout ? '' : ''}>
+      <main className={showLayout ? 'pb-14 md:pb-0' : ''}>
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
@@ -255,6 +256,7 @@ function AppContent() {
         </Routes>
       </main>
 
+      {showLayout && <MobileBottomNav />}
       {showLayout && <Footer />}
     </div>
   );
