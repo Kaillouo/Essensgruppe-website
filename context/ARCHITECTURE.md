@@ -1,6 +1,6 @@
 # Architecture
 
-**Last Updated:** 2026-02-25
+**Last Updated:** 2026-02-28
 
 Monorepo: `backend/` (Express + TypeScript) and `frontend/` (React + Vite + TypeScript)
 
@@ -28,8 +28,14 @@ backend/
       poker.routes.ts          # GET /api/poker/state
       slots.routes.ts          # slots game
       blackjack.routes.ts      # blackjack game
+      mines.routes.ts          # mines game (5×5 grid, in-memory state, 3 endpoints)
       mc.routes.ts             # MC server status check
       abi.routes.ts            # anonymous Abi Zeitung submissions
+      guestGames.routes.ts     # Guest mode: POST /session, GET /balance; guest blackjack/slots/mines (no auth, in-memory)
+    middleware/
+      guestAuth.middleware.ts  # authenticateGuest — validates X-Guest-ID header (UUID format)
+    state/
+      guestState.ts            # In-memory guest sessions Map<guestId,{balance,lastSeen}>; 30min TTL cleanup
     socket/
       poker.socket.ts          # Full Texas Hold'em game logic
     services/
@@ -63,12 +69,20 @@ frontend/
       EventsPage.tsx           # ABI 27 events + Abi Zeitung form
       LinksPage.tsx            # School links, teachers, Stundenplan
       MinecraftPage.tsx        # MC server info + BlueMap
-      GamesPage.tsx            # Game hub (single/multiplayer tabs)
+      GamesPage.tsx            # Old game hub (no longer used at /games, kept for reference)
+      GamesLandingPage.tsx     # New /games — 3-card chooser (Einzelspieler/Mehrspieler/Mit Gast)
+      GamesCollectionPage.tsx  # /games/singleplayer and /games/multiplayer — game card grids
       GamePlaceholderPage.tsx  # "Coming soon" for unbuilt games
       PredictionPage.tsx       # Prediction market
       PokerPage.tsx            # Full-screen poker table
       SlotsPage.tsx            # Slot machine
       BlackjackPage.tsx        # Blackjack
+      MinesPage.tsx            # Mines (Stake-style, responsive, custom mine picker)
+      GuestHubPage.tsx         # /games/guest — Guest mode hub (balance + game cards)
+      GuestBlackjackPage.tsx   # /games/guest/blackjack — Blackjack for guests (in-memory balance)
+      GuestSlotsPage.tsx       # /games/guest/slots — Slots for guests
+      GuestMinesPage.tsx       # /games/guest/mines — Mines for guests
+      GuestPokerPage.tsx       # /games/guest/poker — Coming soon notice
       ProfilePage.tsx          # User profile + avatar + stats
       AdminPage.tsx            # Admin panel (users, settings, analytics, Abi Zeitung)
       AboutPage.tsx            # About us page
@@ -80,8 +94,9 @@ frontend/
     contexts/
       AuthContext.tsx           # Login/logout, user state, JWT token
       SocketContext.tsx         # Socket.io connection, online users, messaging
+      GuestContext.tsx          # Guest mode: guestId (sessionStorage), session balance, refreshBalance
     services/
-      api.service.ts           # 40+ static methods for all API calls
+      api.service.ts           # 40+ static methods for all API calls (incl. startMines, revealMines, cashoutMines)
     types/
       index.ts                 # User, Post, Comment, Event, etc.
 ```
@@ -163,7 +178,17 @@ frontend/
 | POST | /api/predictions/:id/resolve | Resolve + payout |
 | DELETE | /api/predictions/:id | Delete prediction |
 | GET | /api/poker/state | Current poker table state |
+| POST | /api/games/mines/start | Start mines game (bet + mineCount); deducts bet immediately |
+| POST | /api/games/mines/reveal | Reveal a tile; returns isMine, multiplier, minePositions (game over only) |
+| POST | /api/games/mines/cashout | Cash out current multiplier; returns payout + minePositions |
 | GET | /api/mc/status | MC server online check (TCP) |
+| GET | /api/chat/contacts | List contacts with last message + unread count |
+| POST | /api/chat/contacts/:userId | Add contact |
+| DELETE | /api/chat/contacts/:userId | Remove contact |
+| GET | /api/chat/messages/:userId | Message history (last 50) |
+| GET | /api/chat/search?q= | Search users by username |
+| GET | /api/chat/unread | Total unread count |
+| POST | /api/chat/ai | AI chatbot (Haiku) |
 | POST | /api/abi/submit | Anonymous Abi Zeitung submission |
 | GET | /api/abi/submissions | Admin: list submissions |
 | DELETE | /api/abi/submissions/:id | Admin: delete submission |
@@ -191,6 +216,8 @@ frontend/
 | PredictionBet | predictionId, userId, side, amount | Prediction bets |
 | AbiSubmission | title, content (no userId — anonymous) | Abi Zeitung |
 | GameHistory | userId, gameType, bet, result, payout | Game results |
+| DirectMessage | senderId, receiverId, content, read | 1-on-1 chat (auto-deleted after 24h) |
+| Contact | userId, contactId | Persistent contact list |
 
 **Enums:** Role (ABI27, ESSENSGRUPPE_MITGLIED, ADMIN), UserStatus (PENDING, ACTIVE, BANNED), VoteType (POST, COMMENT), EventStatus (PROPOSED, IN_PLANNING, COMPLETED), TransactionType (INITIAL_BALANCE, GAME_BET, GAME_WIN, PREDICTION_BET, PREDICTION_WIN, ADMIN_ADJUSTMENT), PredictionStatus (OPEN, CLOSED)
 
@@ -205,6 +232,16 @@ frontend/
 | games:online_users | Server → All | Same list (backward compat) |
 | games:message | Client → Server | Send instant message to user |
 | games:receive_message | Server → Client | Receive instant message |
+
+### Chat (server.ts)
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| `chat:send` | Client → Server | Send DM, save to DB, forward to recipient |
+| `chat:receive` | Server → Client | New message (real-time delivery + sender echo) |
+| `chat:read` | Client → Server | Mark messages from a user as read |
+| `chat:typing` | Client → Server | Typing indicator |
+| `chat:typing_indicator` | Server → Client | Show typing for a user |
+| `chat:unread_count` | Server → Client | Total unread badge count |
 
 ### Poker (poker.socket.ts)
 | Event | Direction | Description |
@@ -247,6 +284,7 @@ frontend/
 | /games/poker | PokerPage | Protected | No navbar/footer |
 | /games/slots | SlotsPage | Protected | |
 | /games/blackjack | BlackjackPage | Protected | No navbar/footer |
+| /games/mines | MinesPage | Protected | No navbar/footer; mobile: grid top, controls bottom |
 | /games/:game | GamePlaceholderPage | Protected | |
 | /profile | ProfilePage | Protected | |
 | /admin | AdminPage | Admin | |

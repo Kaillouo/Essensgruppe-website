@@ -15,9 +15,14 @@ import predictionRoutes from './routes/prediction.routes';
 import pokerRoutes from './routes/poker.routes';
 import slotsRoutes from './routes/slots.routes';
 import blackjackRoutes from './routes/blackjack.routes';
+import minesRoutes from './routes/mines.routes';
 import mcRoutes from './routes/mc.routes';
 import abiRoutes from './routes/abi.routes';
+import chatRoutes from './routes/chat.routes';
+import guestGamesRoutes from './routes/guestGames.routes';
 import { registerPokerSocket } from './socket/poker.socket';
+import { registerGuestPokerSocket } from './socket/guestPoker.socket';
+import prisma from './utils/prisma.util';
 
 // Load environment variables
 dotenv.config();
@@ -57,8 +62,11 @@ app.use('/api/predictions', predictionRoutes);
 app.use('/api/poker', pokerRoutes);
 app.use('/api/games/slots', slotsRoutes);
 app.use('/api/games/blackjack', blackjackRoutes);
+app.use('/api/games/mines', minesRoutes);
 app.use('/api/mc', mcRoutes);
 app.use('/api/abi', abiRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/guest', guestGamesRoutes);
 
 // Serve uploaded files (avatars, post images, event images)
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
@@ -133,7 +141,7 @@ io.on('connection', (socket) => {
   siteOnline.set(userId, { socketId: socket.id, username });
   broadcastOnlineUsers();
 
-  // Instant message to another online user (no persistence)
+  // Instant message to another online user (no persistence) — legacy
   socket.on('games:message', ({ toUserId, message }: { toUserId: string; message: string }) => {
     if (!message || typeof message !== 'string') return;
     const trimmed = message.trim().slice(0, 120);
@@ -147,6 +155,73 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ── Chat: send DM ──────────────────────────────────────────────────────────
+  socket.on('chat:send', async ({ toUserId, content }: { toUserId: string; content: string }) => {
+    if (!content || typeof content !== 'string') return;
+    const trimmed = content.trim().slice(0, 1000);
+    if (!trimmed) return;
+
+    // Save to DB
+    const msg = await prisma.directMessage.create({
+      data: { senderId: userId, receiverId: toUserId, content: trimmed },
+    });
+
+    // Auto-add both users as contacts (upsert to avoid duplicates)
+    await Promise.all([
+      prisma.contact.upsert({
+        where: { userId_contactId: { userId, contactId: toUserId } },
+        update: {},
+        create: { userId, contactId: toUserId },
+      }),
+      prisma.contact.upsert({
+        where: { userId_contactId: { userId: toUserId, contactId: userId } },
+        update: {},
+        create: { userId: toUserId, contactId: userId },
+      }),
+    ]);
+
+    // Forward to recipient if online
+    const target = siteOnline.get(toUserId);
+    if (target) {
+      io.to(target.socketId).emit('chat:receive', { message: msg });
+
+      // Send updated unread count to recipient
+      const unreadCount = await prisma.directMessage.count({
+        where: { receiverId: toUserId, read: false },
+      });
+      io.to(target.socketId).emit('chat:unread_count', { count: unreadCount });
+    }
+
+    // Confirm back to sender (so it appears in their chat UI immediately)
+    socket.emit('chat:receive', { message: msg });
+  });
+
+  // ── Chat: mark messages as read ────────────────────────────────────────────
+  socket.on('chat:read', async ({ fromUserId }: { fromUserId: string }) => {
+    await prisma.directMessage.updateMany({
+      where: { senderId: fromUserId, receiverId: userId, read: false },
+      data: { read: true },
+    });
+    // Refresh unread count for this user
+    const unreadCount = await prisma.directMessage.count({
+      where: { receiverId: userId, read: false },
+    });
+    socket.emit('chat:unread_count', { count: unreadCount });
+  });
+
+  // ── Chat: typing indicator ─────────────────────────────────────────────────
+  socket.on('chat:typing', ({ toUserId }: { toUserId: string }) => {
+    const target = siteOnline.get(toUserId);
+    if (target) {
+      io.to(target.socketId).emit('chat:typing_indicator', { fromUserId: userId });
+    }
+  });
+
+  // ── Send initial unread count on connect ───────────────────────────────────
+  prisma.directMessage.count({ where: { receiverId: userId, read: false } }).then((count: number) => {
+    socket.emit('chat:unread_count', { count });
+  });
+
   // Remove on tab close / logout
   socket.on('disconnect', () => {
     siteOnline.delete(userId);
@@ -155,6 +230,36 @@ io.on('connection', (socket) => {
 });
 
 registerPokerSocket(io);
+
+// ── Guest Poker namespace ─────────────────────────────────────────────────────
+// Separate Socket.io namespace for guest players — no JWT required, guestId only.
+
+const GUEST_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const guestPokerNS = io.of('/guest-poker');
+guestPokerNS.use((socket, next) => {
+  const guestId = socket.handshake.auth?.guestId as string | undefined;
+  if (!guestId || !GUEST_UUID_RE.test(guestId)) {
+    return next(new Error('Ungültige Gast-ID'));
+  }
+  socket.data.guestId = guestId;
+  next();
+});
+registerGuestPokerSocket(guestPokerNS);
+
+// ── Message cleanup ───────────────────────────────────────────────────────────
+// Delete direct messages older than 24 hours, run on startup + every hour
+async function cleanupOldMessages() {
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const deleted = await prisma.directMessage.deleteMany({
+    where: { createdAt: { lt: cutoff } },
+  });
+  if (deleted.count > 0) {
+    console.log(`🧹 Cleaned up ${deleted.count} expired chat messages`);
+  }
+}
+cleanupOldMessages();
+setInterval(cleanupOldMessages, 60 * 60 * 1000); // every hour
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 

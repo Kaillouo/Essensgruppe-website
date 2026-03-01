@@ -44,3 +44,12 @@ export const resetPasswordLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// AI chat rate limiter: 10 requests per minute per IP
+export const aiChatLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10,
+  message: { error: 'Zu viele KI-Anfragen. Bitte warte eine Minute.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

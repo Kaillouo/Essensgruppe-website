@@ -370,6 +370,7 @@ export const AdminPage = () => {
                   <thead className="bg-white/[0.04] border-b border-white/[0.06]">
                     <tr>
                       <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Nutzername</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-white/50">E-Mail</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Rolle</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Status</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-white/50">Guthaben</th>
@@ -381,6 +382,7 @@ export const AdminPage = () => {
                     {users.map((user: any) => (
                       <tr key={user.id} className="hover:bg-white/[0.03]">
                         <td className="px-4 py-3 text-sm font-medium text-white">{user.username}</td>
+                        <td className="px-4 py-3 text-sm text-white/70">{user.email}</td>
                         <td className="px-4 py-3 text-sm">
                           <button
                             onClick={() => openRoleModal(user)}

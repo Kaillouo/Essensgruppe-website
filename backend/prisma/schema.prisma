@@ -38,6 +38,10 @@ model User {
   predictionBets     PredictionBet[]
   emailVerification  EmailVerification?
   passwordReset      PasswordReset?
+  sentMessages       DirectMessage[] @relation("SentMessages")
+  receivedMessages   DirectMessage[] @relation("ReceivedMessages")
+  contacts           Contact[]       @relation("UserContacts")
+  contactOf          Contact[]       @relation("ContactOf")
 
   @@map("users")
 }
@@ -311,6 +315,39 @@ model AbiSubmission {
 
   @@index([createdAt])
   @@map("abi_submissions")
+}
+
+// Direct messages between users (auto-deleted after 24h)
+model DirectMessage {
+  id         String   @id @default(uuid())
+  senderId   String   @map("sender_id")
+  receiverId String   @map("receiver_id")
+  content    String   @db.Text
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, receiverId])
+  @@index([receiverId, read])
+  @@index([createdAt])
+  @@map("direct_messages")
+}
+
+// Persistent contact list (survives message deletion)
+model Contact {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  contactId String   @map("contact_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User @relation("UserContacts", fields: [userId], references: [id], onDelete: Cascade)
+  contact User @relation("ContactOf", fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contactId])
+  @@index([userId])
+  @@map("contacts")
 }
 
 // Gambling games history

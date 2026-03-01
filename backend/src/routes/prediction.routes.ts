@@ -124,14 +124,14 @@ router.post('/:id/bet', async (req: AuthRequest, res: Response) => {
     if (prediction.bets.find((b) => b.userId === userId))
                                             return res.status(400).json({ error: 'You have already placed a bet' });
 
-    // Reserve the amount: don't deduct yet, but check available balance
+    // Reserve the amount: don't deduct yet, but ensure total prediction bets don't exceed actual balance
     const [user, reserved] = await Promise.all([
       prisma.user.findUnique({ where: { id: userId }, select: { balance: true } }),
       getReservedBalance(userId),
     ]);
     const available = (user?.balance ?? 0) - reserved;
     if (!user || available < amount)
-      return res.status(400).json({ error: `Insufficient available balance (available: ${available})` });
+      return res.status(400).json({ error: `Nicht genug Guthaben für diese Wette (verfügbar: ${available})` });
 
     // Record reservation — balance is NOT deducted yet
     await prisma.predictionBet.create({ data: { predictionId: id, userId, side, amount } });
@@ -166,7 +166,7 @@ router.post('/:id/resolve', async (req: AuthRequest, res: Response) => {
     const totalWin   = winnerBets.reduce((s, b) => s + b.amount, 0);
     const totalLose  = loserBets.reduce((s, b) => s + b.amount, 0);
 
-    const payoutOps: Parameters<typeof prisma.$transaction>[0] = [];
+    const payoutOps: any[] = [];
 
     if (totalWin > 0 && totalLose > 0) {
       // Winners: reserved amount stays (never deducted), they receive proportional share of losers' pool
@@ -179,7 +179,7 @@ router.post('/:id/resolve', async (req: AuthRequest, res: Response) => {
           );
         }
       }
-      // Losers: NOW deduct the reserved amount from their actual balance
+      // Losers: deduct the full bet from their balance (may go negative = debt)
       for (const bet of loserBets) {
         payoutOps.push(
           prisma.user.update({ where: { id: bet.userId }, data: { balance: { decrement: bet.amount } } }),

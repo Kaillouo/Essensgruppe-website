@@ -21,6 +21,7 @@ export const DailyCoinsClaim = ({
   const { user, updateUser } = useAuth();
   const [canClaim, setCanClaim] = useState(true);
   const [nextClaimMs, setNextClaimMs] = useState(0);
+  const [nextClaimAt, setNextClaimAt] = useState(0);
   const [loading, setLoading] = useState(false);
   const [claimed, setClaimed] = useState(false);
 
@@ -30,41 +31,45 @@ export const DailyCoinsClaim = ({
     return `${hours}h ${minutes}m`;
   };
 
+  // Derive canClaim and absolute deadline from the lastDailyClaim timestamp
   useEffect(() => {
     if (user?.lastDailyClaim) {
-      const lastClaim = new Date(user.lastDailyClaim).getTime();
-      const now = new Date().getTime();
-      const msSinceLastClaim = now - lastClaim;
-      const nextClaimTime = 24 * 60 * 60 * 1000;
-
-      if (msSinceLastClaim < nextClaimTime) {
+      const claimAt = new Date(user.lastDailyClaim).getTime() + 24 * 60 * 60 * 1000;
+      const remaining = claimAt - Date.now();
+      if (remaining > 0) {
         setCanClaim(false);
-        setNextClaimMs(nextClaimTime - msSinceLastClaim);
+        setNextClaimAt(claimAt);
+        setNextClaimMs(remaining);
       } else {
         setCanClaim(true);
+        setNextClaimAt(0);
+        setNextClaimMs(0);
       }
     } else {
       setCanClaim(true);
+      setNextClaimAt(0);
+      setNextClaimMs(0);
     }
   }, [user?.lastDailyClaim]);
 
+  // Tick against the absolute deadline so the display stays accurate
+  // even when the browser throttles timers in background tabs
   useEffect(() => {
-    if (!canClaim && nextClaimMs > 0) {
-      const interval = setInterval(() => {
-        setNextClaimMs((prev) => {
-          const newTime = prev - 1000;
-          if (newTime <= 0) {
-            setCanClaim(true);
-            clearInterval(interval);
-            return 0;
-          }
-          return newTime;
-        });
-      }, 1000);
+    if (canClaim || nextClaimAt === 0) return;
 
-      return () => clearInterval(interval);
-    }
-  }, [canClaim, nextClaimMs]);
+    const interval = setInterval(() => {
+      const remaining = nextClaimAt - Date.now();
+      if (remaining <= 0) {
+        setCanClaim(true);
+        setNextClaimMs(0);
+        setNextClaimAt(0);
+      } else {
+        setNextClaimMs(remaining);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [canClaim, nextClaimAt]); // stable deps — does NOT restart every second
 
   const handleClaim = async () => {
     if (!canClaim || loading) return;

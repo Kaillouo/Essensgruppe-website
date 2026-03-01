@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useSocket } from '../contexts/SocketContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
+  const { toggleChat, unreadChatCount, chatOpen } = useSocket();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -128,6 +130,22 @@ export const Navbar = () => {
                   Ich bin Teil der Essensgruppe
                 </Link>
               )
+            )}
+
+            {/* Chat button — visible for all authenticated users */}
+            {isAuthenticated && (
+              <button
+                onClick={toggleChat}
+                className={`relative p-2 rounded-lg transition-colors ${chatOpen ? 'bg-indigo-600/20 text-indigo-400' : 'hover:bg-white/[0.06] text-white/70'}`}
+                aria-label="Chat öffnen"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+                </svg>
+                {!chatOpen && unreadChatCount > 0 && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                )}
+              </button>
             )}
 
             {/* Mobile menu button */}

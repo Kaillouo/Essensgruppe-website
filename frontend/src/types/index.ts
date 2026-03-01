@@ -104,6 +104,65 @@ export interface Event {
   photos: EventPhoto[];
 }
 
+// Chat types
+export interface DirectMessage {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface ChatContact {
+  id: string;
+  user: {
+    id: string;
+    username: string;
+    avatarUrl: string | null;
+  };
+  lastMessage: {
+    content: string;
+    createdAt: string;
+    fromMe: boolean;
+  } | null;
+  unreadCount: number;
+}
+
+export interface ChatUser {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+}
+
+// Mines game types
+export interface MinesStartResponse {
+  mineCount: number;
+  totalTiles: number;
+  revealedSafe: number[];
+  multiplier: number;
+  currentPayout: number;
+  balance: number;
+}
+
+export interface MinesRevealResponse {
+  isMine: boolean;
+  revealedSafe: number[];
+  minePositions?: number[];  // only present when game is over
+  multiplier: number;
+  currentPayout: number;
+  balance?: number;          // only present when game is over
+  status: 'PLAYING' | 'WON' | 'LOST';
+}
+
+export interface MinesCashoutResponse {
+  payout: number;
+  balance: number;
+  minePositions: number[];
+  revealedSafe: number[];
+  multiplier: number;
+}
+
 // Announcement types
 export interface Announcement {
   id: string;

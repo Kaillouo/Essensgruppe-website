@@ -179,9 +179,9 @@ export const PredictionPage = () => {
       setBetError('Bitte gültigen Betrag eingeben');
       return;
     }
-    const available = (user?.balance ?? 0) - (user?.reserved ?? 0);
-    if (amount > available) {
-      setBetError(`Nicht genug Guthaben (verfügbar: ${available})`);
+    const balance = user?.balance ?? 0;
+    if (amount > balance) {
+      setBetError(`Nicht genug Guthaben (Kontostand: ${balance})`);
       return;
     }
     setBetLoading(true);
@@ -586,10 +586,10 @@ export const PredictionPage = () => {
               <input
                 type="number"
                 min="1"
-                max={(user?.balance ?? 0) - (user?.reserved ?? 0)}
+                max={user?.balance ?? 0}
                 value={betAmount}
                 onChange={(e) => setBetAmount(e.target.value)}
-                placeholder={`Verfügbar: ${((user?.balance ?? 0) - (user?.reserved ?? 0)).toLocaleString()}`}
+                placeholder={`Kontostand: ${(user?.balance ?? 0).toLocaleString()}`}
                 className="w-full bg-[#0a0e1a] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary-600/50 mb-2"
                 autoFocus
                 onKeyDown={(e) => { if (e.key === 'Enter') handleBet(); }}

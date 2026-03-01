@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { DirectMessage } from '../types';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface OnlineUser {
@@ -18,6 +19,12 @@ interface SocketContextType {
   onlineUsers: OnlineUser[]; // everyone online except self
   incomingMessage: IncomingMessage | null;
   clearIncomingMessage: () => void;
+  unreadChatCount: number;
+  latestChatMessage: DirectMessage | null;
+  chatOpen: boolean;
+  toggleChat: () => void;
+  openChat: () => void;
+  closeChat: () => void;
 }
 
 // ── Context ───────────────────────────────────────────────────────────────────
@@ -26,6 +33,12 @@ const SocketContext = createContext<SocketContextType>({
   onlineUsers: [],
   incomingMessage: null,
   clearIncomingMessage: () => {},
+  unreadChatCount: 0,
+  latestChatMessage: null,
+  chatOpen: false,
+  toggleChat: () => {},
+  openChat: () => {},
+  closeChat: () => {},
 });
 
 // ── Provider ──────────────────────────────────────────────────────────────────
@@ -39,6 +52,13 @@ export function SocketProvider({ children }: { children: ReactNode }) {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [incomingMessage, setIncomingMessage] = useState<IncomingMessage | null>(null);
   const incomingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [latestChatMessage, setLatestChatMessage] = useState<DirectMessage | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+
+  const toggleChat = () => setChatOpen((v) => !v);
+  const openChat = () => setChatOpen(true);
+  const closeChat = () => setChatOpen(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -69,6 +89,15 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       incomingTimeout.current = setTimeout(() => setIncomingMessage(null), 6000);
     });
 
+    // Chat events
+    socket.on('chat:receive', ({ message }: { message: DirectMessage }) => {
+      setLatestChatMessage(message);
+    });
+
+    socket.on('chat:unread_count', ({ count }: { count: number }) => {
+      setUnreadChatCount(count);
+    });
+
     return () => {
       socket.disconnect();
       socketRef.current = null;
@@ -82,7 +111,18 @@ export function SocketProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <SocketContext.Provider value={{ socket: socketRef.current, onlineUsers, incomingMessage, clearIncomingMessage }}>
+    <SocketContext.Provider value={{
+      socket: socketRef.current,
+      onlineUsers,
+      incomingMessage,
+      clearIncomingMessage,
+      unreadChatCount,
+      latestChatMessage,
+      chatOpen,
+      toggleChat,
+      openChat,
+      closeChat,
+    }}>
       {children}
     </SocketContext.Provider>
   );

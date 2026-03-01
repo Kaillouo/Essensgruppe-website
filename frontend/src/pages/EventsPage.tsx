@@ -393,49 +393,56 @@ interface StatusModalProps {
 
 function StatusModal({ event, onClose, onUpdated }: StatusModalProps) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleStatus = async (status: Event['status']) => {
     setLoading(true);
+    setError('');
     try {
       await ApiService.updateEventStatus(event.id, status);
       onUpdated(event.id, status);
       onClose();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setError(err.message || 'Status konnte nicht geändert werden');
     } finally {
       setLoading(false);
     }
   };
 
-  const statusOptions: { label: string; value: Event['status']; color: string }[] = [
-    { label: 'Vorgeschlagen', value: 'PROPOSED', color: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' },
-    { label: 'In Planung', value: 'IN_PLANNING', color: 'bg-blue-100 text-blue-800 hover:bg-blue-200' },
-    { label: 'Abgeschlossen', value: 'COMPLETED', color: 'bg-green-100 text-green-800 hover:bg-green-200' },
+  const statusOptions: { label: string; value: Event['status']; color: string; active: string }[] = [
+    { label: 'Vorgeschlagen',  value: 'PROPOSED',    color: 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/40 hover:bg-yellow-900/50', active: 'bg-yellow-600/40 text-yellow-200 border border-yellow-500/60' },
+    { label: 'In Planung',     value: 'IN_PLANNING',  color: 'bg-blue-900/30 text-blue-300 border border-blue-700/40 hover:bg-blue-900/50',          active: 'bg-blue-600/40 text-blue-200 border border-blue-500/60' },
+    { label: 'Abgeschlossen',  value: 'COMPLETED',    color: 'bg-green-900/30 text-green-300 border border-green-700/40 hover:bg-green-900/50',       active: 'bg-green-600/40 text-green-200 border border-green-500/60' },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6"
+        style={{ background: 'rgba(10,14,26,0.97)', border: '1px solid rgba(255,255,255,0.10)' }}
+        className="rounded-2xl shadow-2xl w-full max-w-sm p-6"
+        onClick={e => e.stopPropagation()}
       >
-        <h2 className="text-lg font-bold text-gray-900 mb-2">Event verschieben</h2>
-        <p className="text-sm text-gray-500 mb-4">"{event.title}"</p>
+        <h2 className="text-base font-bold text-white mb-1">Status ändern</h2>
+        <p className="text-xs text-white/40 mb-4 truncate">"{event.title}"</p>
         <div className="space-y-2">
           {statusOptions.map(opt => (
             <button
               key={opt.value}
               disabled={loading || event.status === opt.value}
               onClick={() => handleStatus(opt.value)}
-              className={`w-full px-4 py-2.5 rounded-lg font-medium text-sm transition-colors ${opt.color} disabled:opacity-40`}
+              className={`w-full px-4 py-2.5 rounded-xl font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-default ${
+                event.status === opt.value ? opt.active : opt.color
+              }`}
             >
               {event.status === opt.value ? `✓ Aktuell: ${opt.label}` : opt.label}
             </button>
           ))}
         </div>
-        <button onClick={onClose} className="mt-4 w-full px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 text-sm">
+        {error && <p className="mt-3 text-red-400 text-xs">{error}</p>}
+        <button onClick={onClose} className="mt-4 w-full px-4 py-2 rounded-xl text-white/50 hover:text-white/80 text-sm border border-white/10 hover:bg-white/5 transition-colors">
           Abbrechen
         </button>
       </motion.div>

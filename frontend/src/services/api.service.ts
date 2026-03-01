@@ -395,6 +395,38 @@ export class ApiService {
     return this.request(`/predictions/${predictionId}`, { method: 'DELETE' }, true);
   }
 
+  // ── Chat ───────────────────────────────────────────────────────────────────
+  static async getChatContacts() {
+    return this.request('/chat/contacts', {}, true);
+  }
+
+  static async addChatContact(userId: string) {
+    return this.request(`/chat/contacts/${userId}`, { method: 'POST' }, true);
+  }
+
+  static async removeChatContact(userId: string) {
+    return this.request(`/chat/contacts/${userId}`, { method: 'DELETE' }, true);
+  }
+
+  static async getChatMessages(userId: string) {
+    return this.request(`/chat/messages/${userId}`, {}, true);
+  }
+
+  static async searchChatUsers(q: string) {
+    return this.request(`/chat/search?q=${encodeURIComponent(q)}`, {}, true);
+  }
+
+  static async getUnreadCount() {
+    return this.request<{ count: number }>('/chat/unread', {}, true);
+  }
+
+  static async sendAiMessage(messages: Array<{ role: 'user' | 'assistant'; content: string }>) {
+    return this.request<{ reply: string }>('/chat/ai', {
+      method: 'POST',
+      body: JSON.stringify({ messages }),
+    }, true);
+  }
+
   // ── Slots ──────────────────────────────────────────────────────────────────
   static async spinSlots(bet: number) {
     return this.request<{
@@ -421,5 +453,30 @@ export class ApiService {
 
   static async blackjackDouble() {
     return this.request('/games/blackjack/double', { method: 'POST' }, true);
+  }
+
+  // ── Mines ──────────────────────────────────────────────────────────────────
+  static async startMines(bet: number, mineCount: number) {
+    return this.request<import('../types').MinesStartResponse>(
+      '/games/mines/start',
+      { method: 'POST', body: JSON.stringify({ bet, mineCount }) },
+      true
+    );
+  }
+
+  static async revealMines(cellIndex: number) {
+    return this.request<import('../types').MinesRevealResponse>(
+      '/games/mines/reveal',
+      { method: 'POST', body: JSON.stringify({ cellIndex }) },
+      true
+    );
+  }
+
+  static async cashoutMines() {
+    return this.request<import('../types').MinesCashoutResponse>(
+      '/games/mines/cashout',
+      { method: 'POST' },
+      true
+    );
   }
 }

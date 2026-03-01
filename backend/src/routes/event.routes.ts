@@ -248,7 +248,7 @@ router.delete('/:id/photos/:photoId', authenticateToken as any, async (req: Auth
 });
 
 // PATCH /api/events/:id/status — admin: move event between statuses
-router.patch('/:id/status', requireAdmin as any, async (req: AuthRequest, res: Response) => {
+router.patch('/:id/status', authenticateToken as any, requireAdmin as any, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { status } = statusSchema.parse(req.body);
