@@ -82,3 +82,10 @@
 - Backend: `mines.routes.ts` with 3 endpoints (`/start`, `/reveal`, `/cashout`); in-memory `activeGames` Map per user; Fisher-Yates mine placement; 5% house edge multiplier formula; mine positions never sent to client until game over; settlement via `prisma.$transaction`
 - Frontend: `MinesPage.tsx` full-screen page; custom `MineCountPicker` fold-down accordion (6-col grid of 1–24 buttons); responsive layout — desktop: controls left + big grid right; mobile: small grid top + compact controls bottom
 - Wired: `server.ts` route registration, `App.tsx` route + `showLayout` exclusion, `api.service.ts` 3 new methods, `types/index.ts` 3 new interfaces; no Prisma schema changes needed
+
+## 2026-03-02 — Notification System + User Blocking
+- Prisma: 3 new models (`Notification`, `UserBlock`, `NotificationPreference`) + `NotificationType` enum; `prisma db push`
+- Backend: `notification.service.ts` (createNotification, broadcastNotification), `notification.routes.ts` (6 endpoints), `block.routes.ts` (3 endpoints)
+- Notification triggers in `post.routes.ts`, `event.routes.ts`, `prediction.routes.ts`; admin broadcast in `admin.routes.ts` + email template
+- Schedulers in `server.ts`: 12h daily coins reminder, 10min prediction close reminder; block check in `chat:send`
+- Frontend: browser Notification API (no bell/panel — native OS notifications with vibrate); notification prefs + blocked users in ProfilePage; block/unblock button in ChatConversation

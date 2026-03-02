@@ -20,9 +20,12 @@ import mcRoutes from './routes/mc.routes';
 import abiRoutes from './routes/abi.routes';
 import chatRoutes from './routes/chat.routes';
 import guestGamesRoutes from './routes/guestGames.routes';
+import notificationRoutes from './routes/notification.routes';
+import blockRoutes from './routes/block.routes';
 import { registerPokerSocket } from './socket/poker.socket';
 import { registerGuestPokerSocket } from './socket/guestPoker.socket';
 import prisma from './utils/prisma.util';
+import { initNotificationService, createNotification, broadcastNotification } from './services/notification.service';
 
 // Load environment variables
 dotenv.config();
@@ -67,6 +70,8 @@ app.use('/api/mc', mcRoutes);
 app.use('/api/abi', abiRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/guest', guestGamesRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/blocks', blockRoutes);
 
 // Serve uploaded files (avatars, post images, event images)
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
@@ -104,6 +109,9 @@ const io = new Server(httpServer, {
 // Track every logged-in user who has the site open in any tab
 // userId → { socketId, username }
 const siteOnline = new Map<string, { socketId: string; username: string }>();
+
+// Inject io + siteOnline into notification service (avoids circular imports)
+initNotificationService(io, siteOnline);
 
 function broadcastOnlineUsers() {
   const list = Array.from(siteOnline.entries()).map(([userId, data]) => ({
@@ -161,6 +169,12 @@ io.on('connection', (socket) => {
     const trimmed = content.trim().slice(0, 1000);
     if (!trimmed) return;
 
+    // Check if recipient has blocked sender — silently discard
+    const isBlocked = await prisma.userBlock.findUnique({
+      where: { blockerId_blockedId: { blockerId: toUserId, blockedId: userId } },
+    });
+    if (isBlocked) return;
+
     // Save to DB
     const msg = await prisma.directMessage.create({
       data: { senderId: userId, receiverId: toUserId, content: trimmed },
@@ -194,6 +208,14 @@ io.on('connection', (socket) => {
 
     // Confirm back to sender (so it appears in their chat UI immediately)
     socket.emit('chat:receive', { message: msg });
+
+    // Fire-and-forget: notification for new message
+    createNotification({
+      userId: toUserId,
+      type: 'NEW_MESSAGE',
+      title: `💬 Neue Nachricht von ${username}`,
+      body: trimmed.slice(0, 80) + (trimmed.length > 80 ? '...' : ''),
+    });
   });
 
   // ── Chat: mark messages as read ────────────────────────────────────────────
@@ -221,6 +243,35 @@ io.on('connection', (socket) => {
   prisma.directMessage.count({ where: { receiverId: userId, read: false } }).then((count: number) => {
     socket.emit('chat:unread_count', { count });
   });
+
+  // ── Send initial notification count on connect ────────────────────────────
+  prisma.notification.count({ where: { userId, read: false } }).then((count: number) => {
+    socket.emit('notification:count', { count });
+  });
+
+  // ── Daily coins notification (if claimable) ──────────────────────────────
+  prisma.user.findUnique({
+    where: { id: userId },
+    select: { lastDailyClaim: true },
+  }).then(async (u) => {
+    if (!u) return;
+    const canClaim = !u.lastDailyClaim ||
+      (Date.now() - new Date(u.lastDailyClaim).getTime()) >= 24 * 60 * 60 * 1000;
+    if (!canClaim) return;
+    // Avoid duplicate — only create if no unread DAILY_COINS notification exists
+    const existing = await prisma.notification.findFirst({
+      where: { userId, type: 'DAILY_COINS', read: false },
+    });
+    if (!existing) {
+      createNotification({
+        userId,
+        type: 'DAILY_COINS',
+        title: '🪙 Tägliche Münzen verfügbar!',
+        body: '1.000 Münzen können jetzt abgeholt werden.',
+        linkUrl: '/',
+      });
+    }
+  }).catch(() => {});
 
   // Remove on tab close / logout
   socket.on('disconnect', () => {
@@ -260,6 +311,92 @@ async function cleanupOldMessages() {
 }
 cleanupOldMessages();
 setInterval(cleanupOldMessages, 60 * 60 * 1000); // every hour
+
+// ── Daily coins reminder (every 12 hours if unclaimed) ──────────────────────
+async function checkDailyCoinsReminder() {
+  try {
+    const users = await prisma.user.findMany({
+      where: { status: 'ACTIVE' },
+      select: { id: true, lastDailyClaim: true },
+    });
+
+    for (const u of users) {
+      const canClaim = !u.lastDailyClaim ||
+        (Date.now() - new Date(u.lastDailyClaim).getTime()) >= 24 * 60 * 60 * 1000;
+      if (!canClaim) continue;
+
+      // Only send if no unread DAILY_COINS notification exists
+      const existing = await prisma.notification.findFirst({
+        where: { userId: u.id, type: 'DAILY_COINS', read: false },
+      });
+      if (!existing) {
+        createNotification({
+          userId: u.id,
+          type: 'DAILY_COINS',
+          title: '🪙 Tägliche Münzen verfügbar!',
+          body: 'Du hast deine 1.000 Münzen noch nicht abgeholt!',
+          linkUrl: '/',
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Daily coins reminder error:', err);
+  }
+}
+setInterval(checkDailyCoinsReminder, 12 * 60 * 60 * 1000); // every 12 hours
+
+// ── Prediction reminder (1 hour before close) ────────────────────────────────
+async function checkPredictionReminders() {
+  try {
+    const now = Date.now();
+    const closingSoon = await prisma.prediction.findMany({
+      where: {
+        status: 'OPEN',
+        closeDate: {
+          gte: new Date(now + 50 * 60 * 1000),  // closes in > 50 min
+          lte: new Date(now + 60 * 60 * 1000),  // closes in < 60 min
+        },
+      },
+    });
+
+    for (const pred of closingSoon) {
+      const eligibleWhere: any = { status: 'ACTIVE' };
+      if ((pred as any).visibility === 'ESSENSGRUPPE_ONLY') {
+        eligibleWhere.role = { in: ['ESSENSGRUPPE_MITGLIED', 'ADMIN'] };
+      }
+
+      const eligible = await prisma.user.findMany({
+        where: eligibleWhere,
+        select: { id: true },
+      });
+
+      for (const user of eligible) {
+        // Deduplicate: check for existing reminder for this prediction
+        const already = await prisma.notification.findFirst({
+          where: {
+            userId: user.id,
+            type: 'PREDICTION_REMINDER',
+            linkUrl: `/games/prediction#${pred.id}`,
+            createdAt: { gte: new Date(now - 2 * 60 * 60 * 1000) },
+          },
+        });
+        if (!already) {
+          createNotification({
+            userId: user.id,
+            type: 'PREDICTION_REMINDER',
+            title: `⏰ Letzte Stunde: ${pred.title.slice(0, 60)}`,
+            body: 'Diese Vorhersage schließt in weniger als 1 Stunde. Jetzt noch wetten!',
+            linkUrl: `/games/prediction#${pred.id}`,
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Prediction reminder check error:', err);
+  }
+}
+checkPredictionReminders();
+setInterval(checkPredictionReminders, 10 * 60 * 1000); // every 10 minutes
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 

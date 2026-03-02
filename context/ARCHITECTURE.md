@@ -31,6 +31,8 @@ backend/
       mines.routes.ts          # mines game (5×5 grid, in-memory state, 3 endpoints)
       mc.routes.ts             # MC server status check
       abi.routes.ts            # anonymous Abi Zeitung submissions
+      notification.routes.ts   # GET/PATCH/DELETE notifications + preferences
+      block.routes.ts          # GET/POST/DELETE user blocks
       guestGames.routes.ts     # Guest mode: POST /session, GET /balance; guest blackjack/slots/mines (no auth, in-memory)
     middleware/
       guestAuth.middleware.ts  # authenticateGuest — validates X-Guest-ID header (UUID format)
@@ -39,7 +41,8 @@ backend/
     socket/
       poker.socket.ts          # Full Texas Hold'em game logic
     services/
-      email.service.ts         # 5 email templates (Resend SMTP)
+      email.service.ts         # 5 email templates + broadcast (Resend SMTP)
+      notification.service.ts  # createNotification, broadcastNotification (browser Notification API via socket)
     utils/
       jwt.util.ts              # JWT sign/verify
       password.util.ts         # bcrypt hash/compare
@@ -51,7 +54,7 @@ backend/
     types/
       index.ts                 # AuthRequest, DTOs, UserRole type
   prisma/
-    schema.prisma              # 15 models, 6 enums
+    schema.prisma              # 18 models, 7 enums
 
 frontend/
   src/
@@ -136,6 +139,7 @@ frontend/
 | PATCH | /users/:id/password | Admin reset password |
 | PATCH | /users/:id/balance | Adjust gambling balance |
 | PATCH | /users/:id/role | Change role (ABI27/ESSENSGRUPPE_MITGLIED) |
+| POST | /broadcast | Send notification (+ optional email) to EG or All |
 | PATCH | /users/:id/username | Rename user |
 | DELETE | /users/:id | Delete user |
 | GET | /analytics | Dashboard stats |
@@ -192,6 +196,15 @@ frontend/
 | POST | /api/abi/submit | Anonymous Abi Zeitung submission |
 | GET | /api/abi/submissions | Admin: list submissions |
 | DELETE | /api/abi/submissions/:id | Admin: delete submission |
+| GET | /api/notifications | List notifications (last 50) |
+| PATCH | /api/notifications/read-all | Mark all read |
+| PATCH | /api/notifications/:id/read | Mark one read |
+| DELETE | /api/notifications/:id | Delete notification |
+| GET | /api/notifications/preferences | Get notification preferences |
+| PATCH | /api/notifications/preferences | Update notification preferences |
+| GET | /api/blocks | List blocked users |
+| POST | /api/blocks/:userId | Block user |
+| DELETE | /api/blocks/:userId | Unblock user |
 | GET | /api/health | Health check |
 
 ---
@@ -218,8 +231,11 @@ frontend/
 | GameHistory | userId, gameType, bet, result, payout | Game results |
 | DirectMessage | senderId, receiverId, content, read | 1-on-1 chat (auto-deleted after 24h) |
 | Contact | userId, contactId | Persistent contact list |
+| Notification | userId, type, title, body, linkUrl, read | In-app notifications (browser push via socket) |
+| UserBlock | blockerId, blockedId | Block users from DMs |
+| NotificationPreference | userId, 8 boolean toggles | Per-user notification settings |
 
-**Enums:** Role (ABI27, ESSENSGRUPPE_MITGLIED, ADMIN), UserStatus (PENDING, ACTIVE, BANNED), VoteType (POST, COMMENT), EventStatus (PROPOSED, IN_PLANNING, COMPLETED), TransactionType (INITIAL_BALANCE, GAME_BET, GAME_WIN, PREDICTION_BET, PREDICTION_WIN, ADMIN_ADJUSTMENT), PredictionStatus (OPEN, CLOSED)
+**Enums:** Role (ABI27, ESSENSGRUPPE_MITGLIED, ADMIN), UserStatus (PENDING, ACTIVE, BANNED), VoteType (POST, COMMENT), EventStatus (PROPOSED, IN_PLANNING, COMPLETED), TransactionType (INITIAL_BALANCE, GAME_BET, GAME_WIN, PREDICTION_BET, PREDICTION_WIN, ADMIN_ADJUSTMENT), PredictionStatus (OPEN, CLOSED), NotificationType (ADMIN_BROADCAST, NEW_POST, NEW_PREDICTION, PREDICTION_CLOSED, PREDICTION_REMINDER, NEW_EVENT, EVENT_STATUS_CHANGED, DAILY_COINS, NEW_MESSAGE)
 
 ---
 
@@ -242,6 +258,12 @@ frontend/
 | `chat:typing` | Client → Server | Typing indicator |
 | `chat:typing_indicator` | Server → Client | Show typing for a user |
 | `chat:unread_count` | Server → Client | Total unread badge count |
+
+### Notifications (server.ts)
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| `notification:new` | Server → Client | New notification (triggers browser Notification API) |
+| `notification:count` | Server → Client | Unread notification count |
 
 ### Poker (poker.socket.ts)
 | Event | Direction | Description |

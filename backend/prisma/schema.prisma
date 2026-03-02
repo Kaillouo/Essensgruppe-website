@@ -42,6 +42,10 @@ model User {
   receivedMessages   DirectMessage[] @relation("ReceivedMessages")
   contacts           Contact[]       @relation("UserContacts")
   contactOf          Contact[]       @relation("ContactOf")
+  notifications              Notification[]
+  blockedUsers               UserBlock[]              @relation("BlockedBy")
+  blockedBy                  UserBlock[]              @relation("BlockedUser")
+  notificationPreference     NotificationPreference?
 
   @@map("users")
 }
@@ -367,4 +371,68 @@ model GameHistory {
   @@index([gameType])
   @@index([createdAt])
   @@map("games_history")
+}
+
+// Notification types
+enum NotificationType {
+  ADMIN_BROADCAST
+  NEW_POST
+  NEW_PREDICTION
+  PREDICTION_CLOSED
+  PREDICTION_REMINDER
+  NEW_EVENT
+  EVENT_STATUS_CHANGED
+  DAILY_COINS
+  NEW_MESSAGE
+}
+
+// In-app notifications
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  type      NotificationType
+  title     String
+  body      String
+  linkUrl   String?          @map("link_url")
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+// Chat block list (blocks DMs only, not forum visibility)
+model UserBlock {
+  id        String   @id @default(uuid())
+  blockerId String   @map("blocker_id")
+  blockedId String   @map("blocked_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  blocker User @relation("BlockedBy", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("BlockedUser", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@map("user_blocks")
+}
+
+// Per-user notification preferences (ADMIN_BROADCAST always on, not toggleable)
+model NotificationPreference {
+  id                 String  @id @default(uuid())
+  userId             String  @unique @map("user_id")
+  newPost            Boolean @default(true) @map("new_post")
+  newPrediction      Boolean @default(true) @map("new_prediction")
+  predictionClosed   Boolean @default(true) @map("prediction_closed")
+  predictionReminder Boolean @default(true) @map("prediction_reminder")
+  newEvent           Boolean @default(true) @map("new_event")
+  eventStatusChanged Boolean @default(true) @map("event_status_changed")
+  dailyCoins         Boolean @default(true) @map("daily_coins")
+  newMessage         Boolean @default(true) @map("new_message")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
 }

@@ -29,6 +29,8 @@ export function ChatConversation({ contact, onBack, onRemoveContact }: Props) {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockLoading, setBlockLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -48,6 +50,30 @@ export function ChatConversation({ contact, onBack, onRemoveContact }: Props) {
   useEffect(() => {
     loadMessages();
   }, [loadMessages]);
+
+  // Check if contact is blocked
+  useEffect(() => {
+    ApiService.getBlocks().then((blocks: any[]) => {
+      setIsBlocked(blocks.some((b: any) => b.blockedId === contact.id));
+    }).catch(() => {});
+  }, [contact.id]);
+
+  async function toggleBlock() {
+    setBlockLoading(true);
+    try {
+      if (isBlocked) {
+        await ApiService.unblockUser(contact.id);
+        setIsBlocked(false);
+      } else {
+        await ApiService.blockUser(contact.id);
+        setIsBlocked(true);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setBlockLoading(false);
+    }
+  }
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -148,6 +174,16 @@ export function ChatConversation({ contact, onBack, onRemoveContact }: Props) {
           </div>
         </div>
         <button
+          onClick={toggleBlock}
+          disabled={blockLoading}
+          title={isBlocked ? 'Entsperren' : 'Blockieren'}
+          className={`transition-colors p-1 rounded flex-shrink-0 ${isBlocked ? 'text-green-400 hover:text-green-300' : 'text-gray-500 hover:text-orange-400'}`}
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+          </svg>
+        </button>
+        <button
           onClick={() => setShowDeleteConfirm(true)}
           title="Kontakt entfernen"
           className="text-gray-500 hover:text-red-400 transition-colors p-1 rounded flex-shrink-0"
@@ -220,25 +256,29 @@ export function ChatConversation({ contact, onBack, onRemoveContact }: Props) {
 
       {/* Input */}
       <div className="flex-shrink-0 px-3 py-2.5 border-t border-white/10">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKey}
-            placeholder="Nachricht schreiben..."
-            className="flex-1 bg-white/10 border border-white/10 rounded-full px-3 py-1.5 text-sm text-white placeholder-gray-500 outline-none focus:border-indigo-500/50"
-          />
-          <button
-            onClick={sendMessage}
-            disabled={!input.trim()}
-            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors flex-shrink-0"
-          >
-            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-            </svg>
-          </button>
-        </div>
+        {isBlocked ? (
+          <p className="text-xs text-center text-orange-400 py-1">Du hast diesen Nutzer blockiert. Entsperre ihn, um Nachrichten zu senden.</p>
+        ) : (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKey}
+              placeholder="Nachricht schreiben..."
+              className="flex-1 bg-white/10 border border-white/10 rounded-full px-3 py-1.5 text-sm text-white placeholder-gray-500 outline-none focus:border-indigo-500/50"
+            />
+            <button
+              onClick={sendMessage}
+              disabled={!input.trim()}
+              className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors flex-shrink-0"
+            >
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

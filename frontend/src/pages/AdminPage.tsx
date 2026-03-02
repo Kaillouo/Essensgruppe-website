@@ -2,7 +2,124 @@ import { useState, useEffect } from 'react';
 import { ApiService } from '../services/api.service';
 import { motion } from 'framer-motion';
 
-type Tab = 'analytics' | 'pending' | 'users' | 'abiZeitung' | 'settings';
+type Tab = 'analytics' | 'pending' | 'users' | 'abiZeitung' | 'settings' | 'broadcast';
+
+function BroadcastTab() {
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [audience, setAudience] = useState<'ALL' | 'ESSENSGRUPPE_ONLY'>('ALL');
+  const [sendEmail, setSendEmail] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleSend = async () => {
+    if (!title.trim() || !body.trim()) return;
+    setSending(true);
+    setResult(null);
+    try {
+      const res = await ApiService.adminBroadcast({ title: title.trim(), body: body.trim(), audience, sendEmail });
+      setResult({ type: 'success', text: `${(res as any).sent} Benachrichtigungen gesendet ✅` });
+      setTitle('');
+      setBody('');
+    } catch (err: any) {
+      setResult({ type: 'error', text: err.message || 'Fehler beim Senden' });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card max-w-lg">
+      <h3 className="text-lg font-bold text-white mb-6">📣 Benachrichtigung senden</h3>
+
+      {result && (
+        <div className={`mb-4 p-3 rounded-lg text-sm font-medium ${
+          result.type === 'success'
+            ? 'bg-green-500/10 border border-green-500/30 text-green-400'
+            : 'bg-red-500/10 border border-red-500/30 text-red-400'
+        }`}>
+          {result.text}
+        </div>
+      )}
+
+      {/* Audience toggle */}
+      <div className="mb-4">
+        <label className="block text-sm font-semibold text-white/70 mb-2">Zielgruppe</label>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setAudience('ALL')}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+              audience === 'ALL' ? 'bg-primary-600 text-white border-primary-600' : 'border-white/10 text-white/50'
+            }`}
+          >
+            Alle
+          </button>
+          <button
+            onClick={() => setAudience('ESSENSGRUPPE_ONLY')}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+              audience === 'ESSENSGRUPPE_ONLY' ? 'bg-primary-600 text-white border-primary-600' : 'border-white/10 text-white/50'
+            }`}
+          >
+            Nur EG-Mitglieder
+          </button>
+        </div>
+      </div>
+
+      {/* Title */}
+      <div className="mb-4">
+        <label className="block text-sm font-semibold text-white/70 mb-2">Titel</label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          maxLength={200}
+          placeholder="Betreff der Benachrichtigung..."
+          className="input"
+        />
+      </div>
+
+      {/* Body */}
+      <div className="mb-4">
+        <label className="block text-sm font-semibold text-white/70 mb-2">Nachricht</label>
+        <textarea
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          maxLength={1000}
+          rows={4}
+          placeholder="Inhalt der Nachricht..."
+          className="input resize-none"
+        />
+        <p className="text-xs text-white/30 mt-1">{body.length}/1000</p>
+      </div>
+
+      {/* Send email toggle */}
+      <div className="flex items-center justify-between p-3 bg-white/[0.04] rounded-xl border border-white/[0.06] mb-6">
+        <div>
+          <p className="text-sm font-medium text-white">Auch per E-Mail senden</p>
+          <p className="text-xs text-white/40">Nutzer erhalten zusätzlich eine E-Mail</p>
+        </div>
+        <button
+          onClick={() => setSendEmail(!sendEmail)}
+          className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors ${
+            sendEmail ? 'bg-green-500' : 'bg-white/20'
+          }`}
+        >
+          <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+            sendEmail ? 'translate-x-5' : 'translate-x-1'
+          }`} />
+        </button>
+      </div>
+
+      <button
+        onClick={handleSend}
+        disabled={sending || !title.trim() || !body.trim()}
+        className="w-full btn btn-primary py-2.5 disabled:opacity-50"
+      >
+        {sending ? 'Wird gesendet...' : 'Senden'}
+      </button>
+    </motion.div>
+  );
+}
 
 export const AdminPage = () => {
   const [activeTab, setActiveTab] = useState<Tab>('pending');
@@ -248,6 +365,7 @@ export const AdminPage = () => {
     { id: 'analytics', label: 'Analytics' },
     { id: 'abiZeitung', label: 'Abi Zeitung' },
     { id: 'settings', label: 'Einstellungen' },
+    { id: 'broadcast', label: 'Benachrichtigung' },
   ];
 
   return (
@@ -507,6 +625,9 @@ export const AdminPage = () => {
             </div>
           </motion.div>
         )}
+
+        {/* Broadcast Tab */}
+        {activeTab === 'broadcast' && <BroadcastTab />}
       </div>
 
       {/* Balance Modal */}

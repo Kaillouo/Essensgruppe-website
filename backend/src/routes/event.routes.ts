@@ -7,6 +7,7 @@ import prisma from '../utils/prisma.util';
 import { authenticateToken, optionalAuth, requireAdmin } from '../middleware/auth.middleware';
 import { uploadEventPhoto } from '../middleware/upload.middleware';
 import { AuthRequest } from '../types';
+import { broadcastNotification } from '../services/notification.service';
 
 const router = Router();
 
@@ -103,6 +104,26 @@ router.post('/', authenticateToken as any, async (req: AuthRequest, res: Respons
       },
     });
     res.status(201).json({ ...event, visibility: event.visibility, userVote: 0, photos: [] });
+
+    // Fire-and-forget: notify users about the new event
+    prisma.user.findMany({
+      where: {
+        status: 'ACTIVE',
+        id: { not: req.user!.id },
+        ...(visibility === 'ESSENSGRUPPE_ONLY'
+          ? { role: { in: ['ESSENSGRUPPE_MITGLIED', 'ADMIN'] } }
+          : {}),
+      },
+      select: { id: true },
+    }).then((recipients) => {
+      broadcastNotification(
+        recipients.map((r) => r.id),
+        'NEW_EVENT',
+        `📅 Neues Event: ${event.title.slice(0, 80)}`,
+        `${req.user!.username} hat ein neues Event vorgeschlagen.`,
+        '/events'
+      );
+    }).catch(() => {});
   } catch (err) {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors[0].message });
@@ -265,6 +286,25 @@ router.patch('/:id/status', authenticateToken as any, requireAdmin as any, async
     });
 
     res.json(updated);
+
+    // Fire-and-forget: notify all active users about the status change
+    const statusLabels: Record<string, string> = {
+      PROPOSED: 'Vorgeschlagen',
+      IN_PLANNING: 'In Planung',
+      COMPLETED: 'Abgeschlossen',
+    };
+    prisma.user.findMany({
+      where: { status: 'ACTIVE' },
+      select: { id: true },
+    }).then((users) => {
+      broadcastNotification(
+        users.map((u) => u.id),
+        'EVENT_STATUS_CHANGED',
+        `🔄 Event-Update: ${event!.title.slice(0, 80)}`,
+        `Status geändert zu: ${statusLabels[status] || status}`,
+        '/events'
+      );
+    }).catch(() => {});
   } catch (err) {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors[0].message });

@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { ApiService } from '../services/api.service';
 import { motion } from 'framer-motion';
 import { AvatarCropModal } from '../components/AvatarCropModal';
+import { NotificationPreference, UserBlock, ChatUser } from '../types';
 
 export const ProfilePage = () => {
   const { user, updateUser, logout } = useAuth();
@@ -23,6 +24,12 @@ export const ProfilePage = () => {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [cropFile, setCropFile] = useState<File | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPreference | null>(null);
+  const [notifSaving, setNotifSaving] = useState(false);
+  const [blocks, setBlocks] = useState<UserBlock[]>([]);
+  const [blockSearch, setBlockSearch] = useState('');
+  const [blockResults, setBlockResults] = useState<ChatUser[]>([]);
+  const [blockSearching, setBlockSearching] = useState(false);
 
   const handleAvatarClick = () => {
     avatarInputRef.current?.click();
@@ -57,7 +64,57 @@ export const ProfilePage = () => {
     ApiService.getTransactions().then((data: any) => {
       setTransactions(data.slice(0, 5));
     });
+    ApiService.getNotificationPreferences().then(setNotifPrefs).catch(() => {});
+    ApiService.getBlocks().then(setBlocks).catch(() => {});
   }, []);
+
+  const handleTogglePref = async (key: keyof NotificationPreference) => {
+    if (!notifPrefs) return;
+    const updated = { ...notifPrefs, [key]: !notifPrefs[key] };
+    setNotifPrefs(updated);
+    setNotifSaving(true);
+    try {
+      const saved = await ApiService.updateNotificationPreferences(updated);
+      setNotifPrefs(saved);
+    } catch {
+      setNotifPrefs(notifPrefs);
+    } finally {
+      setNotifSaving(false);
+    }
+  };
+
+  const handleBlockSearch = async () => {
+    if (!blockSearch.trim()) return;
+    setBlockSearching(true);
+    try {
+      const results = await ApiService.searchChatUsers(blockSearch) as ChatUser[];
+      setBlockResults(results.filter(u => u.id !== user?.id && !blocks.some(b => b.blockedId === u.id)));
+    } catch {
+      setBlockResults([]);
+    } finally {
+      setBlockSearching(false);
+    }
+  };
+
+  const handleBlock = async (userId: string) => {
+    try {
+      await ApiService.blockUser(userId);
+      const updated = await ApiService.getBlocks();
+      setBlocks(updated);
+      setBlockResults(prev => prev.filter(u => u.id !== userId));
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message });
+    }
+  };
+
+  const handleUnblock = async (userId: string) => {
+    try {
+      await ApiService.unblockUser(userId);
+      setBlocks(prev => prev.filter(b => b.blockedId !== userId));
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message });
+    }
+  };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,10 +264,12 @@ export const ProfilePage = () => {
                   <label className="block text-sm font-medium text-white/60 mb-2">Benutzername</label>
                   <input type="text" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} className="input" required />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-white/60 mb-2">E-Mail</label>
-                  <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input" required />
-                </div>
+                {user?.role === 'ADMIN' && (
+                  <div>
+                    <label className="block text-sm font-medium text-white/60 mb-2">E-Mail</label>
+                    <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input" required />
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <button type="submit" className="btn btn-primary flex-1">Speichern</button>
                   <button type="button" onClick={() => setIsEditing(false)} className="btn btn-secondary flex-1">Abbrechen</button>
@@ -309,11 +368,108 @@ export const ProfilePage = () => {
           )}
         </motion.div>
 
-        {/* Danger Zone */}
+        {/* Notification Preferences */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="card mt-6"
+        >
+          <h3 className="text-xl font-bold text-white mb-4">Benachrichtigungseinstellungen</h3>
+          {notifPrefs ? (
+            <div className="space-y-3">
+              {([
+                { key: 'newPost' as const, label: 'Neue Forenbeiträge', emoji: '\ud83d\udce2' },
+                { key: 'newPrediction' as const, label: 'Neue Vorhersagen', emoji: '\ud83d\udd2e' },
+                { key: 'predictionClosed' as const, label: 'Vorhersage abgeschlossen', emoji: '\ud83c\udfc1' },
+                { key: 'predictionReminder' as const, label: 'Vorhersage-Erinnerung', emoji: '\u23f0' },
+                { key: 'newEvent' as const, label: 'Neue Events', emoji: '\ud83d\udcc5' },
+                { key: 'eventStatusChanged' as const, label: 'Event-Status geändert', emoji: '\ud83d\udd04' },
+                { key: 'dailyCoins' as const, label: 'Tägliche Münzen', emoji: '\ud83e\ude99' },
+                { key: 'newMessage' as const, label: 'Neue Nachrichten', emoji: '\ud83d\udcac' },
+              ]).map(({ key, label, emoji }) => (
+                <div key={key} className="flex items-center justify-between py-2 border-b border-white/[0.06] last:border-0">
+                  <span className="text-white/70">{emoji} {label}</span>
+                  <button
+                    onClick={() => handleTogglePref(key)}
+                    disabled={notifSaving}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${notifPrefs[key] ? 'bg-primary-500' : 'bg-white/20'}`}
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${notifPrefs[key] ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+              ))}
+              <p className="text-xs text-white/30 mt-2">\ud83d\udce3 Admin-Benachrichtigungen können nicht deaktiviert werden.</p>
+            </div>
+          ) : (
+            <p className="text-white/40">Laden...</p>
+          )}
+        </motion.div>
+
+        {/* Blocked Users */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+          className="card mt-6"
+        >
+          <h3 className="text-xl font-bold text-white mb-4">Blockierte Nutzer</h3>
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={blockSearch}
+              onChange={(e) => setBlockSearch(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleBlockSearch()}
+              placeholder="Nutzer suchen..."
+              className="input flex-1"
+            />
+            <button onClick={handleBlockSearch} disabled={blockSearching} className="btn btn-outline">
+              Suchen
+            </button>
+          </div>
+          {blockResults.length > 0 && (
+            <div className="mb-4 space-y-2">
+              {blockResults.map(u => (
+                <div key={u.id} className="flex items-center justify-between py-2 px-3 bg-white/[0.04] rounded-lg">
+                  <div className="flex items-center gap-2">
+                    {u.avatarUrl ? (
+                      <img src={u.avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-primary-600 flex items-center justify-center text-white text-sm font-medium">{u.username.charAt(0).toUpperCase()}</div>
+                    )}
+                    <span className="text-white/80">{u.username}</span>
+                  </div>
+                  <button onClick={() => handleBlock(u.id)} className="text-sm text-red-400 hover:text-red-300">Blockieren</button>
+                </div>
+              ))}
+            </div>
+          )}
+          {blocks.length > 0 ? (
+            <div className="space-y-2">
+              {blocks.map(b => (
+                <div key={b.id} className="flex items-center justify-between py-2 px-3 bg-white/[0.04] rounded-lg">
+                  <div className="flex items-center gap-2">
+                    {b.blocked.avatarUrl ? (
+                      <img src={b.blocked.avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-primary-600 flex items-center justify-center text-white text-sm font-medium">{b.blocked.username.charAt(0).toUpperCase()}</div>
+                    )}
+                    <span className="text-white/80">{b.blocked.username}</span>
+                  </div>
+                  <button onClick={() => handleUnblock(b.blockedId)} className="text-sm text-green-400 hover:text-green-300">Entsperren</button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-white/40">Keine blockierten Nutzer</p>
+          )}
+        </motion.div>
+
+        {/* Danger Zone */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
           className="card mt-6 border-red-500/20"
         >
           <h3 className="text-xl font-bold text-red-400 mb-4">Gefahrenzone</h3>

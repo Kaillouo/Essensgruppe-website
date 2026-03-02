@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { ApiService } from '../services/api.service';
 import { User } from '../types';
@@ -24,6 +24,7 @@ export const DailyCoinsClaim = ({
   const [nextClaimAt, setNextClaimAt] = useState(0);
   const [loading, setLoading] = useState(false);
   const [claimed, setClaimed] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
 
   const getTimeRemaining = (ms: number) => {
     const hours = Math.floor(ms / (1000 * 60 * 60));
@@ -84,6 +85,8 @@ export const DailyCoinsClaim = ({
 
       if (response.claimed && user) {
         setClaimed(true);
+        setShowPopup(true);
+        setTimeout(() => setShowPopup(false), 1400);
         updateUser({ ...user, balance: response.newBalance ?? user.balance, lastDailyClaim: response.lastDailyClaim } as User);
         onClaimed?.(response.newBalance ?? 0);
       } else if (response.nextClaimIn) {
@@ -104,24 +107,39 @@ export const DailyCoinsClaim = ({
   }, [autoClaim, canClaim]);
 
   return (
-    <motion.button
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3 }}
-      onClick={handleClaim}
-      disabled={!canClaim || loading}
-      className={`relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${
-        canClaim && !loading
-          ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-white shadow-lg hover:shadow-yellow-500/50 hover:scale-105'
-          : 'bg-gray-700 text-gray-400 cursor-not-allowed'
-      }`}
-    >
-      <span className="text-lg">🪙</span>
-      {canClaim && !loading ? (
-        <span>1000 Münzen abholen</span>
-      ) : (
-        <span>Wieder in {getTimeRemaining(nextClaimMs)}</span>
-      )}
-    </motion.button>
+    <div className="relative inline-flex">
+      <AnimatePresence>
+        {showPopup && (
+          <motion.div
+            initial={{ opacity: 1, y: 0, scale: 1 }}
+            animate={{ opacity: 0, y: -52, scale: 1.15 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.2, ease: 'easeOut' }}
+            className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 pointer-events-none z-50 whitespace-nowrap font-bold text-yellow-300 text-lg drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]"
+          >
+            +1.000 🪙
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <motion.button
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+        onClick={handleClaim}
+        disabled={!canClaim || loading}
+        className={`relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${
+          canClaim && !loading
+            ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-white shadow-lg hover:shadow-yellow-500/50 hover:scale-105'
+            : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+        }`}
+      >
+        <span className="text-lg">🪙</span>
+        {canClaim && !loading ? (
+          <span>1000 Münzen abholen</span>
+        ) : (
+          <span>Wieder in {getTimeRemaining(nextClaimMs)}</span>
+        )}
+      </motion.button>
+    </div>
   );
 };

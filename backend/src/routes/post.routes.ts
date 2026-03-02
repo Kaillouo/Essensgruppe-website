@@ -4,6 +4,7 @@ import prisma from '../utils/prisma.util';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { uploadPostPhoto } from '../middleware/upload.middleware';
 import { AuthRequest } from '../types';
+import { broadcastNotification } from '../services/notification.service';
 
 const router = Router();
 
@@ -167,6 +168,26 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       voteScore: 0,
       userVote: 0,
     });
+
+    // Fire-and-forget: notify users about the new post
+    prisma.user.findMany({
+      where: {
+        status: 'ACTIVE',
+        id: { not: req.user!.id },
+        ...(visibility === 'ESSENSGRUPPE_ONLY'
+          ? { role: { in: ['ESSENSGRUPPE_MITGLIED', 'ADMIN'] } }
+          : {}),
+      },
+      select: { id: true },
+    }).then((recipients) => {
+      broadcastNotification(
+        recipients.map((r) => r.id),
+        'NEW_POST',
+        `📢 Neuer Beitrag: ${post.title.slice(0, 80)}`,
+        `${post.user.username} hat einen neuen Beitrag erstellt.`,
+        `/forum/${post.id}`
+      );
+    }).catch(() => {});
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors[0].message });

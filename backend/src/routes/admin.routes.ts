@@ -4,7 +4,8 @@ import prisma from '../utils/prisma.util';
 import { authenticateToken, requireAdmin } from '../middleware/auth.middleware';
 import { hashPassword } from '../utils/password.util';
 import { AuthRequest } from '../types';
-import { sendAdminCreatedAccountEmail } from '../services/email.service';
+import { sendAdminCreatedAccountEmail, sendBroadcastEmail } from '../services/email.service';
+import { broadcastNotification } from '../services/notification.service';
 
 const router = Router();
 
@@ -450,6 +451,57 @@ router.get('/analytics', async (req: AuthRequest, res) => {
   } catch (error) {
     console.error('Get analytics error:', error);
     res.status(500).json({ error: 'Failed to fetch analytics' });
+  }
+});
+
+// POST /api/admin/broadcast — send notification (+ optional email) to users
+router.post('/broadcast', async (req: AuthRequest, res) => {
+  try {
+    const broadcastSchema = z.object({
+      title: z.string().min(1).max(200),
+      body: z.string().min(1).max(1000),
+      audience: z.enum(['ALL', 'ESSENSGRUPPE_ONLY']),
+      sendEmail: z.boolean().default(false),
+    });
+
+    const data = broadcastSchema.parse(req.body);
+
+    const where: any = { status: 'ACTIVE' };
+    if (data.audience === 'ESSENSGRUPPE_ONLY') {
+      where.role = { in: ['ESSENSGRUPPE_MITGLIED', 'ADMIN'] };
+    }
+
+    const users = await prisma.user.findMany({
+      where,
+      select: { id: true, email: true, username: true },
+    });
+
+    // Create in-app notifications for all
+    broadcastNotification(
+      users.map((u) => u.id),
+      'ADMIN_BROADCAST',
+      `📣 ${data.title}`,
+      data.body
+    );
+
+    // Optional: send email
+    if (data.sendEmail) {
+      for (const user of users) {
+        sendBroadcastEmail(
+          { username: user.username, email: user.email },
+          data.title,
+          data.body
+        ).catch(() => {});
+      }
+    }
+
+    res.json({ sent: users.length });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors[0].message });
+    }
+    console.error('Broadcast error:', error);
+    res.status(500).json({ error: 'Fehler beim Senden der Benachrichtigung' });
   }
 });
 

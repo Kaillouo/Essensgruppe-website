@@ -163,6 +163,52 @@ export interface MinesCashoutResponse {
   multiplier: number;
 }
 
+// Notification types
+export type NotificationType =
+  | 'ADMIN_BROADCAST'
+  | 'NEW_POST'
+  | 'NEW_PREDICTION'
+  | 'PREDICTION_CLOSED'
+  | 'PREDICTION_REMINDER'
+  | 'NEW_EVENT'
+  | 'EVENT_STATUS_CHANGED'
+  | 'DAILY_COINS'
+  | 'NEW_MESSAGE';
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  linkUrl: string | null;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface NotificationPreference {
+  newPost: boolean;
+  newPrediction: boolean;
+  predictionClosed: boolean;
+  predictionReminder: boolean;
+  newEvent: boolean;
+  eventStatusChanged: boolean;
+  dailyCoins: boolean;
+  newMessage: boolean;
+}
+
+export interface UserBlock {
+  id: string;
+  blockerId: string;
+  blockedId: string;
+  blocked: {
+    id: string;
+    username: string;
+    avatarUrl: string | null;
+  };
+  createdAt: string;
+}
+
 // Announcement types
 export interface Announcement {
   id: string;

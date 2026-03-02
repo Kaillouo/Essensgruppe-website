@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
-import { DirectMessage } from '../types';
+import { DirectMessage, AppNotification } from '../types';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface OnlineUser {
@@ -46,6 +46,32 @@ const SocketContext = createContext<SocketContextType>({
 // The socket is automatically created on login and destroyed on logout/unmount.
 // All pages benefit from this — the online-users list reflects everyone with
 // an Essensgruppe tab open, regardless of which page they're viewing.
+// ── Browser Notification helper ──────────────────────────────────────────────
+function requestBrowserNotifPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function showBrowserNotification(notif: AppNotification) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+  const n = new Notification(notif.title, {
+    body: notif.body,
+    icon: '/logo192.png',
+    tag: notif.id, // prevents duplicates
+    ...({ vibrate: [200, 100, 200] } as any), // vibrate for mobile (not in TS types but supported)
+  });
+
+  if (notif.linkUrl) {
+    n.onclick = () => {
+      window.focus();
+      window.location.href = notif.linkUrl!;
+      n.close();
+    };
+  }
+}
+
 export function SocketProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const socketRef = useRef<Socket | null>(null);
@@ -73,6 +99,9 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Request browser notification permission on login
+    requestBrowserNotifPermission();
+
     // Connect on login
     const socket = io({ auth: { token }, transports: ['websocket', 'polling'] });
     socketRef.current = socket;
@@ -96,6 +125,11 @@ export function SocketProvider({ children }: { children: ReactNode }) {
 
     socket.on('chat:unread_count', ({ count }: { count: number }) => {
       setUnreadChatCount(count);
+    });
+
+    // Notification events → browser native notifications
+    socket.on('notification:new', (notif: AppNotification) => {
+      showBrowserNotification(notif);
     });
 
     return () => {

@@ -1,6 +1,6 @@
 # Project Status
 
-**Last Updated:** 2026-03-01 (Mobile bottom nav + prediction FAB fix)
+**Last Updated:** 2026-03-02 (Notification system + user blocks)
 
 ## Features
 
@@ -33,6 +33,8 @@
 | German Translation (UI) | DONE | All pages fully in German; Footer description/nav translated; AdminPage left as-is |
 | Guest Mode (Games) | DONE | /games/guest hub + blackjack/slots/mines + poker; 1000 session coins; /games → 3-card chooser for auth users; guest poker uses /guest-poker Socket.IO namespace (6-seat, 1/2 blinds, 60s AFK kick, separate from logged-in tables) |
 | PWA (installable app + offline) | DONE | SW + Workbox caching; OfflineBanner + OfflineOverlay; see context/features/pwa.md |
+| Notification System | DONE | Browser native notifications via Socket.io; 9 types (admin broadcast, posts, predictions, events, daily coins, DMs); user prefs in profile; 12h daily coins reminder; admin broadcast panel with optional email |
+| User Blocking | DONE | Block/unblock in profile + chat header; backend silently discards blocked DMs |
 | Mobile Optimization | PARTIAL | Fixed bottom nav bar (Forum/Links/Abi27/Games/MC); footer hidden on mobile; prediction FAB cleared from nav bar; hamburger menu + chat button remain in top navbar |
 | Production Deploy (OCI) | DONE | Live at essensgruppe.de, PM2 managed, fresh DB |
 

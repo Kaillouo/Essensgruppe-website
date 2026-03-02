@@ -4,6 +4,7 @@ import prisma from '../utils/prisma.util';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { AuthRequest } from '../types';
 import { getReservedBalance } from '../utils/balance.util';
+import { broadcastNotification } from '../services/notification.service';
 
 const router = Router();
 router.use(authenticateToken as any);
@@ -100,6 +101,26 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       include: betInclude,
     });
     res.status(201).json(mapPrediction(prediction, req.user!.id));
+
+    // Fire-and-forget: notify users about new prediction
+    prisma.user.findMany({
+      where: {
+        status: 'ACTIVE',
+        id: { not: req.user!.id },
+        ...(visibility === 'ESSENSGRUPPE_ONLY'
+          ? { role: { in: ['ESSENSGRUPPE_MITGLIED', 'ADMIN'] } }
+          : {}),
+      },
+      select: { id: true },
+    }).then((recipients) => {
+      broadcastNotification(
+        recipients.map((r) => r.id),
+        'NEW_PREDICTION',
+        `🔮 Neue Wette: ${prediction.title.slice(0, 80)}`,
+        `${req.user!.username} hat eine neue Vorhersage erstellt.`,
+        '/games/prediction'
+      );
+    }).catch(() => {});
   } catch (err) {
     if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors[0].message });
     console.error(err);
@@ -198,6 +219,19 @@ router.post('/:id/resolve', async (req: AuthRequest, res: Response) => {
     ]);
 
     res.json({ message: 'Prediction resolved' });
+
+    // Fire-and-forget: notify all bettors about resolution
+    const bettorIds = prediction.bets.map((b) => b.userId);
+    if (bettorIds.length > 0) {
+      const outcomeLabel = outcome ? 'JA ✅' : 'NEIN ❌';
+      broadcastNotification(
+        bettorIds,
+        'PREDICTION_CLOSED',
+        `🏁 Wette abgeschlossen: ${prediction.title.slice(0, 60)}`,
+        `Das Ergebnis lautet: ${outcomeLabel}. Deine Auszahlung wurde berechnet.`,
+        '/games/prediction'
+      );
+    }
   } catch (err) {
     if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors[0].message });
     console.error(err);

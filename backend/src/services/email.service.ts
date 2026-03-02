@@ -309,6 +309,45 @@ export async function sendAdminNewUserAlert(newUser: { username: string; email: 
 
 // ─── 5. Admin-Created Account ─────────────────────────────────────────────────
 
+// ─── 6. Admin Broadcast ─────────────────────────────────────────────────────
+
+export async function sendBroadcastEmail(
+  user: { username: string; email: string },
+  title: string,
+  message: string
+): Promise<void> {
+  const portalUrl = `${process.env.FRONTEND_URL}`;
+  const rows = `
+  ${header('Admin-Durchsage')}
+  <tr>
+    <td class="b-pad" style="padding:36px 40px;">
+      <div style="display:inline-block;background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:4px 11px;margin-bottom:18px;">
+        <span style="font-size:11px;font-weight:800;color:#92400e;letter-spacing:0.8px;text-transform:uppercase;">📣 Benachrichtigung</span>
+      </div>
+
+      <h2 style="margin:0 0 6px;font-size:24px;font-weight:900;color:#1e1b4b;letter-spacing:-0.4px;">${title}</h2>
+
+      <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.75;">
+        Hey <strong style="color:#5b21b6;">${user.username}</strong>,
+      </p>
+
+      ${alertBox(message, '#fef3c7', '#92400e')}
+
+      ${primaryBtn('Zum Portal', portalUrl)}
+    </td>
+  </tr>
+  ${footer()}`;
+
+  await transporter.sendMail({
+    from: SENDER,
+    to: user.email,
+    subject: `📣 ${title} — Essensgruppe`,
+    html: emailWrapper(title, message, rows),
+  });
+}
+
+// ─── 5. Admin-Created Account ─────────────────────────────────────────────────
+
 export async function sendAdminCreatedAccountEmail(
   user: { username: string; email: string },
   tempPassword: string

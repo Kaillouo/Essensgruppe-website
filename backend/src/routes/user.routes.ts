@@ -114,6 +114,11 @@ router.patch('/me', async (req: AuthRequest, res) => {
 
     const data: UpdateProfileDto = updateSchema.parse(req.body);
 
+    // Non-admin users cannot change their email
+    if (data.email && req.user!.role !== 'ADMIN') {
+      delete data.email;
+    }
+
     // Check if username/email is already taken by another user
     if (data.username || data.email) {
       const existingUser = await prisma.user.findFirst({

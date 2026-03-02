@@ -479,4 +479,58 @@ export class ApiService {
       true
     );
   }
+
+  // ── Notifications ─────────────────────────────────────────────────────────
+  static async getNotifications() {
+    return this.request<import('../types').AppNotification[]>('/notifications', {}, true);
+  }
+
+  static async markNotificationRead(id: string) {
+    return this.request(`/notifications/${id}/read`, { method: 'PATCH' }, true);
+  }
+
+  static async markAllNotificationsRead() {
+    return this.request('/notifications/read-all', { method: 'PATCH' }, true);
+  }
+
+  static async deleteNotification(id: string) {
+    return this.request(`/notifications/${id}`, { method: 'DELETE' }, true);
+  }
+
+  static async getNotificationPreferences() {
+    return this.request<import('../types').NotificationPreference>('/notifications/preferences', {}, true);
+  }
+
+  static async updateNotificationPreferences(prefs: Partial<import('../types').NotificationPreference>) {
+    return this.request<import('../types').NotificationPreference>('/notifications/preferences', {
+      method: 'PATCH',
+      body: JSON.stringify(prefs),
+    }, true);
+  }
+
+  // ── Blocks ────────────────────────────────────────────────────────────────
+  static async getBlocks() {
+    return this.request<import('../types').UserBlock[]>('/blocks', {}, true);
+  }
+
+  static async blockUser(userId: string) {
+    return this.request(`/blocks/${userId}`, { method: 'POST' }, true);
+  }
+
+  static async unblockUser(userId: string) {
+    return this.request(`/blocks/${userId}`, { method: 'DELETE' }, true);
+  }
+
+  // ── Admin Broadcast ───────────────────────────────────────────────────────
+  static async adminBroadcast(data: {
+    title: string;
+    body: string;
+    audience: 'ALL' | 'ESSENSGRUPPE_ONLY';
+    sendEmail: boolean;
+  }) {
+    return this.request<{ sent: number }>('/admin/broadcast', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }, true);
+  }
 }
