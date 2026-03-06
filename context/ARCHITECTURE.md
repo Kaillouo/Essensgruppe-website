@@ -1,6 +1,6 @@
 # Architecture
 
-**Last Updated:** 2026-02-28
+**Last Updated:** 2026-03-02
 
 Monorepo: `backend/` (Express + TypeScript) and `frontend/` (React + Vite + TypeScript)
 
@@ -11,97 +11,73 @@ Monorepo: `backend/` (Express + TypeScript) and `frontend/` (React + Vite + Type
 ```
 backend/
   src/
-    server.ts                  # Express + Socket.io entry point
+    server.ts                  # Express + Socket.io entry, schedulers (msg cleanup, notification reminders)
     seed.ts                    # DB seed (admin account)
     middleware/
       auth.middleware.ts       # authenticateToken, optionalAuth, requireAdmin, requireMember
-      upload.middleware.ts     # multer for avatars + event photos
+      upload.middleware.ts     # multer for avatars + event photos + post photos
       rateLimiter.middleware.ts # login (5/min), register (3/hr), forgotPassword (5/15min), resetPassword (5/15min)
+      guestAuth.middleware.ts  # authenticateGuest — validates X-Guest-ID header (UUID)
     routes/
       auth.routes.ts           # register, verify-email, login, forgot/reset password
-      user.routes.ts           # profile, avatar upload
-      admin.routes.ts          # user mgmt, settings, analytics, balance
-      post.routes.ts           # forum posts, comments, votes
-      event.routes.ts          # events, event votes, event photos
-      announcement.routes.ts   # MC announcements (admin)
+      user.routes.ts           # profile, avatar, daily-claim
+      admin.routes.ts          # user mgmt, settings, analytics, balance, broadcast
+      post.routes.ts           # forum posts, comments, votes, photo upload
+      event.routes.ts          # events, votes, status, photos
       prediction.routes.ts     # prediction market
+      announcement.routes.ts   # MC announcements (admin)
       poker.routes.ts          # GET /api/poker/state
       slots.routes.ts          # slots game
       blackjack.routes.ts      # blackjack game
-      mines.routes.ts          # mines game (5×5 grid, in-memory state, 3 endpoints)
-      mc.routes.ts             # MC server status check
+      mines.routes.ts          # mines game (5x5, in-memory, 3 endpoints)
+      mc.routes.ts             # MC server status (TCP ping)
       abi.routes.ts            # anonymous Abi Zeitung submissions
-      notification.routes.ts   # GET/PATCH/DELETE notifications + preferences
-      block.routes.ts          # GET/POST/DELETE user blocks
-      guestGames.routes.ts     # Guest mode: POST /session, GET /balance; guest blackjack/slots/mines (no auth, in-memory)
-    middleware/
-      guestAuth.middleware.ts  # authenticateGuest — validates X-Guest-ID header (UUID format)
-    state/
-      guestState.ts            # In-memory guest sessions Map<guestId,{balance,lastSeen}>; 30min TTL cleanup
+      chat.routes.ts           # contacts, messages, search, AI chatbot
+      notification.routes.ts   # notifications + preferences
+      block.routes.ts          # user blocks
+      guestGames.routes.ts     # guest session, balance, blackjack/slots/mines (no auth, in-memory)
     socket/
-      poker.socket.ts          # Full Texas Hold'em game logic
+      poker.socket.ts          # Full Texas Hold'em game logic (auth namespace)
+      guestPoker.socket.ts     # Guest poker (standalone, /guest-poker namespace)
+    state/
+      guestState.ts            # In-memory guest sessions Map<guestId,{balance,lastSeen}>; 30min TTL
     services/
       email.service.ts         # 5 email templates + broadcast (Resend SMTP)
-      notification.service.ts  # createNotification, broadcastNotification (browser Notification API via socket)
+      notification.service.ts  # createNotification, broadcastNotification
     utils/
-      jwt.util.ts              # JWT sign/verify
-      password.util.ts         # bcrypt hash/compare
-      prisma.ts                # Prisma client singleton
-      mailer.ts                # nodemailer transporter (Resend)
+      jwt.util.ts, password.util.ts, prisma.ts, mailer.ts
     scripts/
-      preview-email.ts         # Generate email HTML preview locally
-      send-test-emails.ts      # Send test emails to any address
+      preview-email.ts, send-test-emails.ts
     types/
       index.ts                 # AuthRequest, DTOs, UserRole type
   prisma/
-    schema.prisma              # 18 models, 7 enums
+    schema.prisma              # 21 models, 8 enums
 
 frontend/
   src/
-    App.tsx                    # Router, layout, auth/socket providers
-    main.tsx                   # Entry point
+    App.tsx                    # Router, layout, providers, OfflineBanner, MobileBottomNav
     pages/
-      LandingPage.tsx          # Public landing (YouTube bg)
-      LoginPage.tsx            # Login (username or email)
-      RegisterPage.tsx         # Register (with email)
-      VerifyEmailPage.tsx      # Email verification callback
-      ForgotPasswordPage.tsx   # Request password reset
-      ResetPasswordPage.tsx    # Set new password via token
-      ForumPage.tsx            # Post list + create modal
-      ThreadPage.tsx           # Post detail + nested comments
-      EventsPage.tsx           # ABI 27 events + Abi Zeitung form
-      LinksPage.tsx            # School links, teachers, Stundenplan
-      MinecraftPage.tsx        # MC server info + BlueMap
-      GamesPage.tsx            # Old game hub (no longer used at /games, kept for reference)
-      GamesLandingPage.tsx     # New /games — 3-card chooser (Einzelspieler/Mehrspieler/Mit Gast)
-      GamesCollectionPage.tsx  # /games/singleplayer and /games/multiplayer — game card grids
-      GamePlaceholderPage.tsx  # "Coming soon" for unbuilt games
-      PredictionPage.tsx       # Prediction market
-      PokerPage.tsx            # Full-screen poker table
-      SlotsPage.tsx            # Slot machine
-      BlackjackPage.tsx        # Blackjack
-      MinesPage.tsx            # Mines (Stake-style, responsive, custom mine picker)
-      GuestHubPage.tsx         # /games/guest — Guest mode hub (balance + game cards)
-      GuestBlackjackPage.tsx   # /games/guest/blackjack — Blackjack for guests (in-memory balance)
-      GuestSlotsPage.tsx       # /games/guest/slots — Slots for guests
-      GuestMinesPage.tsx       # /games/guest/mines — Mines for guests
-      GuestPokerPage.tsx       # /games/guest/poker — Coming soon notice
-      ProfilePage.tsx          # User profile + avatar + stats
-      AdminPage.tsx            # Admin panel (users, settings, analytics, Abi Zeitung)
-      AboutPage.tsx            # About us page
-      PrivacyPage.tsx          # Datenschutz
+      LandingPage, LoginPage, RegisterPage, VerifyEmailPage,
+      ForgotPasswordPage, ResetPasswordPage,
+      ForumPage, ThreadPage, EventsPage, LinksPage, MinecraftPage,
+      GamesLandingPage (3-card chooser), GamesCollectionPage,
+      PredictionPage, PokerPage, SlotsPage, BlackjackPage, MinesPage,
+      GuestHubPage, GuestBlackjackPage, GuestSlotsPage, GuestMinesPage, GuestPokerPage,
+      ProfilePage, AdminPage, AboutPage, PrivacyPage
     components/
-      Navbar.tsx               # Nav bar with balance, profile dropdown
-      Footer.tsx               # Site footer
-      ProtectedRoute.tsx       # Auth guard (optional requireAdmin)
+      Navbar, Footer, ProtectedRoute, MobileBottomNav,
+      OfflineBanner, OfflineOverlay,
+      ChatBubble, ChatPanel, ChatContactList, ChatConversation, ChatAIConversation
     contexts/
-      AuthContext.tsx           # Login/logout, user state, JWT token
-      SocketContext.tsx         # Socket.io connection, online users, messaging
-      GuestContext.tsx          # Guest mode: guestId (sessionStorage), session balance, refreshBalance
+      AuthContext.tsx           # Login/logout, user state, JWT
+      SocketContext.tsx         # Socket.io, online users, messaging, notifications
+      GuestContext.tsx          # Guest mode: guestId, session balance
+    hooks/
+      useOnlineStatus.ts       # navigator.onLine detection
     services/
-      api.service.ts           # 40+ static methods for all API calls (incl. startMines, revealMines, cashoutMines)
+      api.service.ts           # 40+ static methods for all API calls
     types/
-      index.ts                 # User, Post, Comment, Event, etc.
+      index.ts                 # User, Post, Comment, Event, Notification, etc.
 ```
 
 ---
@@ -109,204 +85,121 @@ frontend/
 ## API Routes
 
 ### Auth (`/api/auth`)
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | /register | Create account + send verification email |
-| POST | /verify-email | Activate account with token |
-| POST | /login | Login with username or email |
-| POST | /forgot-password | Send password reset email |
-| POST | /reset-password | Set new password with token |
+POST /register, /verify-email, /login, /forgot-password, /reset-password
 
 ### User (`/api/users`)
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | /me | Get own profile |
-| PATCH | /me | Update profile |
-| PATCH | /me/password | Change password |
-| POST | /me/avatar | Upload avatar (multer + sharp) |
-| DELETE | /me | Delete account |
+GET /me | PATCH /me, /me/password | POST /me/avatar, /daily-claim | DELETE /me
 
-### Admin (`/api/admin`) — requires ADMIN role
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | /users | List all users |
-| GET | /users/pending | List pending users |
-| POST | /users | Create user (skip verification) |
-| PATCH | /users/:id/approve | Approve pending user |
-| PATCH | /users/:id/deny | Deny pending user |
-| PATCH | /users/:id/ban | Ban user |
-| PATCH | /users/:id/unban | Unban user |
-| PATCH | /users/:id/password | Admin reset password |
-| PATCH | /users/:id/balance | Adjust gambling balance |
-| PATCH | /users/:id/role | Change role (ABI27/ESSENSGRUPPE_MITGLIED) |
-| POST | /broadcast | Send notification (+ optional email) to EG or All |
-| PATCH | /users/:id/username | Rename user |
-| DELETE | /users/:id | Delete user |
-| GET | /analytics | Dashboard stats |
-| GET | /settings | Get app settings |
-| PATCH | /settings | Update app settings |
+### Admin (`/api/admin`) — requires ADMIN
+GET /users, /users/pending, /analytics, /settings
+POST /users, /broadcast
+PATCH /users/:id/approve, /deny, /ban, /unban, /password, /balance, /role, /username
+PATCH /settings | DELETE /users/:id
 
 ### Forum (`/api/posts`)
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | / | List posts (sort: new/hot/top, search) |
-| POST | / | Create post |
-| GET | /:id | Get post with comment tree + votes |
-| PATCH | /:id | Edit own post |
-| DELETE | /:id | Delete own post (cascades) |
-| POST | /:id/comments | Add comment (supports nesting) |
-| DELETE | /comments/:id | Delete own comment |
-| POST | /:id/vote | Vote on post (+1/-1 toggle) |
-| POST | /comments/:id/vote | Vote on comment |
+GET /, /:id | POST /, /:id/comments, /:id/vote, /comments/:id/vote, /photo-upload
+PATCH /:id | DELETE /:id, /comments/:id
 
 ### Events (`/api/events`)
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | / | List all events with user votes |
-| POST | / | Create event proposal |
-| POST | /:id/vote | Vote on event |
-| PATCH | /:id/status | Admin: change status |
-| DELETE | /:id | Delete event |
-| POST | /:id/photos | Upload event photo |
-| DELETE | /:id/photos/:photoId | Delete event photo |
+GET / | POST /, /:id/vote, /:id/photos
+PATCH /:id/status | DELETE /:id, /:id/photos/:photoId
 
-### Other Routes
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | /api/announcements | List MC announcements |
-| POST | /api/announcements | Admin: create announcement |
-| DELETE | /api/announcements/:id | Admin: delete announcement |
-| GET | /api/predictions | List predictions with bets |
-| POST | /api/predictions | Create prediction |
-| POST | /api/predictions/:id/bet | Place bet |
-| POST | /api/predictions/:id/resolve | Resolve + payout |
-| DELETE | /api/predictions/:id | Delete prediction |
-| GET | /api/poker/state | Current poker table state |
-| POST | /api/games/mines/start | Start mines game (bet + mineCount); deducts bet immediately |
-| POST | /api/games/mines/reveal | Reveal a tile; returns isMine, multiplier, minePositions (game over only) |
-| POST | /api/games/mines/cashout | Cash out current multiplier; returns payout + minePositions |
-| GET | /api/mc/status | MC server online check (TCP) |
-| GET | /api/chat/contacts | List contacts with last message + unread count |
-| POST | /api/chat/contacts/:userId | Add contact |
-| DELETE | /api/chat/contacts/:userId | Remove contact |
-| GET | /api/chat/messages/:userId | Message history (last 50) |
-| GET | /api/chat/search?q= | Search users by username |
-| GET | /api/chat/unread | Total unread count |
-| POST | /api/chat/ai | AI chatbot (Haiku) |
-| POST | /api/abi/submit | Anonymous Abi Zeitung submission |
-| GET | /api/abi/submissions | Admin: list submissions |
-| DELETE | /api/abi/submissions/:id | Admin: delete submission |
-| GET | /api/notifications | List notifications (last 50) |
-| PATCH | /api/notifications/read-all | Mark all read |
-| PATCH | /api/notifications/:id/read | Mark one read |
-| DELETE | /api/notifications/:id | Delete notification |
-| GET | /api/notifications/preferences | Get notification preferences |
-| PATCH | /api/notifications/preferences | Update notification preferences |
-| GET | /api/blocks | List blocked users |
-| POST | /api/blocks/:userId | Block user |
-| DELETE | /api/blocks/:userId | Unblock user |
-| GET | /api/health | Health check |
+### Predictions (`/api/predictions`)
+GET / | POST /, /:id/bet, /:id/resolve | DELETE /:id
+
+### Games
+POST /api/games/mines/start, /reveal, /cashout
+GET /api/poker/state
+Slots + Blackjack: own route files
+
+### MC + Announcements
+GET /api/mc/status | GET/POST/DELETE /api/announcements
+
+### Chat (`/api/chat`)
+GET /contacts, /messages/:userId, /search, /unread | POST /contacts/:userId, /ai | DELETE /contacts/:userId
+
+### Notifications (`/api/notifications`)
+GET /, /preferences | PATCH /read-all, /:id/read, /preferences | DELETE /:id
+
+### Blocks (`/api/blocks`)
+GET / | POST /:userId | DELETE /:userId
+
+### Abi Zeitung (`/api/abi`)
+POST /submit | GET /submissions (admin) | DELETE /submissions/:id (admin)
+
+### Guest (`/api/guest`)
+POST /games/session | GET /games/balance
+Guest blackjack/slots/mines endpoints in guestGames.routes.ts
+
+### Health
+GET /api/health
 
 ---
 
-## Database Models (Prisma)
+## Database Models (Prisma — 21 models)
 
-| Model | Key Fields | Purpose |
-|-------|-----------|---------|
-| User | username, email, passwordHash, role, status, emailVerified, balance, avatarUrl | Accounts |
-| EmailVerification | userId (unique), token, expiresAt | Email verify tokens |
-| PasswordReset | userId (unique), token, expiresAt | Password reset tokens |
-| AppSetting | key (PK), value | App config (registration open/closed) |
-| Post | userId, title, content, imageUrl | Forum threads |
-| Comment | postId, parentCommentId, userId, content | Nested comments |
-| Vote | userId, targetId, targetType (POST/COMMENT), value | Polymorphic votes |
-| Event | userId, title, description, date, location, budget, status, votes | Event proposals |
-| EventVote | userId, eventId, value | Per-user event votes |
-| EventPhoto | eventId, userId, imageUrl | Event gallery |
-| Announcement | userId, title, content | MC announcements |
-| Transaction | userId, amount, type, game | Balance ledger |
-| Prediction | creatorId, title, closeDate, status, outcome | Prediction market |
-| PredictionBet | predictionId, userId, side, amount | Prediction bets |
-| AbiSubmission | title, content (no userId — anonymous) | Abi Zeitung |
-| GameHistory | userId, gameType, bet, result, payout | Game results |
-| DirectMessage | senderId, receiverId, content, read | 1-on-1 chat (auto-deleted after 24h) |
-| Contact | userId, contactId | Persistent contact list |
-| Notification | userId, type, title, body, linkUrl, read | In-app notifications (browser push via socket) |
-| UserBlock | blockerId, blockedId | Block users from DMs |
-| NotificationPreference | userId, 8 boolean toggles | Per-user notification settings |
+| Model | Purpose |
+|-------|---------|
+| User | Accounts (username, email, role, status, balance, avatarUrl, lastDailyClaim) |
+| EmailVerification | Email verify tokens |
+| PasswordReset | Password reset tokens |
+| AppSetting | App config (registration open/closed) |
+| Post | Forum threads (userId, title, content, imageUrl, visibility) |
+| Comment | Nested comments (postId, parentCommentId) |
+| Vote | Polymorphic votes (POST/COMMENT) |
+| Event | Event proposals (title, date, location, status, visibility) |
+| EventVote | Per-user event votes |
+| EventPhoto | Event gallery |
+| Announcement | MC announcements |
+| Transaction | Balance ledger (type: INITIAL_BALANCE/GAME_BET/GAME_WIN/PREDICTION_BET/PREDICTION_WIN/ADMIN_ADJUSTMENT/DAILY_COINS) |
+| Prediction | Prediction market (title, closeDate, status, outcome, visibility) |
+| PredictionBet | Prediction bets (side, amount) |
+| AbiSubmission | Abi Zeitung (anonymous, no userId) |
+| GameHistory | Game results (gameType, bet, result, payout) |
+| DirectMessage | 1-on-1 chat (auto-deleted 24h) |
+| Contact | Persistent contact list |
+| Notification | In-app notifications (type, title, body, linkUrl, read) |
+| UserBlock | Block users from DMs |
+| NotificationPreference | Per-user notification toggles (8 booleans) |
 
-**Enums:** Role (ABI27, ESSENSGRUPPE_MITGLIED, ADMIN), UserStatus (PENDING, ACTIVE, BANNED), VoteType (POST, COMMENT), EventStatus (PROPOSED, IN_PLANNING, COMPLETED), TransactionType (INITIAL_BALANCE, GAME_BET, GAME_WIN, PREDICTION_BET, PREDICTION_WIN, ADMIN_ADJUSTMENT), PredictionStatus (OPEN, CLOSED), NotificationType (ADMIN_BROADCAST, NEW_POST, NEW_PREDICTION, PREDICTION_CLOSED, PREDICTION_REMINDER, NEW_EVENT, EVENT_STATUS_CHANGED, DAILY_COINS, NEW_MESSAGE)
+**Enums:** Role, UserStatus, VoteType, EventStatus, TransactionType, PredictionStatus, NotificationType, Visibility (ALL/ESSENSGRUPPE_ONLY)
 
 ---
 
 ## Socket Events
 
-### Site-wide (server.ts)
-| Event | Direction | Description |
-|-------|-----------|-------------|
-| site:online_users | Server → All | List of online users |
-| games:online_users | Server → All | Same list (backward compat) |
-| games:message | Client → Server | Send instant message to user |
-| games:receive_message | Server → Client | Receive instant message |
-
 ### Chat (server.ts)
-| Event | Direction | Description |
-|-------|-----------|-------------|
-| `chat:send` | Client → Server | Send DM, save to DB, forward to recipient |
-| `chat:receive` | Server → Client | New message (real-time delivery + sender echo) |
-| `chat:read` | Client → Server | Mark messages from a user as read |
-| `chat:typing` | Client → Server | Typing indicator |
-| `chat:typing_indicator` | Server → Client | Show typing for a user |
-| `chat:unread_count` | Server → Client | Total unread badge count |
+chat:send/receive/read/typing/typing_indicator/unread_count
 
 ### Notifications (server.ts)
-| Event | Direction | Description |
-|-------|-----------|-------------|
-| `notification:new` | Server → Client | New notification (triggers browser Notification API) |
-| `notification:count` | Server → Client | Unread notification count |
+notification:new, notification:count
 
-### Poker (poker.socket.ts)
-| Event | Direction | Description |
-|-------|-----------|-------------|
-| poker:sit / poker:join | Client → Server | Take a seat |
-| poker:stand | Client → Server | Leave seat |
-| poker:action | Client → Server | fold/check/call/raise |
-| poker:emote | Client → Server | Send emoji (8 options) |
-| poker:message | Client → Server | Chat message (50 chars) |
-| poker:state | Server → All | Full table state broadcast |
-| poker:my_cards | Server → Client | Private hole cards |
-| poker:hand_result | Server → All | Winner + hand name |
-| poker:emote_broadcast | Server → All | Emoji from player |
-| poker:message_broadcast | Server → All | Chat from player |
-| poker:queue_update | Server → Client | Queue position |
-| poker:queue_seated | Server → Client | Auto-seated from queue |
-| poker:error | Server → Client | Error message |
+### Site-wide (server.ts)
+site:online_users, games:online_users, games:message/receive_message
+
+### Poker (poker.socket.ts — auth namespace)
+poker:sit/join/stand/action/emote/message → poker:state/my_cards/hand_result/emote_broadcast/message_broadcast/queue_update/queue_seated/error
+
+### Guest Poker (/guest-poker namespace)
+guest_poker:* events (same as poker but with guest_ prefix, UUID auth)
 
 ---
 
 ## Frontend Routes
 
-| Path | Component | Auth | Notes |
-|------|-----------|------|-------|
-| / | LandingPage | Public | No navbar/footer |
-| /login | LoginPage | Public | |
-| /register | RegisterPage | Public | |
-| /verify-email | VerifyEmailPage | Public | |
-| /forgot-password | ForgotPasswordPage | Public | |
-| /reset-password | ResetPasswordPage | Public | |
-| /about | AboutPage | Public | |
-| /privacy | PrivacyPage | Public | |
-| /forum | ForumPage | Protected | |
-| /forum/:id | ThreadPage | Protected | |
-| /events | EventsPage | Public | |
-| /links | LinksPage | Public | |
-| /mc | MinecraftPage | Protected | |
-| /games | GamesPage | Protected | |
-| /games/prediction | PredictionPage | Protected | |
-| /games/poker | PokerPage | Protected | No navbar/footer |
-| /games/slots | SlotsPage | Protected | |
-| /games/blackjack | BlackjackPage | Protected | No navbar/footer |
-| /games/mines | MinesPage | Protected | No navbar/footer; mobile: grid top, controls bottom |
-| /games/:game | GamePlaceholderPage | Protected | |
-| /profile | ProfilePage | Protected | |
-| /admin | AdminPage | Admin | |
+| Path | Auth | Notes |
+|------|------|-------|
+| / | Public | Landing (no navbar/footer) |
+| /login, /register, /verify-email, /forgot-password, /reset-password | Public | |
+| /about, /privacy | Public | |
+| /forum, /forum/:id | Protected | |
+| /events | Public | |
+| /links | Public | |
+| /mc | Protected | |
+| /games | Protected | 3-card chooser → singleplayer/multiplayer/guest |
+| /games/prediction | Protected | |
+| /games/poker, /blackjack, /mines | Protected | Full-screen (no navbar/footer) |
+| /games/slots | Protected | |
+| /games/guest, /guest/blackjack, /guest/slots, /guest/mines, /guest/poker | Public | Guest mode |
+| /profile | Protected | |
+| /admin | Admin | |
