@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import {
-  lessons, Lesson, HOUR_TIMES, ALL_KLASSEN, ALL_TEACHERS, ALL_SUBJECTS,
+  lessons, Lesson, HOUR_TIMES, ALL_KLASSEN,
   DAYS, DAY_NAMES,
 } from '../data/stundenplan';
 
@@ -149,22 +149,60 @@ export default function StundenplanSection() {
   const [selectedDay, setSelectedDay] = useState<Lesson['day']>(getTodayDay());
   const [weekFilter, setWeekFilter] = useState<'A' | 'B'>('A');
   const [hjFilter, setHjFilter] = useState<'Hj1' | 'Hj2'>('Hj2');
-  const [selectedKlassen, setSelectedKlassen] = useState<string[]>([]);
+  const [selectedKlassen, setSelectedKlassen] = useState<string[]>(['K1']);
   const [selectedTeachers, setSelectedTeachers] = useState<string[]>([]);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
 
-  // Week view: show all days when exactly 1 class is selected
-  const isWeekView = selectedKlassen.length === 1;
+  // Week view: 1 class selected OR no class but teacher(s) selected
+  const weekViewMode: 'klasse' | 'teacher' | null =
+    selectedKlassen.length === 1 ? 'klasse'
+    : selectedKlassen.length === 0 && selectedTeachers.length > 0 ? 'teacher'
+    : null;
+  const isWeekView = weekViewMode !== null;
+
+  // Base pool: lessons matching week + halbjahr (global toggles)
+  const basePool = useMemo(() => {
+    return lessons.filter(l => {
+      if (l.week !== 'AB' && l.week !== weekFilter) return false;
+      if (l.halbjahr && l.halbjahr !== hjFilter) return false;
+      return true;
+    });
+  }, [weekFilter, hjFilter]);
+
+  // Cascading available options: Klasse → Lehrer → Fach
+  const availableTeachers = useMemo(() => {
+    let pool = basePool;
+    if (selectedKlassen.length > 0) pool = pool.filter(l => selectedKlassen.includes(l.klasse));
+    return [...new Set(pool.map(l => l.teacher))].filter(t => t !== '—').sort();
+  }, [basePool, selectedKlassen]);
+
+  const availableSubjects = useMemo(() => {
+    let pool = basePool;
+    if (selectedKlassen.length > 0) pool = pool.filter(l => selectedKlassen.includes(l.klasse));
+    if (selectedTeachers.length > 0) pool = pool.filter(l => selectedTeachers.includes(l.teacher));
+    return [...new Set(pool.map(l => l.subject))].sort();
+  }, [basePool, selectedKlassen, selectedTeachers]);
+
+  // Auto-clear selections that are no longer valid after upstream filter changes
+  useEffect(() => {
+    if (selectedTeachers.length > 0) {
+      const valid = selectedTeachers.filter(t => availableTeachers.includes(t));
+      if (valid.length !== selectedTeachers.length) setSelectedTeachers(valid);
+    }
+  }, [availableTeachers]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (selectedSubjects.length > 0) {
+      const valid = selectedSubjects.filter(s => availableSubjects.includes(s));
+      if (valid.length !== selectedSubjects.length) setSelectedSubjects(valid);
+    }
+  }, [availableSubjects]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Filter lessons (skip day filter in week view)
   const filtered = useMemo(() => {
-    return lessons.filter(l => {
+    return basePool.filter(l => {
       // Day — only filter by day in single-day mode
       if (!isWeekView && l.day !== selectedDay) return false;
-      // Week: show if lesson is AB or matches selected week
-      if (l.week !== 'AB' && l.week !== weekFilter) return false;
-      // Halbjahr: show if no halbjahr restriction or matches
-      if (l.halbjahr && l.halbjahr !== hjFilter) return false;
       // Klasse filter
       if (selectedKlassen.length > 0 && !selectedKlassen.includes(l.klasse)) return false;
       // Teacher filter
@@ -173,7 +211,7 @@ export default function StundenplanSection() {
       if (selectedSubjects.length > 0 && !selectedSubjects.includes(l.subject)) return false;
       return true;
     });
-  }, [selectedDay, weekFilter, hjFilter, selectedKlassen, selectedTeachers, selectedSubjects, isWeekView]);
+  }, [selectedDay, selectedKlassen, selectedTeachers, selectedSubjects, isWeekView, basePool]);
 
   // Get all unique hours present, in order
   const hourSlots = useMemo(() => getHourSlots(filtered), [filtered]);
@@ -200,6 +238,11 @@ export default function StundenplanSection() {
       l.hours.includes(hour) &&
       (day ? l.day === day : true)
     );
+  };
+
+  // Get all lessons at a given hour+day (no klasse constraint — for teacher week view)
+  const getAllLessonsAt = (hour: number, day: Lesson['day']) => {
+    return filtered.filter(l => l.hours.includes(hour) && l.day === day);
   };
 
   // Check if an hour is the start of a multi-hour lesson
@@ -247,7 +290,13 @@ export default function StundenplanSection() {
           {isWeekView && (
             <div className="flex items-center gap-2">
               <span className="text-xs text-primary-400 font-medium">Wochenansicht</span>
-              <span className="text-xs text-gray-500">— {selectedKlassen[0]}</span>
+              <span className="text-xs text-gray-500">
+                — {weekViewMode === 'klasse'
+                  ? selectedKlassen[0]
+                  : selectedTeachers.length === 1
+                    ? selectedTeachers[0]
+                    : `${selectedTeachers.length} Lehrer`}
+              </span>
             </div>
           )}
 
@@ -291,8 +340,8 @@ export default function StundenplanSection() {
 
             {/* Dropdowns */}
             <FilterDropdown label="Klasse" options={ALL_KLASSEN} selected={selectedKlassen} onChange={setSelectedKlassen} />
-            <FilterDropdown label="Lehrer" options={ALL_TEACHERS} selected={selectedTeachers} onChange={setSelectedTeachers} searchable />
-            <FilterDropdown label="Fach" options={ALL_SUBJECTS} selected={selectedSubjects} onChange={setSelectedSubjects} searchable />
+            <FilterDropdown label="Lehrer" options={availableTeachers} selected={selectedTeachers} onChange={setSelectedTeachers} searchable />
+            <FilterDropdown label="Fach" options={availableSubjects} selected={selectedSubjects} onChange={setSelectedSubjects} searchable />
 
             {hasActiveFilters && (
               <button
@@ -335,19 +384,41 @@ export default function StundenplanSection() {
                       <div className="text-gray-600 text-[10px]">{time?.start}–{time?.end}</div>
                     </td>
                     {DAYS.map(day => {
-                      const klasse = selectedKlassen[0];
-                      if (isSpanned(klasse, hour, day)) return null;
+                      if (weekViewMode === 'klasse') {
+                        const klasse = selectedKlassen[0];
+                        if (isSpanned(klasse, hour, day)) return null;
 
-                      const lessonsHere = getLessonsAt(klasse, hour, day)
+                        const lessonsHere = getLessonsAt(klasse, hour, day)
+                          .filter(l => isLessonStart(l, hour) || l.hours.length === 1);
+
+                        const maxSpan = lessonsHere.reduce((max, l) => {
+                          const span = l.hours.filter(h => hourSlots.includes(h)).length;
+                          return Math.max(max, span);
+                        }, 1);
+
+                        return (
+                          <td key={day} className={`p-1 align-top ${day === getTodayDay() ? 'bg-primary-950/20' : ''}`} rowSpan={maxSpan > 1 ? maxSpan : undefined}>
+                            <div className="space-y-1">
+                              {lessonsHere.map((l, i) => (
+                                <div
+                                  key={i}
+                                  className={`rounded-lg border px-2 py-1.5 ${subjectColor(l.subject)}`}
+                                >
+                                  <div className="font-semibold">{l.subject}</div>
+                                  <div className="text-[10px] opacity-70">{l.teacher} · {l.room}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        );
+                      }
+
+                      // Teacher week view — no rowSpan to avoid layout conflicts with multiple teachers
+                      const lessonsHere = getAllLessonsAt(hour, day)
                         .filter(l => isLessonStart(l, hour) || l.hours.length === 1);
 
-                      const maxSpan = lessonsHere.reduce((max, l) => {
-                        const span = l.hours.filter(h => hourSlots.includes(h)).length;
-                        return Math.max(max, span);
-                      }, 1);
-
                       return (
-                        <td key={day} className={`p-1 align-top ${day === getTodayDay() ? 'bg-primary-950/20' : ''}`} rowSpan={maxSpan > 1 ? maxSpan : undefined}>
+                        <td key={day} className={`p-1 align-top ${day === getTodayDay() ? 'bg-primary-950/20' : ''}`}>
                           <div className="space-y-1">
                             {lessonsHere.map((l, i) => (
                               <div
@@ -355,7 +426,7 @@ export default function StundenplanSection() {
                                 className={`rounded-lg border px-2 py-1.5 ${subjectColor(l.subject)}`}
                               >
                                 <div className="font-semibold">{l.subject}</div>
-                                <div className="text-[10px] opacity-70">{l.teacher} · {l.room}</div>
+                                <div className="text-[10px] opacity-70">{l.klasse} · {l.room}</div>
                               </div>
                             ))}
                           </div>
