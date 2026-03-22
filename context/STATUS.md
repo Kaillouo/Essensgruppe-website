@@ -13,7 +13,7 @@
 | Forum (posts/comments/votes) | DONE | Reddit-style, nested comments, search, sort |
 | Events + Photo Galleries | DONE | Propose/vote/status, photo carousel |
 | Abi Zeitung (anonymous) | DONE | Submit anonymously, admin views |
-| Links Page | DONE | School links, 83 teachers, Stundenplan placeholder |
+| Links Page | DONE | School links, 83 teachers, Stundenplan (grades 5–10 + K1 + K2), week view for single class |
 | MC Page | DONE | Server status, BlueMap iframe, announcements |
 | Poker (Texas Hold'em) | DONE | 6-seat, solo mode, queue, watchers, emotes |
 | Prediction Market | DONE | Create/bet/resolve; debt system (losers can go negative) |
@@ -40,7 +40,6 @@
 
 ## Needs User Input
 
-- **Stundenplan data** — schedule data for Links page dropdown
 - **MC Leaderboard** — data source for player stats
 - **Social link URLs** — verify GoFundMe, Instagram are current
 - **Landing page video** — currently YouTube `Y2gmQFjpcsU`

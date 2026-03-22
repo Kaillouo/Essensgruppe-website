@@ -64,3 +64,16 @@
 - Built canvas-based TunnelGrid: 45 concentric squares fly outward from bright center on scroll
 - RoomContainer: removed per-room tunnel, simplified corridor strip (12vh), added z-index for room sections
 - Shortened hero spacer (40vh→25vh), room height (120vh→110vh), corridor strip (25vh→12vh)
+
+## 2026-03-16 — Stundenplan Feature
+- Converted `content/stundenplanV2.md` (1300+ lines) to typed `frontend/src/data/stundenplan.ts` (all grades 5–10 + K2, Mon–Fri)
+- Built `StundenplanSection` component replacing LinksPage placeholder
+- Filters: day tabs, A/B-Woche toggle, Hj1/Hj2 toggle (default Hj2), Klasse/Lehrer/Fach multi-select dropdowns
+- Grid view for ≤6 classes, card view for many; defaults to current weekday (Mon on weekends)
+- K1 data still missing — noted in feature doc and UI footer
+
+## 2026-03-22 — Stundenplan: K1 Data + Week View
+- Added K1 timetable (~120 entries, Mon–Fri) to `frontend/src/data/stundenplan.ts`
+- Added week view: selecting exactly 1 class shows all 5 days as columns with today highlighted
+- Day tabs hidden in week view, replaced by "Wochenansicht — [Klasse]" label
+- Removed "K1-Daten folgen in Kürze" placeholder text
